@@ -1,0 +1,15 @@
+node_modules/
+.next/
+out/
+build/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+.env*.local
+.DS_Store
+/public/fonts/local-preview/
+.claude
+env
+.env
+.env.example
+CLAUDE.md
