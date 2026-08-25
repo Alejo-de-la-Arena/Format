@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Archivo, Inter } from "next/font/google";
-import localFont from "next/font/local";
 import { MotionConfig } from "motion/react";
 import { getActiveSeason } from "@/lib/data/seasons";
 import { seasonAccentVars } from "@/lib/theme";
@@ -10,12 +9,11 @@ import "./globals.css";
 // la licencia comercial de CS Miska del diseñador original. Sirve sólo
 // como preview local. REEMPLAZAR por la versión con licencia comercial
 // antes de cualquier deploy a producción.
-const csMiska = localFont({
-  src: "../public/fonts/local-preview/CSMiska-Regular_demo.otf",
-  variable: "--font-cs-miska",
-  weight: "400",
-  display: "swap",
-});
+//
+// CS Miska NO se declara acá con next/font/local: el .otf está gitignoreado
+// y next/font lo resolvería en tiempo de compilación, rompiendo el build de
+// producción. Se carga con @font-face en app/globals.css, que tolera que el
+// archivo no exista.
 
 // Fallback de --font-display en la cadena de fuentes mientras se resuelve
 // la licencia comercial de CS Miska — ver app/globals.css § --font-display.
@@ -47,7 +45,7 @@ export default async function RootLayout({
   return (
     <html
       lang="es"
-      className={`${csMiska.variable} ${archivo.variable} ${inter.variable}`}
+      className={`${archivo.variable} ${inter.variable}`}
     >
       <body
         className="overflow-x-hidden bg-paper font-body text-ink antialiased"

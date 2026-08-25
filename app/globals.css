@@ -1,6 +1,25 @@
 @import "tailwindcss";
 
 /*
+ * CS Miska se carga por @font-face contra /public en vez de next/font/local
+ * a propósito: el .otf de preview está gitignoreado (DEMO de uso personal,
+ * licencia 1001fonts FFP — ver TODO en app/layout.tsx) y no existe en el
+ * build de producción. next/font/local resuelve el archivo en tiempo de
+ * compilación y rompe el build si falta; una url() root-relative no se
+ * resuelve en build, así que si el archivo no está el navegador simplemente
+ * cae al siguiente de la cadena (Archivo). El build nunca depende de la
+ * fuente. Al llegar la licencia comercial: dejar el .otf/.woff2 en
+ * public/fonts/ versionado y actualizar el src de acá.
+ */
+@font-face {
+  font-family: "CS Miska";
+  src: url("/fonts/local-preview/CSMiska-Regular_demo.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/*
  * FORMAT — zine / fotocopia / collage de stickers. Gris papel y negro son
  * constantes del sistema; el color lo pone la Season activa (o la propia,
  * en /eventos/[slug]) vía --accent-1..5, aplicados como inline style en
@@ -49,11 +68,12 @@
   --color-accent-4: var(--accent-4);
   --color-accent-5: var(--accent-5);
 
-  /* CS Miska: DEMO de uso personal, sólo preview local — ver TODO en
-     app/layout.tsx. Archivo queda de fallback en la cadena hasta tener la
-     licencia comercial. */
-  --font-display: var(--font-cs-miska), var(--font-archivo), "Helvetica Neue",
-    Helvetica, Arial, sans-serif;
+  /* CS Miska: DEMO de uso personal, sólo preview local — ver el @font-face
+     de arriba y el TODO en app/layout.tsx. Archivo queda de fallback en la
+     cadena hasta tener la licencia comercial: si el .otf no está presente
+     (deploy), el texto display sale en Archivo sin romper nada. */
+  --font-display: "CS Miska", var(--font-archivo), "Helvetica Neue", Helvetica,
+    Arial, sans-serif;
   --font-body: var(--font-inter), "Helvetica Neue", Helvetica, Arial,
     sans-serif;
 }
