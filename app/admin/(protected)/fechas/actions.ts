@@ -26,8 +26,6 @@ export async function upsertFecha(
   const especial = formData.get("especial") === "on";
   const horaInicio = String(formData.get("horaInicio") ?? "").trim() || null;
   const horaFin = String(formData.get("horaFin") ?? "").trim() || null;
-  const youtubeUrl = String(formData.get("youtubeUrl") ?? "").trim() || null;
-  const soundcloudUrl = String(formData.get("soundcloudUrl") ?? "").trim() || null;
   const barraLibre = especial && formData.get("barraLibre") === "on";
   const tragoNombre = especial
     ? String(formData.get("tragoNombre") ?? "").trim() || null
@@ -47,8 +45,6 @@ export async function upsertFecha(
     especial,
     hora_inicio: horaInicio,
     hora_fin: horaFin,
-    youtube_url: youtubeUrl,
-    soundcloud_url: soundcloudUrl,
     barra_libre: barraLibre,
     trago_nombre: tragoNombre,
     trago_descripcion: tragoDescripcion,

@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 import MobileMenu from "@/components/MobileMenu";
 import ExternalArrow from "@/components/ExternalArrow";
 import HoverUnderline from "@/components/HoverUnderline";
+import { EXTERNAL_LINK, SOCIAL } from "@/lib/social";
 
 const MotionLink = motion.create(Link);
 
@@ -47,9 +48,8 @@ export default function Nav() {
           ))}
         </div>
         <motion.a
-          href="https://instagram.com"
-          target="_blank"
-          rel="noopener noreferrer"
+          href={SOCIAL.instagram}
+          {...EXTERNAL_LINK}
           initial="rest"
           whileHover="hover"
           whileFocus="hover"

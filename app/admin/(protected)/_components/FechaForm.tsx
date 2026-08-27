@@ -111,27 +111,6 @@ export default function FechaForm({
         </div>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="flex flex-col gap-1.5">
-          <span className="label-mono text-muted">YouTube (set completo)</span>
-          <input
-            name="youtubeUrl"
-            defaultValue={fecha?.youtubeUrl ?? ""}
-            placeholder="https://youtube.com/..."
-            className="border border-line bg-paper px-2.5 py-2 outline-none focus:border-accent-1"
-          />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="label-mono text-muted">SoundCloud</span>
-          <input
-            name="soundcloudUrl"
-            defaultValue={fecha?.soundcloudUrl ?? ""}
-            placeholder="https://soundcloud.com/..."
-            className="border border-line bg-paper px-2.5 py-2 outline-none focus:border-accent-1"
-          />
-        </label>
-      </div>
-
       {fecha ? (
         <>
           <FlyerDropzone fecha={fecha} seasonSlug={season.slug} />

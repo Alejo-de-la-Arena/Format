@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import type { Forma } from "@/lib/types";
 import type { AdminSeason } from "../data";
 import ColorFieldset from "./ColorFieldset";
-import SeasonSliderManager from "./SeasonSliderManager";
+import LabClipsManager from "./LabClipsManager";
+import { parseVideoUrl } from "@/lib/embed";
 import { upsertSeason, type SeasonFormState } from "../seasons/actions";
 
 const FORMAS: { value: Forma; label: string }[] = [
@@ -37,6 +38,7 @@ export default function SeasonForm({
   );
   const [colores, setColores] = useState<string[]>(resolveColors(season?.colores));
   const [forma, setForma] = useState<Forma>(season?.forma ?? "square");
+  const [aftermovie, setAftermovie] = useState(season?.aftermovieUrl ?? "");
   const router = useRouter();
 
   useEffect(() => {
@@ -46,6 +48,9 @@ export default function SeasonForm({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
+
+  const aftermovieEmbed = parseVideoUrl(aftermovie);
+  const aftermovieInvalido = aftermovie.trim().length > 0 && !aftermovieEmbed;
 
   return (
     <form
@@ -142,17 +147,46 @@ export default function SeasonForm({
       <div className="flex flex-col gap-4">
         <ColorFieldset colores={colores} onChange={setColores} />
 
+        {/* AFTERMOVIE — sólo la URL. El video vive en YouTube/Vimeo: Supabase
+            Storage no hace transcoding ni streaming adaptativo. */}
+        <label className="flex flex-col gap-1.5">
+          <span className="label-mono text-muted">Aftermovie (YouTube o Vimeo)</span>
+          <input
+            name="aftermovieUrl"
+            value={aftermovie}
+            onChange={(e) => setAftermovie(e.target.value)}
+            placeholder="https://youtube.com/watch?v=… o https://vimeo.com/…"
+            className={`border bg-paper px-3 py-2 outline-none focus:border-accent-1 ${
+              aftermovieInvalido ? "border-red-600" : "border-line"
+            }`}
+          />
+          {aftermovieInvalido ? (
+            <span className="text-xs text-red-600">
+              No es una URL de video de YouTube ni de Vimeo.
+            </span>
+          ) : aftermovieEmbed ? (
+            <span className="label-mono text-muted">
+              {aftermovieEmbed.platform === "youtube" ? "YouTube" : "Vimeo"} ·{" "}
+              {aftermovieEmbed.id}
+            </span>
+          ) : (
+            <span className="text-xs text-muted">
+              Dejalo vacío si todavía no hay aftermovie.
+            </span>
+          )}
+        </label>
+
         {season ? (
-          <SeasonSliderManager
-            sliderPhotos={season.sliderPhotos}
+          <LabClipsManager
+            clips={season.labClips}
             seasonId={season.id}
             seasonSlug={season.slug}
           />
         ) : (
           <div className="flex flex-col gap-2">
-            <span className="label-mono text-muted">Slider Experience</span>
+            <span className="label-mono text-muted">FORMAT Lab</span>
             <p className="text-xs text-muted">
-              Guardá la Season primero para poder subir fotos.
+              Guardá la Season primero para poder cargar clips.
             </p>
           </div>
         )}

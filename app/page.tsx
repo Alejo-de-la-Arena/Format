@@ -6,8 +6,8 @@ import SectionTitle from "@/components/SectionTitle";
 import PosterCard from "@/components/PosterCard";
 import ArchiveCard from "@/components/ArchiveCard";
 import ShapeSticker from "@/components/ShapeSticker";
-import SeasonShowcase from "@/components/SeasonShowcase";
-import Carousel from "@/components/Carousel";
+import WhatIsFormat from "@/components/WhatIsFormat";
+import VideoPlayer from "@/components/VideoPlayer";
 import {
   getFechasProximas,
   getFechasProximasConFlyer,
@@ -16,6 +16,7 @@ import {
 } from "@/lib/data/fechas";
 import { getSeasons, getActiveSeason } from "@/lib/data/seasons";
 import { getSeasonColors } from "@/lib/season-colors";
+import { isVideoUrl } from "@/lib/embed";
 
 const wrap = "mx-auto max-w-[1400px] px-[clamp(18px,4vw,48px)]";
 const sectionPad = "py-[clamp(44px,5vw,72px)]";
@@ -80,6 +81,19 @@ export default async function Home() {
   // que el copy de arriba).
   const experienceSeason = proximaExperienceSeason ?? activeSeason;
   const experienceColors = experienceSeason ? getSeasonColors(experienceSeason) : null;
+  // Se filtra por URL parseable y no sólo por "hay algo cargado": una URL
+  // que no parsea hace que VideoPlayer devuelva null, y la sección quedaría
+  // con un hueco en vez de caer al estado vacío. Las Server Actions ya
+  // validan al guardar; esto cubre filas editadas a mano en la base.
+  const aftermovieUrl =
+    experienceSeason?.aftermovieUrl && isVideoUrl(experienceSeason.aftermovieUrl)
+      ? experienceSeason.aftermovieUrl
+      : null;
+  // FORMAT Lab muestra los clips de la Season ACTIVA (no la de la próxima
+  // Experience): son los DJs que están tocando este mes.
+  const labSeason = activeSeason;
+  const labColors = labSeason ? getSeasonColors(labSeason) : null;
+  const labClips = (labSeason?.labClips ?? []).filter((c) => isVideoUrl(c.url));
 
   return (
     <>
@@ -166,104 +180,100 @@ export default async function Home() {
                 Ver Experience
               </Link>
             </div>
-            {experienceSeason && experienceSeason.sliderPhotos.length > 0 ? (
-              <Carousel
-                items={experienceSeason.sliderPhotos.map((src, i) => ({
-                  id: `${experienceSeason.slug}-${i}`,
-                  src,
-                  alt: `Foto ${i + 1} de ${experienceSeason.nombre}`,
-                }))}
-                accent={experienceColors?.[0]}
+            {/* AFTERMOVIE — vertical, con tope de ancho para que 9:16 no
+                estire la banda entera en desktop. */}
+            {experienceSeason && aftermovieUrl && experienceColors ? (
+              <VideoPlayer
+                url={aftermovieUrl}
+                titulo={experienceSeason.nombre}
+                kicker="Aftermovie"
+                forma={experienceSeason.forma}
+                accent={experienceColors[0]}
+                className="mx-auto max-w-[340px]"
               />
             ) : (
-              <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink">
+              <div className="relative mx-auto flex aspect-[9/16] w-full max-w-[340px] flex-col items-center justify-center gap-4 overflow-hidden border border-paper/15 bg-ink">
+                {/* Misma trama que el poster del player: el hueco lee como
+                    fotocopia y no como un rectángulo negro vacío. */}
+                {experienceColors && (
+                  <span
+                    aria-hidden
+                    className="absolute inset-0 opacity-30"
+                    style={{
+                      backgroundImage: `radial-gradient(${experienceColors[0]} 1px, transparent 1.2px), radial-gradient(${experienceColors[0]} 1px, transparent 1.2px)`,
+                      backgroundSize: "9px 9px",
+                      backgroundPosition: "0 0, 4.5px 4.5px",
+                    }}
+                  />
+                )}
                 {experienceColors && (
                   <ShapeSticker
                     forma={experienceSeason?.forma ?? "square"}
                     color={experienceColors[0]}
-                    size={140}
+                    size={132}
                     rotate={-6}
-                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                    className="relative"
                     withLogo
                   />
                 )}
+                <p className="relative max-w-[22ch] px-6 text-center text-sm text-paper/60">
+                  El aftermovie de esta Season todavía no está listo.
+                </p>
               </div>
             )}
           </div>
         </div>
       </section>
 
-      {/* FORMAT LAB */}
+      {/* FORMAT LAB — clips de video de la Season activa, uno por DJ.
+          Mismo player que el aftermovie: poster propio, el iframe recién
+          se monta al apretar play. */}
       <section id="lab" className={sectionPad}>
         <div className={wrap}>
-          <SectionTitle title="FORMAT Lab" moreHref="/lab" moreLabel="Ver todo →" />
+          <SectionTitle title="FORMAT Lab" />
           <p className="-mt-4 mb-6 text-[15px] text-muted">
-            Explorá sets de nuestros eventos anteriores.
+            Los DJs de la Season, en corto.
           </p>
-          {pasados.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-3">
-              {pasados.map((f) => {
-                const season = seasonBySlug.get(f.seasonSlug);
-                if (!season) return null;
-                const colors = getSeasonColors(season);
-                return (
-                  <a
-                    key={`${f.seasonSlug}-${f.fecha}`}
-                    href={f.youtube ?? "#"}
-                    className="group border border-line bg-paper-2 transition-colors hover:border-accent-1"
-                  >
-                    <div className="relative aspect-video overflow-hidden bg-paper-2">
-                      <div
-                        className="h-full w-full"
-                        style={{
-                          background: `radial-gradient(80% 100% at 50% 0%, color-mix(in srgb, ${colors[2]} 55%, var(--color-paper-2)), var(--color-paper-2) 75%)`,
-                        }}
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <svg
-                          viewBox="0 0 44 44"
-                          className="h-11 w-11 text-ink opacity-80"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={1.5}
-                          aria-hidden
-                        >
-                          <circle cx="22" cy="22" r="20" />
-                          <path d="M18 15 L30 22 L18 29 Z" fill="currentColor" stroke="none" />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <div className="text-base font-bold">
-                        {season.nombre} — Set completo
-                      </div>
-                      <div className="label-mono mt-1 text-muted">YouTube</div>
-                    </div>
-                  </a>
-                );
-              })}
+          {labSeason && labColors && labClips.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+              {labClips.map((clip, i) => (
+                <VideoPlayer
+                  // `orden` no tiene unique en la base: se combina con la
+                  // URL para que la key no colisione entre dos clips.
+                  key={`${clip.orden}-${clip.url}`}
+                  url={clip.url}
+                  titulo={clip.titulo || `Clip ${i + 1}`}
+                  kicker={labSeason.nombre}
+                  forma={labSeason.forma}
+                  accent={labColors[0]}
+                />
+              ))}
             </div>
           ) : (
-            <p className="text-sm text-muted">Todavía no hay sets publicados.</p>
+            <p className="text-sm text-muted">
+              Todavía no hay clips de esta Season.
+            </p>
           )}
         </div>
       </section>
 
-      {/* QUÉ ES FORMAT — corto, al final. El fondo y los colores de la pieza
-          son locales a esta sección: el resto de la home no se entera. */}
-      <SeasonShowcase
-        className={`border-t border-line ${sectionPad}`}
+      {/* QUÉ ES FORMAT — compacta, al final. Revela sólo la Season que
+          sigue a la activa; los colores de la pieza son locales a esta
+          sección y no tocan el theming del resto de la home. */}
+      <WhatIsFormat
+        activa={
+          activeSeason
+            ? {
+                numero: activeSeason.numero,
+                nombre: activeSeason.nombre,
+                forma: activeSeason.forma,
+                color: getSeasonColors(activeSeason)[0],
+              }
+            : null
+        }
+        className="border-t border-line py-[clamp(36px,4vw,60px)]"
         wrapClassName={wrap}
-      >
-        <SectionTitle title="Qué es FORMAT" />
-        <div className="max-w-[24ch] text-[clamp(22px,2.6vw,30px)] font-bold leading-[1.25] tracking-tight">
-          Cada viernes, Av. Costanera Rafael Obligado 4801 cambia por completo.
-        </div>
-        <p className="mt-4 max-w-[52ch] text-[15px] text-muted">
-          Música electrónica curada, escenografía propia y un cocktail para cada
-          edición.
-        </p>
-      </SeasonShowcase>
+      />
 
       {/*
         FORMAT SPECIAL — eventos fuera de JET. Página futura; fuera de la home

@@ -7,8 +7,8 @@ import type { CSSProperties, ElementType, ReactNode } from "react";
  */
 
 /** Bordes recortados, exportados para los casos que necesitan el mismo
- *  tratamiento sobre un elemento propio (ej. un motion.span con `layout`,
- *  que anima su ancho — ver components/SeasonShowcase.tsx). */
+ *  tratamiento sobre un elemento propio (ej. el poster de VideoPlayer o las
+ *  cintas de WhatIsFormat, que no pueden envolverse en un TapeBlock). */
 export const EDGES: Record<1 | 2 | 3, string> = {
   1: "polygon(0% 6%, 2% 0%, 25% 2%, 50% 0%, 75% 3%, 98% 0%, 100% 5%, 99% 30%, 100% 55%, 98% 80%, 100% 94%, 97% 100%, 72% 98%, 48% 100%, 22% 97%, 3% 100%, 0% 92%, 2% 65%, 0% 40%, 1% 20%)",
   2: "polygon(1% 0%, 30% 3%, 60% 0%, 100% 4%, 98% 22%, 100% 45%, 97% 68%, 100% 90%, 96% 100%, 65% 97%, 35% 100%, 4% 96%, 0% 78%, 2% 52%, 0% 28%, 3% 8%)",

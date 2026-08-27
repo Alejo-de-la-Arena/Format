@@ -16,7 +16,16 @@ export interface AdminSeason {
   concepto: string;
   fechaInicio: string;
   fechaFin: string;
-  sliderPhotos: AdminFoto[];
+  aftermovieUrl: string | null;
+  labClips: AdminLabClip[];
+}
+
+/** Un clip de FORMAT Lab en /admin. Sólo URL: no hay objeto en Storage. */
+export interface AdminLabClip {
+  id: string;
+  orden: number;
+  titulo: string;
+  url: string;
 }
 
 export interface AdminLineupSlot {
@@ -45,8 +54,6 @@ export interface AdminFecha {
   flyerUrl: string | null;
   fotoEscenaPath: string | null;
   fotoEscenaUrl: string | null;
-  youtubeUrl: string | null;
-  soundcloudUrl: string | null;
   barraLibre: boolean;
   tragoNombre: string | null;
   tragoDescripcion: string | null;
@@ -64,9 +71,9 @@ export async function getAdminSeasons(): Promise<AdminSeasonWithFechas[]> {
 
   const { data: seasonRows, error: seasonsError } = await supabase
     .from("seasons")
-    .select("*, season_slider_photos(*)")
+    .select("*, season_lab_clips(*)")
     .order("fecha_inicio", { ascending: true })
-    .order("orden", { referencedTable: "season_slider_photos", ascending: true });
+    .order("orden", { referencedTable: "season_lab_clips", ascending: true });
   if (seasonsError) throw seasonsError;
 
   const { data: fechaRows, error: fechasError } = await supabase
@@ -80,16 +87,13 @@ export async function getAdminSeasons(): Promise<AdminSeasonWithFechas[]> {
   // Cache-busting con updated_at — flyer/foto_escena se suben a un path
   // determinístico con upsert:true, así que la URL pública no cambia sola
   // al reemplazar el archivo y el CDN/next/image siguen sirviendo la
-  // versión vieja cacheada sin este query param. Las fotos del slider
-  // Experience usan paths con uuid (como fotos_galeria) — no lo necesitan.
+  // versión vieja cacheada sin este query param.
   const bust = (url: string | null, updatedAt: string) =>
     url ? `${url}?v=${encodeURIComponent(updatedAt)}` : url;
   const flyerUrl = (path: string | null, updatedAt: string) =>
     bust(path ? supabase.storage.from("flyers").getPublicUrl(path).data.publicUrl : null, updatedAt);
   const galeriaUrl = (path: string | null) =>
     path ? supabase.storage.from("galerias").getPublicUrl(path).data.publicUrl : null;
-  const sliderPhotoUrl = (path: string) =>
-    supabase.storage.from("season-previews").getPublicUrl(path).data.publicUrl;
 
   const fechasBySeason = new Map<string, AdminFecha[]>();
   for (const row of fechaRows ?? []) {
@@ -104,8 +108,6 @@ export async function getAdminSeasons(): Promise<AdminSeasonWithFechas[]> {
       flyerUrl: flyerUrl(row.flyer_path, row.updated_at),
       fotoEscenaPath: row.foto_escena_path,
       fotoEscenaUrl: bust(galeriaUrl(row.foto_escena_path), row.updated_at),
-      youtubeUrl: row.youtube_url,
-      soundcloudUrl: row.soundcloud_url,
       barraLibre: row.barra_libre,
       tragoNombre: row.trago_nombre,
       tragoDescripcion: row.trago_descripcion,
@@ -142,13 +144,14 @@ export async function getAdminSeasons(): Promise<AdminSeasonWithFechas[]> {
     concepto: row.concepto,
     fechaInicio: row.fecha_inicio,
     fechaFin: row.fecha_fin,
-    sliderPhotos: (row.season_slider_photos ?? [])
+    aftermovieUrl: row.aftermovie_url,
+    labClips: (row.season_lab_clips ?? [])
       .sort((a: { orden: number }, b: { orden: number }) => a.orden - b.orden)
-      .map((p: { id: string; orden: number; storage_path: string }) => ({
-        id: p.id,
-        orden: p.orden,
-        storagePath: p.storage_path,
-        url: sliderPhotoUrl(p.storage_path),
+      .map((c: { id: string; orden: number; titulo: string; video_url: string }) => ({
+        id: c.id,
+        orden: c.orden,
+        titulo: c.titulo,
+        url: c.video_url,
       })),
     fechas: fechasBySeason.get(row.id) ?? [],
   }));

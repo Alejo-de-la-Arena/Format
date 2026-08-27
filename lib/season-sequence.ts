@@ -6,9 +6,13 @@ import type { Forma } from "@/lib/types";
  * real (Supabase); las siguientes cuatro son constantes de UI hasta que
  * existan de verdad en /admin.
  *
+ * La pieza NO muestra la secuencia entera: revela sólo la Season siguiente
+ * a la activa (ver `getNextSeason`). Las demás quedan acá como dato del
+ * modelo, sin llegar nunca a pantalla mientras no les toque el turno.
+ *
  * Ojo: estos colores son LOCALES a esa sección. No tocan --accent-1..5 ni
  * el theming por Season del resto del sitio (ver lib/theme.ts) — la home
- * sigue en el azul de Origin mientras la pieza cicla por los otros.
+ * sigue en el azul de Origin mientras la pieza revela la siguiente.
  *
  * `colores` respeta el orden de roles del resto del sitio:
  * [0] principal · [1] secundario · [2] gradiente/glow · [3] detalle ·
@@ -61,3 +65,35 @@ export const SEASON_SEQUENCE: SeasonSequenceItem[] = [
     tilt: -3,
   },
 ];
+
+/**
+ * La Season que sigue a la activa, y cuántas quedan detrás de ella.
+ *
+ * Es lo único que consume la pieza "Qué es FORMAT": con Origin activa
+ * devuelve Ascent y 3 restantes; cuando la activa pase a Ascent devolverá
+ * Pulse sola, sin tocar código. El match es por `numero` (Supabase guarda
+ * "001", igual que acá) y cae a `nombre` por las dudas.
+ *
+ * `restantes` no identifica nada: es sólo cuántas siluetas anónimas dibujar
+ * después de la revelada para que se vea que la secuencia sigue.
+ */
+export function getNextSeason(
+  activa?: { numero?: string; nombre?: string } | null,
+): { siguiente: SeasonSequenceItem | null; restantes: number } {
+  if (!activa) return { siguiente: null, restantes: 0 };
+
+  const i = SEASON_SEQUENCE.findIndex(
+    (s) =>
+      s.numero === activa.numero ||
+      s.nombre.toLowerCase() === activa.nombre?.toLowerCase(),
+  );
+  // Season activa fuera de la secuencia, o última: no hay nada que revelar.
+  if (i === -1 || i === SEASON_SEQUENCE.length - 1) {
+    return { siguiente: null, restantes: 0 };
+  }
+
+  return {
+    siguiente: SEASON_SEQUENCE[i + 1],
+    restantes: SEASON_SEQUENCE.length - (i + 2),
+  };
+}

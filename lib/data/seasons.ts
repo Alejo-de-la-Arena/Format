@@ -1,5 +1,5 @@
 import { cache } from "react";
-import type { Season } from "@/lib/types";
+import type { LabClip, Season } from "@/lib/types";
 import { createClient } from "@/lib/supabase/public";
 
 export { getSeasonColors } from "@/lib/season-colors";
@@ -13,16 +13,14 @@ interface SeasonRow {
   concepto: string;
   fecha_inicio: string;
   fecha_fin: string;
-  season_slider_photos: { orden: number; storage_path: string }[];
+  aftermovie_url: string | null;
+  season_lab_clips: { orden: number; titulo: string; video_url: string }[];
 }
 
-function mapSeason(
-  supabase: ReturnType<typeof createClient>,
-  row: SeasonRow,
-): Season {
-  const sliderPhotos = [...(row.season_slider_photos ?? [])]
+function mapSeason(row: SeasonRow): Season {
+  const labClips: LabClip[] = [...(row.season_lab_clips ?? [])]
     .sort((a, b) => a.orden - b.orden)
-    .map((p) => supabase.storage.from("season-previews").getPublicUrl(p.storage_path).data.publicUrl);
+    .map((c) => ({ titulo: c.titulo, url: c.video_url, orden: c.orden }));
 
   return {
     slug: row.slug,
@@ -33,7 +31,8 @@ function mapSeason(
     concepto: row.concepto,
     fechaInicio: row.fecha_inicio,
     fechaFin: row.fecha_fin,
-    sliderPhotos,
+    aftermovieUrl: row.aftermovie_url ?? undefined,
+    labClips,
   };
 }
 
@@ -48,11 +47,11 @@ export const getSeasons = cache(async (): Promise<Season[]> => {
     const supabase = createClient();
     const { data, error } = await supabase
       .from("seasons")
-      .select("*, season_slider_photos(*)")
+      .select("*, season_lab_clips(*)")
       .order("fecha_inicio", { ascending: true })
-      .order("orden", { referencedTable: "season_slider_photos", ascending: true });
+      .order("orden", { referencedTable: "season_lab_clips", ascending: true });
     if (error) throw error;
-    return (data ?? []).map((row) => mapSeason(supabase, row));
+    return (data ?? []).map(mapSeason);
   } catch (err) {
     console.error("getSeasons: no se pudo consultar Supabase", err);
     return [];

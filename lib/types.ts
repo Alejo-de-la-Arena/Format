@@ -34,6 +34,20 @@ export interface Cocktail {
 }
 
 /**
+ * Un clip de FORMAT Lab: video corto alojado en YouTube/Vimeo, típicamente
+ * uno por DJ de la Season. Va contra la Season y no contra una Fecha — el
+ * clip es del DJ dentro del concepto de la Season, no de un viernes puntual.
+ * La cantidad es libre.
+ */
+export interface LabClip {
+  /** Nombre del DJ, o título del clip. */
+  titulo: string;
+  /** URL de YouTube o Vimeo tal cual se cargó en /admin. */
+  url: string;
+  orden: number;
+}
+
+/**
  * Una Season mensual: agrupa varios viernes Residence consecutivos bajo el
  * mismo concepto, forma y paleta. El primer viernes suele ser la apertura
  * (Experience), marcada con `especial` en su Fecha.
@@ -60,8 +74,14 @@ export interface Season {
   fechaInicio: string;
   /** ISO yyyy-mm-dd, último viernes de la Season. */
   fechaFin: string;
-  /** Fotos del slider Experience, en orden, subidas desde /admin (hasta 8). */
-  sliderPhotos: string[];
+  /**
+   * URL de YouTube/Vimeo del aftermovie de la Season. El video no se aloja
+   * en Supabase (sin transcoding ni streaming adaptativo): en /admin se pega
+   * la URL y el embed se arma en el cliente — ver lib/embed.ts.
+   */
+  aftermovieUrl?: string;
+  /** Clips de FORMAT Lab de esta Season, en orden. */
+  labClips: LabClip[];
 }
 
 /**
@@ -85,8 +105,6 @@ export interface Fecha {
   fotoEscena?: ImageSrc;
   /** Fotos de la noche (detalle, fecha ya pasada). */
   galeria?: string[];
-  youtube?: string;
-  soundcloud?: string;
   /** Sólo relevante cuando especial = true. */
   barraLibre?: boolean;
   /** Cocktail de autor de esta fecha Experience. */

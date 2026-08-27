@@ -12,11 +12,11 @@ import HoverAnchor from "@/components/HoverAnchor";
 import SectionTitle from "@/components/SectionTitle";
 import TapeBlock from "@/components/TapeBlock";
 import { getSeasons, getSeason, getAccentsExcept } from "@/lib/data/seasons";
+import { EXTERNAL_LINK, SOCIAL } from "@/lib/social";
 import { getSeasonColors } from "@/lib/season-colors";
 import { seasonAccentVars } from "@/lib/theme";
 import { getFechasBySeason } from "@/lib/data/fechas";
 import { fechaCorta, esPasado, rangoHorario } from "@/lib/dates";
-import { getSoundcloudEmbedUrl, getYoutubeEmbedUrl } from "@/lib/embed";
 import type { Fecha, Season } from "@/lib/types";
 
 const wrap = "mx-auto max-w-[1400px] px-[clamp(18px,4vw,48px)]";
@@ -171,7 +171,6 @@ function FechaRow({
 }) {
   const pasado = esPasado(fecha.fecha);
   const colors = getSeasonColors(season);
-  const youtubeEmbed = fecha.youtube ? getYoutubeEmbedUrl(fecha.youtube) : null;
 
   // La página muestra un solo viernes: abierto de entrada, sin pedir un click.
   return (
@@ -230,46 +229,17 @@ function FechaRow({
         )}
 
         {pasado && (
-          <>
-            <div className="mt-8">
-              <h3 className="label-mono mb-4 text-muted">Fotos de la noche</h3>
-              <EventGallery
-                fotos={(fecha.galeria ?? []).map((id) => ({
-                  src: id,
-                  alt: `Foto de ${season.nombre} — ${fechaCorta(fecha.fecha)}`,
-                }))}
-                colors={colors}
-                forma={season.forma}
-              />
-            </div>
-
-            {(youtubeEmbed || fecha.soundcloud) && (
-              <div className="mt-8">
-                <h3 className="label-mono mb-4 text-muted">Set completo</h3>
-                {youtubeEmbed ? (
-                  <div className="relative aspect-video w-full overflow-hidden border border-line bg-ink">
-                    <iframe
-                      src={youtubeEmbed}
-                      title={`Set de ${season.nombre} — ${fechaCorta(fecha.fecha)}`}
-                      className="absolute inset-0 h-full w-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  </div>
-                ) : (
-                  fecha.soundcloud && (
-                    <iframe
-                      src={getSoundcloudEmbedUrl(fecha.soundcloud)}
-                      title={`Set de ${season.nombre} — ${fechaCorta(fecha.fecha)}`}
-                      className="w-full"
-                      height={166}
-                      allow="autoplay"
-                    />
-                  )
-                )}
-              </div>
-            )}
-          </>
+          <div className="mt-8">
+            <h3 className="label-mono mb-4 text-muted">Fotos de la noche</h3>
+            <EventGallery
+              fotos={(fecha.galeria ?? []).map((id) => ({
+                src: id,
+                alt: `Foto de ${season.nombre} — ${fechaCorta(fecha.fecha)}`,
+              }))}
+              colors={colors}
+              forma={season.forma}
+            />
+          </div>
         )}
       </div>
     </details>
@@ -387,9 +357,8 @@ export default async function SeasonPage({
               {hayProximos && (
                 <section className="mt-10">
                   <HoverAnchor
-                    href="https://instagram.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={SOCIAL.instagram}
+                    {...EXTERNAL_LINK}
                     className="label-mono flex items-center justify-center gap-1.5 border border-line px-5 py-4 text-center transition-colors hover:border-accent-1"
                   >
                     Seguí las novedades en Instagram

@@ -1,8 +1,8 @@
 /**
  * PRNG determinístico compartido por la geometría "a mano" del sitio
- * (components/shapePaths.ts, lib/shape-morph.ts): misma seed → misma
- * secuencia siempre. Es lo que permite jitterear vértices sin generar
- * mismatches de hidratación entre server y client (nada de Math.random).
+ * (components/shapePaths.ts): misma seed → misma secuencia siempre. Es lo
+ * que permite jitterear vértices sin generar mismatches de hidratación entre
+ * server y client (nada de Math.random).
  */
 
 /** FNV-1a: string/number → uint32 estable. */

@@ -13,8 +13,6 @@ interface FechaRow {
   flyer_path: string | null;
   foto_escena_path: string | null;
   updated_at: string;
-  youtube_url: string | null;
-  soundcloud_url: string | null;
   barra_libre: boolean;
   trago_nombre: string | null;
   trago_descripcion: string | null;
@@ -72,8 +70,6 @@ function mapFecha(supabase: SupabaseClient, row: FechaRow): Fecha {
     flyer: publicUrl(supabase, "flyers", row.flyer_path, row.updated_at),
     fotoEscena: publicUrl(supabase, "galerias", row.foto_escena_path, row.updated_at),
     galeria: galeria.length > 0 ? galeria : undefined,
-    youtube: row.youtube_url ?? undefined,
-    soundcloud: row.soundcloud_url ?? undefined,
     barraLibre: row.especial ? row.barra_libre : undefined,
     tragoAutor:
       row.especial && row.trago_nombre

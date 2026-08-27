@@ -10,6 +10,7 @@ import HoverArrow from "@/components/HoverArrow";
 import HoverAnchor from "@/components/HoverAnchor";
 import HoverLink from "@/components/HoverLink";
 import ExperienceBadge from "@/components/ExperienceBadge";
+import { EXTERNAL_LINK, SOCIAL } from "@/lib/social";
 import { getFechasOrdenadas, getProximaFecha } from "@/lib/data/fechas";
 import { getSeasons } from "@/lib/data/seasons";
 import { getSeasonColors } from "@/lib/season-colors";
@@ -39,9 +40,8 @@ export default async function FechasPage() {
             Todavía no hay próximas fechas confirmadas.
           </p>
           <HoverAnchor
-            href="https://instagram.com"
-            target="_blank"
-            rel="noopener noreferrer"
+            href={SOCIAL.instagram}
+            {...EXTERNAL_LINK}
             className="label-mono mt-6 inline-flex items-center gap-1.5 border border-line px-5 py-3 transition-colors hover:border-accent-1"
           >
             Seguí las novedades en Instagram
