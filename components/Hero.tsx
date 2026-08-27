@@ -33,12 +33,12 @@ export default function Hero({ season }: { season: Season }) {
               height={58}
               priority
               unoptimized
-              className="h-[clamp(78px,11.5vw,140px)] w-auto"
+              className="h-[clamp(115px,11.5vw,140px)] w-auto"
             />
           </h1>
         </div>
 
-        <h2 className="mt-4 flex flex-col items-center gap-0.5 font-body text-[clamp(20px,6vw,42px)] font-semibold uppercase tracking-[0.08em] text-ink md:mt-5 md:items-start">
+        <h2 className="flex flex-col items-center gap-0.5 font-body text-[clamp(20px,6vw,42px)] font-semibold uppercase tracking-[0.08em] text-ink md:mt-5 md:items-start">
           <GlitchText accent={accent} speed={1.8}>
             Made by sound
           </GlitchText>
