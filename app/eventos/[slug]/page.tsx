@@ -11,6 +11,7 @@ import ExternalArrow from "@/components/ExternalArrow";
 import HoverAnchor from "@/components/HoverAnchor";
 import SectionTitle from "@/components/SectionTitle";
 import TapeBlock from "@/components/TapeBlock";
+import PrintSheetFrame from "@/components/PrintSheetFrame";
 import { getSeasons, getSeason, getAccentsExcept } from "@/lib/data/seasons";
 import { EXTERNAL_LINK, SOCIAL } from "@/lib/social";
 import { getSeasonColors } from "@/lib/season-colors";
@@ -274,9 +275,15 @@ export default async function SeasonPage({
   const heroFlyer = fechaActiva?.flyer ?? fechasSeason.find((f) => f.flyer)?.flyer;
   const hayProximos = fechasSeason.some((f) => !esPasado(f.fecha));
 
-  // La MetaCard "Cocktail" se arma con la fecha de apertura (especial=true,
-  // la primera cronológicamente) que ya tenga trago cargado.
-  const fechaApertura = fechasSeason.find((f) => f.especial && f.tragoAutor);
+  // El trago de autor es de la fecha Experience (especial=true), no de cada
+  // viernes: sólo se muestra cuando la fecha que se está viendo es esa.
+  const tragoAutor = fechaActiva?.especial ? fechaActiva.tragoAutor : undefined;
+
+  // Numeración de pliego para el marco de imprenta del hero: "001 · 21.08.26".
+  const [pY, pM, pD] = (fechaActiva?.fecha ?? "").split("-");
+  const pliego = pD
+    ? `${season.numero.padStart(3, "0")} · ${pD}.${pM}.${pY.slice(2)}`
+    : season.numero.padStart(3, "0");
 
   const isInfinity = season.slug === "infinity";
   // Cada variante trae su propio set de 5 colores ya resuelto: la Season
@@ -291,7 +298,8 @@ export default async function SeasonPage({
       <Nav />
       <main>
         <div className={`${wrap} py-[clamp(28px,4vw,52px)]`}>
-          <div className="grid gap-x-[clamp(32px,5vw,72px)] gap-y-10 lg:grid-cols-[1fr_1.15fr]">
+          <PrintSheetFrame colors={getSeasonColors(season)} pliego={pliego}>
+            <div className="grid gap-x-[clamp(32px,5vw,72px)] gap-y-10 lg:grid-cols-[1fr_1.15fr]">
             {/* CONTENIDO */}
             <div className="min-w-0">
               <div className="text-center lg:text-left">
@@ -333,11 +341,11 @@ export default async function SeasonPage({
 
               <div className="mt-10 flex flex-col gap-5 sm:flex-row">
                 <MetaCard label="Lugar" value={VENUE} rotate={-1} />
-                {fechaApertura?.tragoAutor && (
+                {tragoAutor && (
                   <MetaCard
                     label="Cocktail"
-                    value={fechaApertura.tragoAutor.nombre}
-                    detail={fechaApertura.tragoAutor.descripcion}
+                    value={tragoAutor.nombre}
+                    detail={tragoAutor.descripcion}
                     rotate={1}
                   />
                 )}
@@ -388,7 +396,8 @@ export default async function SeasonPage({
                 />
               </div>
             </aside>
-          </div>
+            </div>
+          </PrintSheetFrame>
         </div>
       </main>
       <Footer />

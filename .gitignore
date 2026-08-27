@@ -7,7 +7,6 @@ build/
 next-env.d.ts
 .env*.local
 .DS_Store
-/public/fonts/local-preview/
 .claude
 env
 .env

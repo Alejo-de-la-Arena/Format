@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "motion/react";
 import MobileMenu from "@/components/MobileMenu";
 import ExternalArrow from "@/components/ExternalArrow";
@@ -25,12 +26,18 @@ export default function Nav() {
   return (
     <nav className="sticky top-0 z-[60] border-b border-line bg-paper">
       <div className="mx-auto flex h-[60px] max-w-[1400px] items-center gap-9 px-[clamp(18px,4vw,48px)]">
-        <Link
-          href="/"
-          className="flex flex-col font-display text-xl font-black leading-[0.78] tracking-[-0.05em]"
-        >
-          <span className="block">FOR</span>
-          <span className="block">MAT</span>
+        <Link href="/" className="flex items-center" aria-label="FORMAT — inicio">
+          {/* Logo apilado FOR/MAT. Alto fijado al del wordmark tipográfico
+              anterior (text-xl · leading-[0.78], ~34px en dos líneas). */}
+          <Image
+            src="/logos/logo-format-columna.svg"
+            alt="FORMAT"
+            width={150}
+            height={100}
+            priority
+            unoptimized
+            className="h-[50px] w-auto"
+          />
         </Link>
         <div className="hidden gap-7 md:flex">
           {links.map((l) => (

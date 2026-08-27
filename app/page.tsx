@@ -180,8 +180,9 @@ export default async function Home() {
                 Ver Experience
               </Link>
             </div>
-            {/* AFTERMOVIE — vertical, con tope de ancho para que 9:16 no
-                estire la banda entera en desktop. */}
+            {/* AFTERMOVIE — vertical 9:16. Ancho completo de la columna en
+                mobile; en desktop se acota por ALTO (no por ancho) para que
+                el 9:16 no estire la banda entera. */}
             {experienceSeason && aftermovieUrl && experienceColors ? (
               <VideoPlayer
                 url={aftermovieUrl}
@@ -189,10 +190,10 @@ export default async function Home() {
                 kicker="Aftermovie"
                 forma={experienceSeason.forma}
                 accent={experienceColors[0]}
-                className="mx-auto max-w-[340px]"
+                className="mx-auto w-full md:max-w-[calc(min(68vh,600px)*9/16)]"
               />
             ) : (
-              <div className="relative mx-auto flex aspect-[9/16] w-full max-w-[340px] flex-col items-center justify-center gap-4 overflow-hidden border border-paper/15 bg-ink">
+              <div className="relative mx-auto flex aspect-[9/16] w-full flex-col items-center justify-center gap-4 overflow-hidden border border-paper/15 bg-ink md:max-w-[calc(min(68vh,600px)*9/16)]">
                 {/* Misma trama que el poster del player: el hueco lee como
                     fotocopia y no como un rectángulo negro vacío. */}
                 {experienceColors && (

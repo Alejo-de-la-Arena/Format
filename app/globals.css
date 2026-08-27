@@ -1,25 +1,6 @@
 @import "tailwindcss";
 
 /*
- * CS Miska se carga por @font-face contra /public en vez de next/font/local
- * a propósito: el .otf de preview está gitignoreado (DEMO de uso personal,
- * licencia 1001fonts FFP — ver TODO en app/layout.tsx) y no existe en el
- * build de producción. next/font/local resuelve el archivo en tiempo de
- * compilación y rompe el build si falta; una url() root-relative no se
- * resuelve en build, así que si el archivo no está el navegador simplemente
- * cae al siguiente de la cadena (Archivo). El build nunca depende de la
- * fuente. Al llegar la licencia comercial: dejar el .otf/.woff2 en
- * public/fonts/ versionado y actualizar el src de acá.
- */
-@font-face {
-  font-family: "CS Miska";
-  src: url("/fonts/local-preview/CSMiska-Regular_demo.otf") format("opentype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-/*
  * FORMAT — zine / fotocopia / collage de stickers. Gris papel y negro son
  * constantes del sistema; el color lo pone la Season activa (o la propia,
  * en /eventos/[slug]) vía --accent-1..5, aplicados como inline style en
@@ -68,12 +49,8 @@
   --color-accent-4: var(--accent-4);
   --color-accent-5: var(--accent-5);
 
-  /* CS Miska: DEMO de uso personal, sólo preview local — ver el @font-face
-     de arriba y el TODO en app/layout.tsx. Archivo queda de fallback en la
-     cadena hasta tener la licencia comercial: si el .otf no está presente
-     (deploy), el texto display sale en Archivo sin romper nada. */
-  --font-display: "CS Miska", var(--font-archivo), "Helvetica Neue", Helvetica,
-    Arial, sans-serif;
+  /* Sólo Inter. El wordmark FORMAT va como SVG (public/logos/), no hay
+     fuente display. */
   --font-body: var(--font-inter), "Helvetica Neue", Helvetica, Arial,
     sans-serif;
 }
@@ -83,9 +60,9 @@
   outline-offset: 3px;
 }
 
-/* Etiquetas: fechas, kickers, datos. Antes monoespaciadas — CLAUDE.md
-   permite sólo CS Miska + Inter, así que el look "dato" ahora sale de
-   mayúsculas + tracking + peso alto en Inter, no de una fuente mono. */
+/* Etiquetas: fechas, kickers, datos. Antes monoespaciadas — el sitio usa
+   sólo Inter, así que el look "dato" sale de mayúsculas + tracking + peso
+   alto, no de una fuente mono. */
 @utility label-mono {
   font-family: var(--font-body);
   font-size: 11px;
@@ -211,6 +188,41 @@
   }
 }
 
+/* Marco de pliego de imprenta (ver components/PrintSheetFrame.tsx): las
+   marcas de registro de las esquinas se desalinean 2-3px y vuelven a su
+   lugar en un ciclo muy lento, como una impresion que se corrige sola. La
+   barra de color y la numeracion quedan estaticas. */
+@keyframes print-registration-a {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  35% {
+    transform: translate(2px, 0);
+  }
+  65% {
+    transform: translate(0, -2px);
+  }
+}
+@keyframes print-registration-b {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(-2px, 1px);
+  }
+  70% {
+    transform: translate(1px, 2px);
+  }
+}
+.print-reg {
+  animation: print-registration-a 10s ease-in-out infinite;
+}
+.print-reg-alt {
+  animation: print-registration-b 12s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -222,5 +234,9 @@
   .glitch-text::before {
     animation: none !important;
     opacity: 0;
+  }
+  .print-reg,
+  .print-reg-alt {
+    animation: none !important;
   }
 }

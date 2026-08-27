@@ -1,28 +1,12 @@
 import type { Metadata } from "next";
-import { Archivo, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
 import { MotionConfig } from "motion/react";
 import { getActiveSeason } from "@/lib/data/seasons";
 import { seasonAccentVars } from "@/lib/theme";
 import "./globals.css";
 
-// TODO: DEMO de uso personal (licencia 1001fonts FFP) — todavía no tenemos
-// la licencia comercial de CS Miska del diseñador original. Sirve sólo
-// como preview local. REEMPLAZAR por la versión con licencia comercial
-// antes de cualquier deploy a producción.
-//
-// CS Miska NO se declara acá con next/font/local: el .otf está gitignoreado
-// y next/font lo resolvería en tiempo de compilación, rompiendo el build de
-// producción. Se carga con @font-face en app/globals.css, que tolera que el
-// archivo no exista.
-
-// Fallback de --font-display en la cadena de fuentes mientras se resuelve
-// la licencia comercial de CS Miska — ver app/globals.css § --font-display.
-const archivo = Archivo({
-  subsets: ["latin"],
-  weight: ["600", "700", "800", "900"],
-  variable: "--font-archivo",
-  display: "swap",
-});
+// Tipografía: sólo Inter. El wordmark FORMAT (hero, header, footer) va como
+// SVG vectorizado en public/logos/ — no se sirve ninguna webfont display.
 
 const inter = Inter({
   subsets: ["latin"],
@@ -43,10 +27,7 @@ export default async function RootLayout({
   const activeSeason = await getActiveSeason();
 
   return (
-    <html
-      lang="es"
-      className={`${archivo.variable} ${inter.variable}`}
-    >
+    <html lang="es" className={inter.variable}>
       <body
         className="overflow-x-hidden bg-paper font-body text-ink antialiased"
         style={seasonAccentVars(activeSeason)}

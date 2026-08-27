@@ -37,12 +37,15 @@ const ITEM: Variants = {
  * Un tramo de la línea: rulo de tinta que une una silueta con la siguiente.
  * `faint` para el que va hacia lo que todavía no se cuenta.
  */
-function Tramo({ faint = false }: { faint?: boolean }) {
+function Tramo({ faint = false, long = false }: { faint?: boolean; long?: boolean }) {
   return (
     <span
       aria-hidden
       className="flex shrink-0 items-center"
-      style={{ height: ROW, width: "clamp(12px,2.4vw,26px)" }}
+      style={{
+        height: ROW,
+        width: long ? "clamp(30px,6vw,72px)" : "clamp(12px,2.4vw,26px)",
+      }}
     >
       <span
         className="block h-[2px] w-full"
@@ -213,21 +216,11 @@ export default function WhatIsFormat({
               initial={reduced ? false : "hidden"}
               whileInView="show"
               viewport={{ once: true, margin: "0px 0px -12% 0px" }}
-              className="justify-self-start md:justify-self-end"
+              className="justify-self-start pt-8 md:justify-self-end md:pt-0"
             >
-              {/* La rotación va como prop de motion, no como transform en
-                  style: motion maneja el transform y lo pisaría. */}
-              <motion.span
-                variants={ITEM}
-                className="label-mono inline-block bg-ink px-2 py-1 text-paper"
-                style={{ rotate: -1.6, clipPath: EDGES[3] }}
-              >
-                Próximamente
-              </motion.span>
-
               {/* El margen negativo saca la cola del padding del wrap: lo
                   difuso queda cortado por el overflow-hidden de la sección. */}
-              <div className="mt-3 -mr-[clamp(18px,6vw,96px)] flex items-start">
+              <div className="-mr-[clamp(18px,6vw,96px)] flex items-start">
                 {/* Abre la línea: sólida, tamaño completo, nombre en cinta. */}
                 <motion.div variants={ITEM} className="flex flex-col items-center gap-2">
                   <span
@@ -252,12 +245,28 @@ export default function WhatIsFormat({
                 </motion.div>
 
                 <motion.span variants={ITEM}>
-                  <Tramo />
+                  <Tramo long />
                 </motion.span>
 
                 {/* Después: más chica, en trama y sin cinta — presente pero
-                    con menos peso. Se identifica por silueta y color. */}
-                <motion.div variants={ITEM} className="flex flex-col items-center gap-2">
+                    con menos peso. Se identifica por silueta y color. La
+                    etiqueta "Próximamente" va acá arriba, sobre la Season que
+                    sigue — no sobre la activa. */}
+                <motion.div
+                  variants={ITEM}
+                  className="relative flex flex-col items-center gap-2"
+                >
+                  <span
+                    className="label-mono absolute bottom-full left-1/2 mb-2 whitespace-nowrap bg-ink px-1.5 py-0.5 text-paper"
+                    style={{
+                      transform: "translateX(-50%) rotate(-1.6deg)",
+                      clipPath: EDGES[3],
+                      fontSize: "9px",
+                      letterSpacing: "0.1em",
+                    }}
+                  >
+                    Próximamente
+                  </span>
                   <span
                     className="flex items-center justify-center"
                     style={{ height: ROW, width: `calc(${ROW} * 0.64)` }}
@@ -266,7 +275,11 @@ export default function WhatIsFormat({
                       aria-hidden
                       viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`}
                       className="h-full w-full opacity-70"
-                      style={{ transform: `rotate(${siguiente.tilt}deg)` }}
+                      style={{
+                        transform:
+                          `rotate(${siguiente.tilt}deg)` +
+                          (siguiente.forma === "triangle" ? " scaleY(-1)" : ""),
+                      }}
                     >
                       <defs>
                         <pattern

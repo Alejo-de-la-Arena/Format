@@ -1,13 +1,10 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import Image from "next/image";
 import type { Season } from "@/lib/types";
 import { getSeasonColors } from "@/lib/season-colors";
 import HeroBackground from "@/components/HeroBackground";
 import GlitchText from "@/components/GlitchText";
-
-const TITLE_TYPE =
-  "text-[clamp(100px,15vw,180px)] font-display font-semibold leading-[0.78] tracking-[-0.05em]";
 
 /**
  * Hero: fondo halftone/SDF animado (ver HeroBackground), el wordmark FORMAT
@@ -24,13 +21,20 @@ export default function Hero({ season }: { season: Season }) {
       <div className="relative z-[2] mx-auto w-full max-w-[1400px] px-[clamp(18px,4vw,48px)] py-[clamp(28px,4vw,52px)] md:pb-[clamp(28px,4vw,52px)] md:pt-0">
         <div
           className="relative inline-block"
-          style={{ transform: "rotate(-1.5deg)", "--hero-glow-accent": accent } as CSSProperties}
+          style={{ transform: "rotate(-1.5deg)" }}
         >
-          <h1
-            className={`flex flex-row items-center md:items-start ${TITLE_TYPE}`}
-            style={{ color: "color-mix(in srgb, var(--color-ink) 88%, var(--hero-glow-accent) 12%)" }}
-          >
-            <span className="block">FORMAT</span>
+          {/* Wordmark FORMAT. Alto atado al mismo clamp que tenía el texto
+              display, para conservar escala y composición del hero. */}
+          <h1 className="m-0">
+            <Image
+              src="/logos/logo-format-horizontal.svg"
+              alt="FORMAT"
+              width={256}
+              height={58}
+              priority
+              unoptimized
+              className="h-[clamp(78px,11.5vw,140px)] w-auto"
+            />
           </h1>
         </div>
 

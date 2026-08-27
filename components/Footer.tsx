@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "motion/react";
 import ExternalArrow from "@/components/ExternalArrow";
 import HoverUnderline from "@/components/HoverUnderline";
@@ -115,21 +116,22 @@ export default function Footer() {
         </div>
 
         {/* Wordmark: pieza gráfica, con el subrayado como elemento aparte
-            debajo del bloque de texto — así nunca recorta las letras. */}
-        {/* El font-size vive en el contenedor para que el subrayado pueda
-            medirse en `em` y acompañe al wordmark en cualquier viewport:
-            CS Miska deja mucho aire bajo la línea de base, así que el margen
-            negativo lo sube hasta quedar pegado a las letras sin cortarlas. */}
+            debajo — así nunca recorta las letras. El font-size vive en el
+            contenedor para que tanto el logo (alto en `em`) como el subrayado
+            escalen juntos en cualquier viewport. `brightness-0 invert` deja el
+            SVG en blanco sólido sobre el negro del footer. */}
         <div className="mt-[clamp(38px,5vw,68px)] border-t border-paper/12 pt-[clamp(22px,3vw,38px)] text-[clamp(48px,11vw,158px)]">
+          <Image
+            src="/logos/logo-format-horizontal.svg"
+            alt="FORMAT"
+            width={256}
+            height={58}
+            unoptimized
+            className="block h-[0.82em] w-auto select-none brightness-0 invert"
+          />
           <span
             aria-hidden
-            className="block select-none font-display font-black uppercase leading-[1.02] tracking-[0.015em] text-paper"
-          >
-            Format
-          </span>
-          <span
-            aria-hidden
-            className="mt-[-0.18em] block h-[max(3px,0.045em)] w-full bg-accent-1"
+            className="mt-[0.08em] block h-[max(3px,0.045em)] w-full bg-accent-1"
           />
         </div>
       </div>
