@@ -6,9 +6,6 @@ import type { Forma } from "@/lib/types";
 /** Fijo — mismo valor que --color-paper en app/globals.css. */
 const PAPER = "#c8d0d2";
 
-/** ~65% más rápido que tiempo real, aplicado al reloj del shader. */
-const TIME_SCALE = 1.65;
-
 /** season.forma → índice de forma para el uniform uShape del shader. */
 const SHAPE_INDEX: Record<Forma, number> = {
   square: 0,
@@ -43,7 +40,6 @@ const FRAGMENT = /* glsl */ `
   uniform vec3 uPaper;
   uniform float uShape;
   uniform vec2 uPointer;
-  uniform float uScroll;
 
   // Ashima simplex noise (2D), dominio público.
   vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
@@ -71,16 +67,6 @@ const FRAGMENT = /* glsl */ `
     g.x = a0.x * x0.x + h.x * x0.y;
     g.yz = a0.yz * x12.xz + h.yz * x12.yw;
     return 130.0 * dot(m, g);
-  }
-
-  float fbm(vec2 p) {
-    float f = 0.0;
-    f += 0.5 * snoise(p);
-    p *= 2.02;
-    f += 0.25 * snoise(p);
-    p *= 2.03;
-    f += 0.125 * snoise(p);
-    return f;
   }
 
   float sdCircle(vec2 p, float r) { return length(p) - r; }
@@ -131,98 +117,69 @@ const FRAGMENT = /* glsl */ `
     return sdCross(p, r * 0.8);
   }
 
-  // Variantes de la forma de Season activa (uShape), no formas nuevas:
-  // mismo sdShape con rotación, redondeo, contorno, anidado o proporción
-  // distintos. 0=base 1=rombo 2=redondeada 3=contorno 4=anidada 5=estirada.
+  vec2 rotatePoint(vec2 p, float angle) {
+    float c = cos(angle), s = sin(angle);
+    return mat2(c, -s, s, c) * p;
+  }
+
+  // Eight print treatments of ONE identity. No future Season shapes.
   float sdVariant(vec2 p, float shapeId, float variantId, float r) {
-    if (variantId < 0.5) {
-      return sdShape(p, shapeId, r);
+    float d = 1.0;
+    if (variantId < 0.5) d = sdShape(rotatePoint(p, sin(uTime * .4) * .12), shapeId, r);
+    else if (variantId < 1.5) d = abs(sdShape(p, shapeId, r)) - .07;
+    else if (variantId < 2.5) d = min(min(
+      abs(sdShape(p, shapeId, r)) - .035,
+      abs(sdShape(rotatePoint(p, .16), shapeId, r * .66)) - .03),
+      sdShape(p, shapeId, r * .28));
+    else if (variantId < 3.5) {
+      vec2 q = abs(p) - vec2(.36 + .07 * sin(uTime * 1.5));
+      d = sdShape(rotatePoint(q, sin(uTime) * .16), shapeId, r * .36);
     }
-    if (variantId < 1.5) {
-      float c = 0.70710678, s = 0.70710678;
-      vec2 pr = mat2(c, -s, s, c) * p;
-      return sdShape(pr, shapeId, r);
+    else if (variantId < 4.5) d = abs(sdShape(rotatePoint(p, .7854), shapeId, r * .92)) - .09;
+    else if (variantId < 5.5) d = min(
+      abs(sdShape(p - vec2(.13, .10), shapeId, r)) - .035,
+      abs(sdShape(p + vec2(.13, .10), shapeId, r)) - .035);
+    else if (variantId < 6.5) d = min(
+      abs(sdShape(rotatePoint(p, -.25), shapeId, r)) - .04,
+      abs(sdShape(rotatePoint(p, .35), shapeId, r * .68)) - .04);
+    else {
+      vec2 tiled = mod(p + .27, .54) - .27;
+      d = max(sdShape(tiled, shapeId, .23), sdShape(p, shapeId, r * 1.05));
     }
-    if (variantId < 2.5) {
-      return sdShape(p, shapeId, r * 0.88) - r * 0.12;
-    }
-    if (variantId < 3.5) {
-      float d = sdShape(p, shapeId, r);
-      return abs(d) - r * 0.08;
-    }
-    if (variantId < 4.5) {
-      float outer = abs(sdShape(p, shapeId, r)) - r * 0.06;
-      float innerShape = sdShape(p, shapeId, r * 0.4);
-      return min(outer, innerShape);
-    }
-    vec2 pp = vec2(p.x * 1.3, p.y * 0.78);
-    return sdShape(pp, shapeId, r);
+    return d;
   }
 
   // Máscara de forma [0,1] en un punto uv dado, con warp + envolvente ya aplicados.
-  float shapeMaskAt(vec2 uv, float envelope, float warpAmp, float variantId, vec2 drift) {
+  float shapeMaskAt(vec2 uv, float phase) {
     vec2 aspect = uResolution.x > uResolution.y
       ? vec2(uResolution.x / uResolution.y, 1.0)
       : vec2(1.0, uResolution.y / uResolution.x);
-    vec2 p = (uv - 0.5) * 2.0 * aspect;
-    p -= drift;
-
-    vec2 warp = vec2(
-      fbm(p * 0.9 + vec2(0.0, 0.0) + uTime * 0.05),
-      fbm(p * 0.9 + vec2(5.2, 1.3) + uTime * 0.05)
-    );
-    p += warp * warpAmp;
-    p += uPointer * 0.06;
-    p.y += uScroll * 0.1;
-
-    float d = sdVariant(p, uShape, variantId, 1.0);
-    float edge = 0.05;
-    float mask = smoothstep(edge, -edge, d);
-    return mask * envelope;
+    vec2 center = uResolution.x > uResolution.y * 1.2 ? vec2(.66,.54) : vec2(.5,.54);
+    vec2 p = (uv - center) * 2.0 * aspect;
+    p -= vec2(sin(uTime * .25), cos(uTime * .31)) * .09;
+    p += vec2(snoise(p + uTime * .12), snoise(p + vec2(5.2,1.3) + uTime * .12)) * .075;
+    p += uPointer * .045;
+    float id = mod(floor(phase), 8.0);
+    float nextId = mod(id + 1.0, 8.0);
+    float morph = smoothstep(.56, 1.0, fract(phase));
+    float d = mix(sdVariant(p, uShape, id, .95), sdVariant(p, uShape, nextId, .95), morph);
+    return 1.0 - smoothstep(-.028, .028, d);
   }
 
   void main() {
     vec2 uv = vUv;
 
-    float cycleSpeed = 0.08;
-    float cyc = fract(uTime * cycleSpeed);
-    // Coseno elevado: envolvente 0→1→0 con derivada continua en todo el
-    // loop, incluido el punto de wrap — la onda triangular anterior tenía
-    // un quiebre ahí que se sentía como un salto.
-    float envelope = 0.5 - 0.5 * cos(cyc * 6.28318530718);
-    // Perturbación chica relativa al radio de la forma (~0.5) — deforma el
-    // borde sin destruir la silueta, un poco más cuando está disolviéndose.
-    float warpAmp = mix(0.2, 0.08, envelope);
-
-    // Una variante distinta de la forma por ciclo. El cambio cae siempre en
-    // el wrap de cyc, donde envelope ya es 0 (forma invisible), así nunca
-    // se ve el corte entre variantes.
-    float variantId = mod(floor(uTime * cycleSpeed), 6.0);
-
-    // Centro de la forma a la deriva: recorre distintas zonas del canvas de
-    // forma continua y orgánica en vez de quedar fijo en el medio. Rango
-    // acotado para que la forma ocupe más área visible en todo momento.
-    vec2 drift = vec2(
-      fbm(vec2(uTime * 0.025, 12.4)),
-      fbm(vec2(uTime * 0.021, 58.1))
-    ) * 0.35;
-
-    // Grilla corregida por aspect ratio para que las celdas (y los puntos)
-    // sean cuadradas/circulares en píxeles reales, no en UV normalizado.
-    // La densidad oscila lento entre trama fina y gruesa — variación extra
-    // de la familia "cuadrada" sin tocar la silueta (ver sdVariant).
-    float densityWobble = 0.86 + 0.32 * sin(uTime * 0.11);
+    // Fixed registration grid: no breathing density / crawling while scrolling.
+    float phase = uTime / 2.8;
     float aspectRatio = uResolution.x / uResolution.y;
-    vec2 density = vec2(44.0 * aspectRatio, 44.0) * densityWobble;
+    vec2 density = vec2(48.0 * aspectRatio, 48.0);
     vec2 cellUv = (floor(uv * density) + 0.5) / density;
-    float mask = shapeMaskAt(cellUv, envelope, warpAmp, variantId, drift);
-
-    float grain = fbm(cellUv * 18.0 + 40.0) * 0.5 + 0.5;
-    float base = 0.05 + grain * 0.05;
-    float amt = clamp(base + mask * 0.85, 0.0, 1.0);
+    float mask = shapeMaskAt(cellUv, phase);
+    float grain = fract(sin(dot(floor(uv * density), vec2(12.9898,78.233))) * 43758.5453);
+    float amt = clamp(.045 + grain * .055 + mask * .89, 0.0, 1.0);
 
     vec2 grid = fract(uv * density) - 0.5;
-    float cellDist = length(grid);
+    float cellDist = mix(length(grid), max(abs(grid.x),abs(grid.y)), .5 + .5 * sin(uTime * .7));
 
     float minR = 0.05;
     float maxR = 0.46;
@@ -248,11 +205,16 @@ const FRAGMENT = /* glsl */ `
 export default function HeroBackground({
   forma,
   accent,
+  paused = false,
 }: {
   forma: Forma;
   accent: string;
+  paused?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const pausedRef = useRef(paused);
+  const updateRef = useRef<() => void>(() => {});
+  useEffect(() => { pausedRef.current = paused; updateRef.current(); }, [paused]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -273,25 +235,22 @@ export default function HeroBackground({
 
       let renderer: import("three").WebGLRenderer;
       try {
-        renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "low-power" });
       } catch {
         return;
       }
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
       const scene = new THREE.Scene();
       const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
       const uniforms = {
-        uTime: { value: reduce ? 4.0 : 0.0 },
+        uTime: { value: 0.7 },
         uResolution: { value: new THREE.Vector2(1, 1) },
         uAccent: { value: new THREE.Vector3(...hexToVec3(accent)) },
         uPaper: { value: new THREE.Vector3(...hexToVec3(PAPER)) },
         uShape: { value: SHAPE_INDEX[forma] },
         uPointer: { value: new THREE.Vector2(0, 0) },
-        uScroll: { value: 0 },
       };
 
       const material = new THREE.ShaderMaterial({
@@ -302,57 +261,62 @@ export default function HeroBackground({
       const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
       scene.add(mesh);
 
-      function resize() {
-        const r = parent!.getBoundingClientRect();
-        renderer.setSize(r.width, r.height, false);
+      let lastW = 0;
+      let lastH = 0;
+      function resize(width: number, height: number) {
+        if (!width || !height || (lastW === width && lastH === height)) return;
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, width < 768 ? 1 : 1.5));
+        renderer.setSize(width, height, false);
         uniforms.uResolution.value.set(
-          r.width * renderer.getPixelRatio(),
-          r.height * renderer.getPixelRatio(),
+          width * renderer.getPixelRatio(),
+          height * renderer.getPixelRatio(),
         );
+        lastW = width;
+        lastH = height;
+        renderer.render(scene, camera);
       }
-      resize();
-      window.addEventListener("resize", resize);
+      resize(parent.clientWidth, parent.clientHeight);
+      // Observe the stable svh host, not browser chrome resize events.
+      const ro = new ResizeObserver(([entry]) => resize(entry.contentRect.width, entry.contentRect.height));
+      ro.observe(parent);
 
       // Puntero: posición relativa al centro del hero, suavizada.
       const pointerTarget = { x: 0, y: 0 };
       const pointerCurrent = { x: 0, y: 0 };
       function onPointerMove(e: PointerEvent) {
+        if (e.pointerType !== "mouse" || !running) return;
         const r = parent!.getBoundingClientRect();
         pointerTarget.x = ((e.clientX - r.left) / r.width - 0.5) * 2;
         pointerTarget.y = -((e.clientY - r.top) / r.height - 0.5) * 2;
       }
-      window.addEventListener("pointermove", onPointerMove);
-
-      // Scroll: progreso 0-1 de cuánto pasó el hero por el viewport.
-      const scrollTarget = { v: 0 };
-      const scrollCurrent = { v: 0 };
-      function onScroll() {
-        const r = parent!.getBoundingClientRect();
-        scrollTarget.v = Math.min(1, Math.max(0, 1 - r.top / Math.max(r.height, 1)));
-      }
-      onScroll();
-      window.addEventListener("scroll", onScroll, { passive: true });
+      const resetPointer = () => { pointerTarget.x = 0; pointerTarget.y = 0; };
+      parent.addEventListener("pointermove", onPointerMove, { passive: true });
+      parent.addEventListener("pointerleave", resetPointer);
 
       let raf = 0;
       let inView = true;
-      let running = !reduce;
+      let running = false;
+      let previousTime = 0;
 
       function updateRunning() {
-        const next = inView && !document.hidden && !reduce;
+        const next = inView && !document.hidden && !motion.matches && !pausedRef.current;
+        canvas!.dataset.motion = next ? "running" : "paused";
         if (next === running) return;
         running = next;
+        previousTime = 0;
         cancelAnimationFrame(raf);
         if (running) raf = requestAnimationFrame(frame);
       }
 
       function frame(t: number) {
         if (!running) return;
-        uniforms.uTime.value = t * 0.001 * TIME_SCALE;
+        // Elapsed visible time, so resuming never jumps to another shape.
+        const dt = previousTime ? Math.min((t - previousTime) / 1000, .05) : 0;
+        previousTime = t;
+        uniforms.uTime.value += dt;
         pointerCurrent.x += (pointerTarget.x - pointerCurrent.x) * 0.06;
         pointerCurrent.y += (pointerTarget.y - pointerCurrent.y) * 0.06;
         uniforms.uPointer.value.set(pointerCurrent.x, pointerCurrent.y);
-        scrollCurrent.v += (scrollTarget.v - scrollCurrent.v) * 0.06;
-        uniforms.uScroll.value = scrollCurrent.v;
         renderer.render(scene, camera);
         raf = requestAnimationFrame(frame);
       }
@@ -365,16 +329,18 @@ export default function HeroBackground({
 
       const onVisibility = () => updateRunning();
       document.addEventListener("visibilitychange", onVisibility);
-
-      if (reduce) renderer.render(scene, camera);
-      else raf = requestAnimationFrame(frame);
+      motion.addEventListener("change", updateRunning);
+      updateRef.current = updateRunning;
+      updateRunning();
 
       cleanup = () => {
         io.disconnect();
+        ro.disconnect();
+        updateRef.current = () => {};
         document.removeEventListener("visibilitychange", onVisibility);
-        window.removeEventListener("resize", resize);
-        window.removeEventListener("pointermove", onPointerMove);
-        window.removeEventListener("scroll", onScroll);
+        motion.removeEventListener("change", updateRunning);
+        parent.removeEventListener("pointermove", onPointerMove);
+        parent.removeEventListener("pointerleave", resetPointer);
         cancelAnimationFrame(raf);
         mesh.geometry.dispose();
         material.dispose();

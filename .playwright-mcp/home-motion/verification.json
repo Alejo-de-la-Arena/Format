@@ -1,0 +1,31 @@
+{
+  "date": "2026-08-28",
+  "build": "passed: Next.js 15.5.20, isolated distDir, exit 0",
+  "buildNote": "Initial clean build reported the pre-existing Supabase Edge Runtime process.version warning; final cached build passed.",
+  "typescript": "tsc --noEmit --incremental false passed",
+  "unitTests": "7/7 passed: node --test tests/season-intro.test.mjs",
+  "review": "Reviewed changed data mappings, conditional admin payload, timer/listener cleanup, reduced-motion styles, shader variants and pause lifecycle; git diff --check passed.",
+  "lint": "No standalone lint script configured; Next build type/lint stage passed.",
+  "browser": {
+    "desktop": { "viewportWidth": 1440, "clientWidth": 1425, "scrollWidth": 1425 },
+    "mobile": { "viewportWidth": 390, "clientWidth": 375, "scrollWidth": 375 },
+    "minimum": { "viewportWidth": 360, "clientWidth": 345, "scrollWidth": 345 },
+    "replayAndSkip": "passed; modal opens, body locks, closes, restores overflow and replay focus",
+    "escape": "passed after adding explicit key handler",
+    "autoClose": "observed closed after animation, body overflow restored, canvas running",
+    "reload": "does not repeat welcome after it has been shown",
+    "offscreen": "canvas data-motion is paused at #archivo, running when back at hero",
+    "introPause": "canvas data-motion is paused while welcome is open",
+    "eventDirect": "no intro on /eventos/origin?fecha=2026-08-21",
+    "crossRouteAnchor": "event menu Ediciones navigates to /#archivo, no intro, body unlocked",
+    "unrevealedNamesInBuiltHomeHTML": 0
+  },
+  "notVerified": [
+    "CPU 4x profiling: unavailable in selected browser API; no FPS claim made.",
+    "Live reduced-motion emulation: unavailable; guards, CSS and selection logic reviewed/tested.",
+    "Admin save/read round trip: panel redirects to login; SQL migration intentionally not applied.",
+    "Future Season visuals with real data: only Origin exists; date selection tested with local fixtures, no DB mutation."
+  ],
+  "migration": "supabase/migrations/0010_season_intro.sql (manual, not executed)",
+  "screenshots": ["hero-desktop.png", "intro-desktop.png", "hero-mobile.png", "intro-mobile.png", "hero-360.png", "ediciones-mobile.png"]
+}

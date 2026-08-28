@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isVideoUrl } from "@/lib/embed";
 import type { Forma } from "@/lib/types";
+import { isIntroMotion, isIntroText } from "@/lib/season-intro";
 
 export type SeasonFormState =
   | { error?: string; ok?: boolean; slug?: string }
@@ -12,6 +13,8 @@ export type SeasonFormState =
 function revalidateSite(slug?: string) {
   revalidatePath("/");
   revalidatePath("/fechas");
+  revalidatePath("/archivo");
+  revalidatePath("/about");
   revalidatePath("/experience");
   if (slug) revalidatePath(`/eventos/${slug}`);
   revalidatePath("/admin");
@@ -30,6 +33,16 @@ export async function upsertSeason(
   const fechaInicio = String(formData.get("fechaInicio") ?? "");
   const fechaFin = String(formData.get("fechaFin") ?? "");
   const aftermovieUrl = String(formData.get("aftermovieUrl") ?? "").trim();
+  // Bloques de texto de /about — texto libre con saltos de línea, sin trim
+  // interno (sólo bordes) para no comerse la última línea vacía intencional.
+  const aboutRelato = String(formData.get("aboutRelato") ?? "").trim();
+  const colorDescripcion = String(formData.get("colorDescripcion") ?? "").trim();
+  const formaDescripcion = String(formData.get("formaDescripcion") ?? "").trim();
+  const introText = String(formData.get("introText") ?? "").trim();
+  const introMotion = String(formData.get("introMotion") ?? "signal");
+  if (!isIntroText(introText) || !isIntroMotion(introMotion)) {
+    return { error: "La bienvenida admite hasta 160 caracteres, 3 líneas y un movimiento de la lista." };
+  }
   const colores = formData
     .getAll("colores")
     .map((v) => String(v).trim())
@@ -62,6 +75,11 @@ export async function upsertSeason(
     fecha_fin: fechaFin,
     colores,
     aftermovie_url: aftermovieUrl || null,
+    about_relato: aboutRelato,
+    color_descripcion: colorDescripcion,
+    forma_descripcion: formaDescripcion,
+    // Disabled fields are omitted before migration, preserving other edits.
+    ...(formData.has("introMotion") ? { intro_text: introText, intro_motion: introMotion } : {}),
   };
 
   const { error } = id
@@ -69,6 +87,9 @@ export async function upsertSeason(
     : await supabase.from("seasons").insert(payload);
 
   if (error) {
+    if (/intro_(text|motion)/.test(error.message)) {
+      return { error: "Aplicá primero la migración 0010_season_intro.sql y recargá el panel." };
+    }
     return { error: error.message };
   }
 

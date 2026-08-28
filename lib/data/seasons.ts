@@ -1,6 +1,7 @@
 import { cache } from "react";
 import type { LabClip, Season } from "@/lib/types";
 import { createClient } from "@/lib/supabase/public";
+import { isIntroMotion, buenosAiresDay } from "@/lib/season-intro";
 
 export { getSeasonColors } from "@/lib/season-colors";
 
@@ -14,6 +15,11 @@ interface SeasonRow {
   fecha_inicio: string;
   fecha_fin: string;
   aftermovie_url: string | null;
+  about_relato: string | null;
+  color_descripcion: string | null;
+  forma_descripcion: string | null;
+  intro_text?: string | null;
+  intro_motion?: string | null;
   season_lab_clips: { orden: number; titulo: string; video_url: string }[];
 }
 
@@ -33,6 +39,15 @@ function mapSeason(row: SeasonRow): Season {
     fechaFin: row.fecha_fin,
     aftermovieUrl: row.aftermovie_url ?? undefined,
     labClips,
+    intro: {
+      text: row.intro_text ?? "",
+      motion: isIntroMotion(row.intro_motion) ? row.intro_motion : "signal",
+    },
+    about: {
+      relato: row.about_relato ?? "",
+      colorDescripcion: row.color_descripcion ?? "",
+      formaDescripcion: row.forma_descripcion ?? "",
+    },
   };
 }
 
@@ -73,18 +88,16 @@ export async function getActiveSeason(): Promise<Season | null> {
   const seasons = await getSeasons();
   if (seasons.length === 0) return null;
 
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
+  const hoy = buenosAiresDay();
 
   const enCurso = seasons.find(
     (s) =>
-      hoy >= new Date(`${s.fechaInicio}T00:00:00`) &&
-      hoy <= new Date(`${s.fechaFin}T00:00:00`),
+      hoy >= s.fechaInicio && hoy <= s.fechaFin,
   );
   if (enCurso) return enCurso;
 
   const proxima = seasons.find(
-    (s) => new Date(`${s.fechaInicio}T00:00:00`) > hoy,
+    (s) => s.fechaInicio > hoy,
   );
   if (proxima) return proxima;
 

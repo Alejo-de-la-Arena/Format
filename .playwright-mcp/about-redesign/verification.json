@@ -1,0 +1,17 @@
+{
+  "page": "/about",
+  "viewports": [
+    1440,
+    390,
+    360
+  ],
+  "textPreserved": true,
+  "seasonSlugs": [
+    "origin"
+  ],
+  "paletteRemoved": true,
+  "build": "passed",
+  "buildWarning": "Existing Supabase Node.js API use in Edge middleware",
+  "consoleAfterFinalReload": [],
+  "reducedMotion": "Implemented in Motion hook and CSS; browser media emulation unavailable"
+}

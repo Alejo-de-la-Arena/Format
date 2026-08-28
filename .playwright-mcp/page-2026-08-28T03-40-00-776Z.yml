@@ -1,0 +1,116 @@
+- generic [active] [ref=f3e1]:
+  - navigation [ref=f3e2]:
+    - generic [ref=f3e3]:
+      - link "FORMAT — inicio" [ref=f3e4] [cursor=pointer]:
+        - /url: /
+        - img "FORMAT" [ref=f3e5]
+      - link "FORMAT en Instagram" [ref=f3e6] [cursor=pointer]:
+        - /url: https://www.instagram.com/format.lab_/
+        - generic [ref=f3e8]: Instagram
+      - button "Abrir menú" [ref=f3e13]
+  - banner [ref=f3e16]:
+    - generic [ref=f3e18]:
+      - heading [level=1] [ref=f3e20]:
+        - img "FORMAT" [ref=f3e21]
+      - heading "Made by sound Made by sound Made by sound Shaped by people Shaped by people Shaped by people" [level=2] [ref=f3e22]:
+        - generic [ref=f3e23]: Made by sound Made by sound Made by sound
+        - generic [ref=f3e24]: Shaped by people Shaped by people Shaped by people
+  - generic [ref=f3e26]:
+    - generic [ref=f3e27]:
+      - heading "Próximos eventos" [level=2] [ref=f3e28]
+      - link "Ver todos →" [ref=f3e29] [cursor=pointer]:
+        - /url: /fechas
+    - generic [ref=f3e31]:
+      - img "Flyer de Origin" [ref=f3e32]
+      - generic [ref=f3e33]:
+        - generic [ref=f3e34]: Vie 28 Ago
+        - generic [ref=f3e35]: Origin
+        - generic [ref=f3e36]: Av. Costanera Rafael Obligado 4801
+  - generic [ref=f3e38]:
+    - generic [ref=f3e39]:
+      - heading "Ediciones anteriores" [level=2] [ref=f3e40]
+      - link "Ver archivo →" [ref=f3e41] [cursor=pointer]:
+        - /url: /archivo
+    - generic [ref=f3e42]:
+      - link [ref=f3e43] [cursor=pointer]:
+        - /url: /eventos/origin?fecha=2026-08-21
+        - img "Flyer de Origin" [ref=f3e44]
+        - generic [ref=f3e45]:
+          - text: Ver detalles del evento
+          - generic [ref=f3e46]: →
+      - link [ref=f3e47] [cursor=pointer]:
+        - /url: /eventos/origin?fecha=2026-08-14
+        - img "Flyer de Origin" [ref=f3e48]
+        - generic [ref=f3e49]:
+          - text: Ver detalles del evento
+          - generic [ref=f3e50]: →
+      - link [ref=f3e51] [cursor=pointer]:
+        - /url: /eventos/origin?fecha=2026-08-07
+        - img "Flyer de Origin" [ref=f3e52]
+        - generic [ref=f3e53]:
+          - text: Ver detalles del evento
+          - generic [ref=f3e54]: →
+  - generic [ref=f3e56]:
+    - heading "FORMAT Experience" [level=2] [ref=f3e58]
+    - generic [ref=f3e59]:
+      - generic [ref=f3e60]:
+        - heading "Nuestro evento estrella del mes." [level=3] [ref=f3e61]: Nuestro eventoestrella del mes.
+        - paragraph [ref=f3e62]: "Una noche distinta: escenografía completa, cocktail propio y el mejor lineup. Una vez por mes en la terraza."
+        - link "Ver Experience" [ref=f3e63] [cursor=pointer]:
+          - /url: /experience
+      - button "Reproducir Origin" [ref=f3e65] [cursor=pointer]:
+        - generic [ref=f3e72]:
+          - generic [ref=f3e73]: Aftermovie
+          - generic [ref=f3e74]: Origin
+  - generic [ref=f3e76]:
+    - heading "FORMAT Lab" [level=2] [ref=f3e78]
+    - paragraph [ref=f3e79]: Los DJs de la Season, en corto.
+    - paragraph [ref=f3e80]: Todavía no hay clips de esta Season.
+  - generic [ref=f3e83]:
+    - generic [ref=f3e84]:
+      - heading "Qué es FORMAT" [level=2] [ref=f3e86]
+      - paragraph [ref=f3e87]: Cada mes la terraza cambia por completo.
+      - paragraph [ref=f3e88]: Música electrónica, escenografía completa y un cocktail para el opening de cada Season.
+    - generic [ref=f3e89]:
+      - generic [ref=f3e90]:
+        - generic [ref=f3e91]: 001 Origin
+        - generic [ref=f3e99]:
+          - generic [ref=f3e100]: Próximamente
+          - generic [ref=f3e106]: 002 Ascent
+      - paragraph [ref=f3e113]: "Seasons de FORMAT: 001 Origin, después 002 Ascent, y más por anunciar."
+  - contentinfo [ref=f3e114]:
+    - generic [ref=f3e116]:
+      - generic [ref=f3e117]:
+        - generic [ref=f3e118]:
+          - generic [ref=f3e119]: Dónde
+          - generic [ref=f3e120]: Av. Costanera Rafael Obligado 4801
+          - generic [ref=f3e121]: Buenos Aires
+        - generic [ref=f3e122]:
+          - generic [ref=f3e123]: Explorar
+          - generic [ref=f3e124]:
+            - link "Eventos" [ref=f3e125] [cursor=pointer]:
+              - /url: /#proximos
+            - link "Ediciones" [ref=f3e126] [cursor=pointer]:
+              - /url: /#archivo
+            - link "Lab" [ref=f3e127] [cursor=pointer]:
+              - /url: /#lab
+        - generic [ref=f3e128]:
+          - generic [ref=f3e129]: Seguinos
+          - generic [ref=f3e130]:
+            - link "Instagram" [ref=f3e131] [cursor=pointer]:
+              - /url: https://www.instagram.com/format.lab_/
+              - text: Instagram
+              - generic [ref=f3e132]: ↗
+            - link "SoundCloud" [ref=f3e133] [cursor=pointer]:
+              - /url: https://soundcloud.com
+              - text: SoundCloud
+              - generic [ref=f3e134]: ↗
+            - link "YouTube" [ref=f3e135] [cursor=pointer]:
+              - /url: https://www.youtube.com/@Format-lab
+              - text: YouTube
+              - generic [ref=f3e136]: ↗
+        - generic [ref=f3e137]:
+          - generic [ref=f3e138]: Contacto
+          - link "Bookings" [ref=f3e139] [cursor=pointer]:
+            - /url: mailto:bookings@format.com
+      - img "FORMAT" [ref=f3e141]

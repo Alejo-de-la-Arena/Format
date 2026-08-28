@@ -5,6 +5,8 @@ import type { Season } from "@/lib/types";
 import { getSeasonColors } from "@/lib/season-colors";
 import HeroBackground from "@/components/HeroBackground";
 import GlitchText from "@/components/GlitchText";
+import { useHomeMotion } from "@/components/home/HomeMotion";
+import HomeReveal from "@/components/home/HomeReveal";
 
 /**
  * Hero: fondo halftone/SDF animado (ver HeroBackground), el wordmark FORMAT
@@ -13,13 +15,14 @@ import GlitchText from "@/components/GlitchText";
  */
 export default function Hero({ season }: { season: Season }) {
   const [accent] = getSeasonColors(season);
+  const { introOpen, ready } = useHomeMotion();
 
   return (
-    <header className="relative flex h-dvh items-center justify-center overflow-hidden border-b border-line bg-paper text-center md:h-auto md:min-h-[clamp(360px,58vh,620px)] md:items-end md:justify-start md:text-left">
-      <HeroBackground forma={season.forma} accent={accent} />
+    <header className="relative flex h-[100svh] items-center justify-center overflow-hidden border-b border-line bg-paper text-center md:h-auto md:min-h-[clamp(360px,58vh,620px)] md:items-end md:justify-start md:text-left">
+      <HeroBackground forma={season.forma} accent={accent} paused={introOpen || !ready} />
 
       <div className="relative z-[2] mx-auto w-full max-w-[1400px] px-[clamp(18px,4vw,48px)] py-[clamp(28px,4vw,52px)] md:pb-[clamp(28px,4vw,52px)] md:pt-0">
-        <div
+        <HomeReveal><div
           className="relative inline-block"
           style={{ transform: "rotate(-1.5deg)" }}
         >
@@ -29,20 +32,20 @@ export default function Hero({ season }: { season: Season }) {
             <Image
               src="/logos/logo-format-horizontal.svg"
               alt="FORMAT"
-              width={256}
-              height={58}
+              width={1812}
+              height={662}
               priority
               unoptimized
               className="h-[clamp(115px,11.5vw,140px)] w-auto"
             />
           </h1>
-        </div>
+        </div></HomeReveal>
 
         <h2 className="flex flex-col items-center gap-0.5 font-body text-[clamp(20px,6vw,42px)] font-semibold uppercase tracking-[0.08em] text-ink md:mt-5 md:items-start">
-          <GlitchText accent={accent} speed={1.8}>
+          <GlitchText accent={accent} speed={1.8} enableOnHover>
             Made by sound
           </GlitchText>
-          <GlitchText accent={accent} speed={1.8}>
+          <GlitchText accent={accent} speed={1.8} enableOnHover>
             Shaped by people
           </GlitchText>
         </h2>

@@ -10,6 +10,8 @@ export type FechaFormState =
 function revalidateSite(slug: string) {
   revalidatePath("/");
   revalidatePath("/fechas");
+  revalidatePath("/archivo");
+  revalidatePath("/about");
   revalidatePath("/experience");
   revalidatePath(`/eventos/${slug}`);
   revalidatePath("/admin");

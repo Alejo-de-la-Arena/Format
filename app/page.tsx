@@ -8,8 +8,9 @@ import ArchiveCard from "@/components/ArchiveCard";
 import ShapeSticker from "@/components/ShapeSticker";
 import WhatIsFormat from "@/components/WhatIsFormat";
 import VideoPlayer from "@/components/VideoPlayer";
+import HomeReveal from "@/components/home/HomeReveal";
+import { getIntroSeasons } from "@/lib/season-intro";
 import {
-  getFechasProximas,
   getFechasProximasConFlyer,
   getFechasPasadas,
   getProximaFechaEspecial,
@@ -51,9 +52,8 @@ function experienceCopy(seasonNombre?: string, headliner?: string, cocktail?: st
 }
 
 export default async function Home() {
-  const [proximos, proximosConFlyerAll, pasadosAll, seasons, activeSeason, proximaExperience] =
+  const [proximosConFlyerAll, pasadosAll, seasons, activeSeason, proximaExperience] =
     await Promise.all([
-      getFechasProximas(),
       getFechasProximasConFlyer(),
       getFechasPasadas(),
       getSeasons(),
@@ -62,12 +62,10 @@ export default async function Home() {
     ]);
 
   const seasonBySlug = new Map(seasons.map((s) => [s.slug, s]));
+  const { current: startedSeason } = getIntroSeasons(seasons);
   const proximosConFlyer = proximosConFlyerAll.slice(0, 6);
   const pasados = pasadosAll.slice(0, 6);
-  const destacado = proximos[0];
-  const heroSeason = destacado
-    ? (seasonBySlug.get(destacado.seasonSlug) ?? activeSeason)
-    : activeSeason;
+  const heroSeason = startedSeason ?? activeSeason;
   const proximaExperienceSeason = proximaExperience
     ? seasonBySlug.get(proximaExperience.seasonSlug)
     : undefined;
@@ -108,10 +106,10 @@ export default async function Home() {
 
       {/* PRÓXIMOS VIERNES — slider de posters, sólo fechas con flyer cargado */}
       {proximosConFlyer.length > 0 && (
-        <section id="proximos" className={sectionPad}>
+        <section id="proximos" className={`bg-ink text-white ${sectionPad}`}>
           <div className={wrap}>
-            <SectionTitle title="Próximos eventos" moreHref="/fechas" />
-            <div className="slider">
+            <HomeReveal><SectionTitle title="Próximos eventos" moreHref="/fechas" dark /></HomeReveal>
+            <HomeReveal className="slider" staggered>
               {proximosConFlyer.map((f) => {
                 const season = seasonBySlug.get(f.seasonSlug);
                 if (!season) return null;
@@ -120,10 +118,11 @@ export default async function Home() {
                     key={`${f.seasonSlug}-${f.fecha}`}
                     fecha={f}
                     season={season}
+                    dark
                   />
                 );
               })}
-            </div>
+            </HomeReveal>
           </div>
         </section>
       )}
@@ -131,13 +130,13 @@ export default async function Home() {
       {/* EDICIONES ANTERIORES — slider con fotos de la puesta en escena */}
       <section id="archivo" className={sectionPad}>
         <div className={wrap}>
-          <SectionTitle
+          <HomeReveal><SectionTitle
             title="Ediciones anteriores"
             moreHref="/archivo"
-            moreLabel="Ver archivo →"
-          />
+            moreLabel="Ver calendario →"
+          /></HomeReveal>
           {pasados.length > 0 ? (
-            <div className="slider">
+            <HomeReveal className="slider" staggered>
               {pasados.map((f) => {
                 const season = seasonBySlug.get(f.seasonSlug);
                 if (!season) return null;
@@ -149,7 +148,7 @@ export default async function Home() {
                   />
                 );
               })}
-            </div>
+            </HomeReveal>
           ) : (
             <p className="text-sm text-muted">
               {/* Todavía no hay ediciones anteriores. */}
@@ -162,9 +161,9 @@ export default async function Home() {
       {/* FORMAT EXPERIENCE — banda ink, copy corto, link a página propia */}
       <section id="experience" className={`bg-ink text-paper ${sectionPad}`}>
         <div className={wrap}>
-          <SectionTitle title="FORMAT Experience" dark />
+          <HomeReveal><SectionTitle title="FORMAT Experience" dark /></HomeReveal>
           <div className="grid items-center gap-[clamp(24px,4vw,60px)] md:grid-cols-[1.1fr_0.9fr]">
-            <div>
+            <HomeReveal staggered>
               <h3 className="m-0 text-[clamp(30px,4.6vw,56px)] font-extrabold leading-none tracking-[-0.025em]">
                 Nuestro evento
                 <br />
@@ -175,11 +174,11 @@ export default async function Home() {
               </p>
               <Link
                 href="/experience"
-                className="label-mono mt-6 inline-flex items-center gap-1.5 bg-accent-1 px-[22px] py-3.5 text-paper transition-colors hover:bg-paper hover:text-ink"
+                className="label-mono mt-6 inline-flex items-center gap-1.5 bg-accent-1 px-[22px] py-3.5 text-paper motion-safe:transition-transform motion-safe:hover:-translate-y-1 motion-safe:hover:-rotate-1 hover:bg-paper hover:text-ink"
               >
                 Ver Experience
               </Link>
-            </div>
+            </HomeReveal>
             {/* AFTERMOVIE — vertical 9:16. Ancho completo de la columna en
                 mobile; en desktop se acota por ALTO (no por ancho) para que
                 el 9:16 no estire la banda entera. */}
@@ -231,12 +230,12 @@ export default async function Home() {
           se monta al apretar play. */}
       <section id="lab" className={sectionPad}>
         <div className={wrap}>
-          <SectionTitle title="FORMAT Lab" />
+          <HomeReveal><SectionTitle title="FORMAT Lab" /></HomeReveal>
           <p className="-mt-4 mb-6 text-[15px] text-muted">
             Los DJs de la Season, en corto.
           </p>
           {labSeason && labColors && labClips.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            <HomeReveal className="grid gap-4 sm:grid-cols-2 md:grid-cols-3" staggered>
               {labClips.map((clip, i) => (
                 <VideoPlayer
                   // `orden` no tiene unique en la base: se combina con la
@@ -249,7 +248,7 @@ export default async function Home() {
                   accent={labColors[0]}
                 />
               ))}
-            </div>
+            </HomeReveal>
           ) : (
             <p className="text-sm text-muted">
               Todavía no hay clips de esta Season.
@@ -258,17 +257,15 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* QUÉ ES FORMAT — compacta, al final. Revela sólo la Season que
-          sigue a la activa; los colores de la pieza son locales a esta
-          sección y no tocan el theming del resto de la home. */}
+      {/* Identidad iniciada y el único adelanto autorizado: Origin → Ascent. */}
       <WhatIsFormat
         activa={
-          activeSeason
+          startedSeason
             ? {
-                numero: activeSeason.numero,
-                nombre: activeSeason.nombre,
-                forma: activeSeason.forma,
-                color: getSeasonColors(activeSeason)[0],
+                numero: startedSeason.numero,
+                nombre: startedSeason.nombre,
+                forma: startedSeason.forma,
+                color: getSeasonColors(startedSeason)[0],
               }
             : null
         }

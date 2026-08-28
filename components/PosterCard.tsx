@@ -14,9 +14,11 @@ const VENUE = "Av. Costanera Rafael Obligado 4801";
 export default function PosterCard({
   fecha,
   season,
+  dark = false,
 }: {
   fecha: Fecha;
   season: Season;
+  dark?: boolean;
 }) {
   const colors = getSeasonColors(season);
 
@@ -30,11 +32,11 @@ export default function PosterCard({
         label="Flyer — próximamente"
       />
       <div className="flex flex-col gap-1 pt-3">
-        <span className="label-mono" style={{ color: colors[0] }}>
+        <span className="label-mono" style={{ color: dark ? "#FFFFFF" : colors[0] }}>
           {fechaCorta(fecha.fecha)}
         </span>
         <span className="text-lg font-bold tracking-tight">{season.nombre}</span>
-        <span className="text-[13px] text-muted">{VENUE}</span>
+        <span className={`text-[13px] ${dark ? "text-white/70" : "text-muted"}`}>{VENUE}</span>
       </div>
     </div>
   );

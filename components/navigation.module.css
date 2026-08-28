@@ -1,0 +1,19 @@
+.header { border-bottom: 1px solid var(--color-ink); box-shadow: 0 3px 0 color-mix(in srgb,var(--color-ink) 8%,transparent); }
+.bar { gap: clamp(16px,3vw,40px); }
+.instagram { display: inline-flex; align-items: center; gap: 10px; min-height: 42px; flex-shrink: 0; padding: 4px 12px 4px 4px; border: 1px solid var(--color-ink); border-radius: 24px; color: var(--color-ink); font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; background: transparent; text-decoration: none; }
+.instagramIcon { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--color-ink); border-radius: 50%; }
+.instagramIcon svg { width: 18px; height: 18px; }
+.external { font-size: 17px; line-height: 1; transition: transform .2s; }
+.instagram:hover .external { transform: translate(2px,-2px); }
+.instagram:hover .instagramIcon { background: var(--color-ink); color: var(--color-paper); }
+.instagram:focus-visible { outline: 2px solid var(--color-ink); outline-offset: 4px; }
+.menuButton { display: grid; place-content: center; gap: 6px; width: 44px; height: 44px; border: 1px solid color-mix(in srgb,var(--color-ink) 25%,transparent); }
+.menuButton span { height: 1px; background: var(--color-ink); width: 21px; }
+.menuButton span:last-child { width: 14px; justify-self: end; }
+.menuArt { position: absolute; inset: 0; pointer-events: none; color: var(--nav-accent); opacity: .14; overflow: hidden; }
+.menuArt svg { position: absolute; width: 310px; height: 310px; right: -135px; top: 115px; transform: rotate(-16deg); }
+.menuArt svg:nth-child(2) { transform: rotate(2deg) scale(.82); }
+.menuArt svg:nth-child(3) { top: auto; bottom: 50px; right: auto; left: -125px; transform: rotate(8deg) scale(.66); opacity: .45; }
+@media (min-width: 768px) { .menuButton { display: none; } }
+@media (max-width: 390px) { .instagram { gap: 7px; padding-right: 10px; font-size: 9px; } }
+@media (prefers-reduced-motion: reduce) { .external { transition: none; } }

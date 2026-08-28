@@ -60,6 +60,14 @@
   outline-offset: 3px;
 }
 
+/* Scroll suave para la navegación por anclas (menú → secciones de la home).
+   El offset evita que la barra sticky (60px) tape el título de la sección.
+   `prefers-reduced-motion` lo devuelve a `auto` más abajo. */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 76px;
+}
+
 /* Etiquetas: fechas, kickers, datos. Antes monoespaciadas — el sitio usa
    sólo Inter, así que el look "dato" sale de mayúsculas + tracking + peso
    alto, no de una fuente mono. */
@@ -72,23 +80,35 @@
 }
 
 @layer components {
-  /* Slider horizontal con scroll-snap */
+  /* Slider horizontal con scroll-snap. `proximity` (no `mandatory`) para que
+     el snap no pelee con el scroll vertical de la página en touch;
+     `overscroll-behavior-x: contain` evita que el overscroll horizontal
+     rebote al scroll del documento. */
   .slider {
     display: flex;
     gap: 16px;
     overflow-x: auto;
-    scroll-snap-type: x mandatory;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
     padding-bottom: 14px;
     scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--color-ink) 30%, transparent)
+    /* Barra en el acento de la Season activa (--accent-1), no el gris por
+       defecto. Firefox: sólo `scrollbar-color`. */
+    scrollbar-color: color-mix(in srgb, var(--accent-1) 60%, transparent)
       transparent;
   }
   .slider::-webkit-scrollbar {
-    height: 5px;
+    height: 6px;
+  }
+  .slider::-webkit-scrollbar-track {
+    background: transparent;
   }
   .slider::-webkit-scrollbar-thumb {
-    background: color-mix(in srgb, var(--color-ink) 30%, transparent);
+    background: color-mix(in srgb, var(--accent-1) 55%, transparent);
     border-radius: 9px;
+  }
+  .slider:hover::-webkit-scrollbar-thumb {
+    background: var(--accent-1);
   }
   .slider > * {
     scroll-snap-align: start;
@@ -218,6 +238,11 @@
 }
 .print-reg {
   animation: print-registration-a 10s ease-in-out infinite;
+}
+/* Pausada mientras el marco no está en viewport (ver InViewportPause). */
+[data-inview="false"] .print-reg,
+[data-inview="false"] .print-reg-alt {
+  animation-play-state: paused;
 }
 .print-reg-alt {
   animation: print-registration-b 12s ease-in-out infinite;

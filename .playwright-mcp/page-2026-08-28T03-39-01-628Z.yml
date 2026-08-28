@@ -1,0 +1,58 @@
+- generic [active] [ref=f2e1]:
+  - navigation [ref=f2e2]:
+    - generic [ref=f2e3]:
+      - link "FORMAT — inicio" [ref=f2e4] [cursor=pointer]:
+        - /url: /
+        - img "FORMAT" [ref=f2e5]
+      - link "FORMAT en Instagram" [ref=f2e6] [cursor=pointer]:
+        - /url: https://www.instagram.com/format.lab_/
+        - generic [ref=f2e8]: Instagram
+      - button "Abrir menú" [ref=f2e13]
+  - main [ref=f2e16]:
+    - heading "Próximas Fechas" [level=1] [ref=f2e18]
+    - generic [ref=f2e19]:
+      - paragraph [ref=f2e20]: Aún no hay más fechas anunciadas.
+      - link "Seguí las novedades en Instagram" [ref=f2e21] [cursor=pointer]:
+        - /url: https://www.instagram.com/format.lab_/
+        - text: Seguí las novedades en Instagram
+        - generic [ref=f2e22]: ↗
+      - group [ref=f2e23]:
+        - generic "Ver fechas anteriores" [ref=f2e24] [cursor=pointer]:
+          - text: Ver fechas anteriores
+          - generic [ref=f2e25]: +
+  - contentinfo [ref=f2e26]:
+    - generic [ref=f2e28]:
+      - generic [ref=f2e29]:
+        - generic [ref=f2e30]:
+          - generic [ref=f2e31]: Dónde
+          - generic [ref=f2e32]: Av. Costanera Rafael Obligado 4801
+          - generic [ref=f2e33]: Buenos Aires
+        - generic [ref=f2e34]:
+          - generic [ref=f2e35]: Explorar
+          - generic [ref=f2e36]:
+            - link "Eventos" [ref=f2e37] [cursor=pointer]:
+              - /url: /#proximos
+            - link "Ediciones" [ref=f2e38] [cursor=pointer]:
+              - /url: /#archivo
+            - link "Lab" [ref=f2e39] [cursor=pointer]:
+              - /url: /#lab
+        - generic [ref=f2e40]:
+          - generic [ref=f2e41]: Seguinos
+          - generic [ref=f2e42]:
+            - link "Instagram" [ref=f2e43] [cursor=pointer]:
+              - /url: https://www.instagram.com/format.lab_/
+              - text: Instagram
+              - generic [ref=f2e44]: ↗
+            - link "SoundCloud" [ref=f2e45] [cursor=pointer]:
+              - /url: https://soundcloud.com
+              - text: SoundCloud
+              - generic [ref=f2e46]: ↗
+            - link "YouTube" [ref=f2e47] [cursor=pointer]:
+              - /url: https://www.youtube.com/@Format-lab
+              - text: YouTube
+              - generic [ref=f2e48]: ↗
+        - generic [ref=f2e49]:
+          - generic [ref=f2e50]: Contacto
+          - link "Bookings" [ref=f2e51] [cursor=pointer]:
+            - /url: mailto:bookings@format.com
+      - img "FORMAT" [ref=f2e53]

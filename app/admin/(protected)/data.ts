@@ -1,5 +1,6 @@
 import type { Forma } from "@/lib/types";
 import { createClient } from "@/lib/supabase/server";
+import { isIntroMotion, type IntroMotion } from "@/lib/season-intro";
 
 /**
  * Shapes de datos para /admin — incluyen `id` (uuid de Supabase) porque acá
@@ -17,6 +18,12 @@ export interface AdminSeason {
   fechaInicio: string;
   fechaFin: string;
   aftermovieUrl: string | null;
+  aboutRelato: string;
+  colorDescripcion: string;
+  formaDescripcion: string;
+  introText: string;
+  introMotion: IntroMotion;
+  introAvailable: boolean;
   labClips: AdminLabClip[];
 }
 
@@ -145,6 +152,12 @@ export async function getAdminSeasons(): Promise<AdminSeasonWithFechas[]> {
     fechaInicio: row.fecha_inicio,
     fechaFin: row.fecha_fin,
     aftermovieUrl: row.aftermovie_url,
+    aboutRelato: row.about_relato ?? "",
+    colorDescripcion: row.color_descripcion ?? "",
+    formaDescripcion: row.forma_descripcion ?? "",
+    introText: row.intro_text ?? "",
+    introMotion: isIntroMotion(row.intro_motion) ? row.intro_motion : "signal",
+    introAvailable: "intro_text" in row && "intro_motion" in row,
     labClips: (row.season_lab_clips ?? [])
       .sort((a: { orden: number }, b: { orden: number }) => a.orden - b.orden)
       .map((c: { id: string; orden: number; titulo: string; video_url: string }) => ({

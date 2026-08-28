@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import InViewportPause from "@/components/InViewportPause";
 
 /**
  * Marco de "pliego de imprenta en preparación" para el hero de
@@ -64,7 +65,10 @@ export default function PrintSheetFrame({
 }) {
   return (
     <div className="relative isolate pb-10 pt-9">
-      <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
+      <InViewportPause
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-0"
+      >
         {/* Marcas de registro — 4 esquinas, apenas fuera de la caja. */}
         <RegistrationMark className="print-reg absolute -left-3 -top-3 opacity-30" />
         <RegistrationMark className="print-reg-alt absolute -right-3 -top-3 opacity-30" />
@@ -102,7 +106,7 @@ export default function PrintSheetFrame({
             {pliego}
           </span>
         )}
-      </div>
+      </InViewportPause>
 
       <div className="relative z-10">{children}</div>
     </div>

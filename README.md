@@ -51,6 +51,19 @@ Un viernes individual dentro de una Season.
 
 `{ titulo: string; url: string; orden: number }` — un clip de FORMAT Lab, típicamente uno por DJ de la Season. `titulo` es el nombre del DJ.
 
+## Bienvenida por Season
+
+Al comenzar una visita a cualquier página pública se presenta una introducción de 3,8 segundos: la señal se ensambla, toma el color de la Season y da paso a la página. No hay botón de saltar; cierra automáticamente, admite Escape y se puede repetir desde el hero. No representa una carga ni retrasa los datos de la página.
+
+- `seasons.intro_text`: frase opcional (hasta 160 caracteres; el panel admite 3 líneas). Vacío usa el nombre real de la Season; Origin usa «WELCOME TO / THE ORIGIN.».
+- `seasons.intro_motion`: `signal` (ensamblado), `ascend` (ascenso) o `expand` (expansión). Son movimientos genéricos, sin nombres ni identidades futuras en el cliente.
+- Aplicar manualmente `supabase/migrations/0010_season_intro.sql` antes de editar estos campos en `/admin`. Son columnas de `seasons` porque la relación y el ciclo de vida son 1:1; conservan las políticas RLS existentes. No se duplica forma, color, nombre ni cocktail. Antes de migrar, la lectura pública usa defaults y el panel mantiene operativas las otras ediciones.
+- La intro selecciona la última Season cuyo inicio ya ocurrió en `America/Argentina/Buenos_Aires`, y a lo sumo la anterior. No anticipa la próxima. La home conserva la política existente para anunciar fechas futuras reales; la bienvenida tiene su propia selección por inicio.
+- Se recuerda por sesión de pestaña con `format:visit-intro:v2:<slug>:<fechaInicio>` en sessionStorage (sin datos personales). Si el almacenamiento está bloqueado, se recuerda en memoria. No se repite al navegar o recargar en esa sesión; una nueva sesión independiente vuelve a mostrarla. No aparece en admin ni con movimiento reducido. La revalidación sigue siendo de 300 segundos.
+- Única excepción de adelanto autorizada: «Qué es FORMAT» muestra Origin → Ascent, con el triángulo violeta invertido. Vive sólo en ese componente de la home, no se usa en intro, navegación, calendario, fechas ni About. No se importa el catálogo de Seasons futuras.
+- Hero: ocho variantes de la misma forma, cambio cada 2,8 segundos. Un plano WebGL; DPR limitado a 1 en mobile / 1,5 desktop; reloj pausado fuera del viewport, con la pestaña oculta o la intro abierta. Sin muestreo de scroll ni lecturas de layout por frame.
+- Pruebas de selección/fecha/persistencia: `node --test tests/season-intro.test.mjs` (usa TypeScript ya instalado).
+
 ## Video
 
 FORMAT **no aloja video propio**: Supabase Storage no hace transcoding ni streaming adaptativo, y pegar una URL es más rápido que esperar un upload. El aftermovie y los clips de Lab viven en YouTube o Vimeo, y en `/admin` se carga sólo la URL.

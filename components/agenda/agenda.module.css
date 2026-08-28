@@ -1,0 +1,109 @@
+.page { padding: clamp(28px,5vw,64px) clamp(18px,4vw,48px) clamp(48px,7vw,100px); max-width: 1400px; margin: auto; }
+.masthead { margin-bottom: clamp(36px,5vw,64px); }
+.mastheadRail, .mastheadFoot { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; }
+.mastheadRail { border-top: 1px solid var(--color-ink); padding: 14px 0; }
+.mastheadRail a { display: inline-flex; align-items: center; gap: 12px; min-height: 32px; }
+.mastheadRail a span { font-size: 22px; }
+.mastheadBody { display: grid; grid-template-columns: minmax(0,1fr) 210px; align-items: end; gap: 20px; padding: 24px 0 36px; }
+.masthead h1 { display: flex; flex-wrap: wrap; align-items: center; gap: .14em .24em; margin: 0; font-size: clamp(48px,7vw,100px); font-weight: 800; line-height: .92; letter-spacing: -.07em; overflow-wrap: anywhere; }
+.masthead h1 > span { display: table; padding: .03em .13em .1em; background: var(--color-ink); color: var(--color-paper); transform: rotate(-2deg); }
+.mastheadAside { display: grid; justify-items: end; gap: 18px; }
+.mastheadAside svg { width: 95px; height: 95px; color: var(--color-accent-1); transform: rotate(8deg); }
+.mastheadAside p { max-width: 21ch; margin: 0; font-size: 13px; line-height: 1.6; }
+.mastheadFoot { border-top: 1px solid var(--color-ink); border-bottom: 1px solid var(--color-ink); padding: 10px 0; }
+.mastheadFoot > span:last-child { letter-spacing: .5em; color: var(--color-accent-1); }
+.feature { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.1fr); gap: clamp(28px,6vw,90px); align-items: center; padding: 12px 0 52px; }
+.featureImage { width: min(100%,380px); justify-self: center; transform: rotate(-1deg); }
+.flyer { display: block; width: 100%; height: auto; }
+.flyerMissing { display: grid; align-content: center; justify-items: center; gap: 20px; padding: 40px 12px; min-height: 180px; border: 1px dashed currentColor; color: var(--date-accent,var(--color-accent-1)); }
+.flyerMissing svg { width: 65%; max-width: 140px; }
+.flyerMissing span { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--color-ink); }
+.featureCopy { position: relative; padding: clamp(24px,4vw,48px); background: var(--color-ink); color: var(--color-paper-2); }
+.featureCopy::before { content: ""; position: absolute; top: 20px; left: -8px; bottom: 20px; width: 8px; background: var(--date-accent,var(--color-accent-1)); }
+.eyebrow { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.eyebrow::before { content: ""; width: 7px; height: 7px; background: currentColor; }
+.dateDisplay { display: flex; align-items: end; gap: 18px; padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px dashed #c8d0d255; }
+.dateDisplay strong { font-size: clamp(90px,12vw,160px); line-height: .78; font-weight: 800; letter-spacing: -.09em; }
+.dateDisplay > span { display: grid; gap: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .12em; }
+.featureCopy h2 { margin: 0 0 12px; font-size: clamp(32px,4.4vw,60px); font-weight: 800; letter-spacing: -.05em; line-height: 1; overflow-wrap: anywhere; }
+.featureMeta { display: grid; gap: 4px; font-size: 12px; line-height: 1.65; color: #dde3e4bb; }
+.lineup { list-style: none; display: flex; flex-wrap: wrap; gap: 5px 14px; padding: 18px 0 0; margin: 18px 0 0; border-top: 1px solid #c8d0d233; font-size: 14px; font-weight: 600; }
+.cta { display: flex; justify-content: space-between; align-items: center; gap: 24px; min-height: 48px; margin-top: 26px; padding: 12px 0; border-top: 1px solid currentColor; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.cta span { font-size: 24px; transition: transform .2s; }
+.cta:hover span { transform: translateX(4px); }
+.sectionHeading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; border-bottom: 2px solid var(--color-ink); padding: 16px 0; margin-top: 24px; }
+.sectionHeading h2 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -.04em; }
+.sectionHeading > span { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.dateList { list-style: none; padding: 0; margin: 0; }
+.dateRow { position: relative; display: grid; grid-template-columns: 88px minmax(0,1fr) 70px 22px; gap: 24px; align-items: center; padding: 24px 0; border-bottom: 1px solid color-mix(in srgb,var(--color-ink) 25%,transparent); }
+.rowDate { display: grid; gap: 6px; }
+.rowDate strong { font-size: 52px; line-height: .9; letter-spacing: -.06em; font-weight: 800; }
+.rowDate span { font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.rowName { display: grid; gap: 8px; }
+.rowName strong { font-size: 26px; line-height: 1; letter-spacing: -.04em; overflow-wrap: anywhere; }
+.rowName small { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; }
+.rowArrow { font-size: 22px; transition: transform .2s; }
+.dateRow:hover .rowArrow { transform: translate(3px,-3px); }
+.rowImage { transform: rotate(2deg); }
+.rowName::before { content: ""; height: 3px; width: 32px; background: var(--date-accent,var(--color-accent-1)); }
+.empty { position: relative; isolation: isolate; padding: clamp(30px,5vw,64px); background: var(--color-ink); color: var(--color-paper-2); }
+.empty h2 { max-width: 19ch; margin: 28px 0; font-size: clamp(28px,4.5vw,58px); font-weight: 800; letter-spacing: -.05em; line-height: 1.05; }
+.empty p { max-width: 42ch; font-size: 13px; line-height: 1.6; }
+.emptyLink { display: inline-flex; gap: 16px; align-items: center; min-height: 44px; margin-top: 16px; padding-bottom: 8px; border-bottom: 1px solid currentColor; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.past { margin-top: 40px; }
+.past summary { display: flex; align-items: center; justify-content: space-between; gap: 20px; cursor: pointer; min-height: 68px; padding: 18px 0; border-top: 2px solid var(--color-ink); border-bottom: 1px solid var(--color-ink); font-size: clamp(17px,2.4vw,26px); font-weight: 800; letter-spacing: -.03em; list-style: none; }
+.past summary::-webkit-details-marker { display: none; }
+.past summary span { font-size: 32px; font-weight: 400; transition: transform .2s; }
+.past[open] summary span { transform: rotate(45deg); }
+.bottomRail { margin-top: 48px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; padding-top: 24px; border-top: 1px solid var(--color-ink); font-size: 12px; }
+.month { margin-bottom: 64px; }
+.monthHeader { display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: center; border-bottom: 1px solid var(--color-ink); padding-bottom: 20px; margin-bottom: 28px; }
+.monthNumber { display: grid; place-items: center; min-width: 72px; height: 72px; background: var(--color-ink); color: var(--color-paper); font-size: 38px; font-weight: 800; letter-spacing: -.07em; transform: rotate(-3deg); }
+.monthHeader h2 { margin: 0; font-size: clamp(30px,4vw,52px); font-weight: 800; letter-spacing: -.05em; line-height: 1; }
+.monthHeader p { margin: 6px 0 0; font-size: 11px; letter-spacing: .12em; }
+.monthCount { font-size: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: .1em; }
+.calendarGrid { display: grid; grid-template-columns: repeat(var(--friday-count,4),minmax(0,1fr)); gap: clamp(16px,2.5vw,36px); list-style: none; padding: 0; margin: 0; }
+.calendarCard { display: flex; flex-direction: column; height: 100%; min-width: 0; padding: 16px 0 12px; border-top: 3px solid var(--date-accent); border-bottom: 1px solid var(--color-ink); transition: transform .25s; }
+.calendarCard:hover { transform: translateY(-4px); }
+.calendarDate { display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px; }
+.calendarDate strong { font-size: clamp(48px,6vw,82px); font-weight: 800; letter-spacing: -.07em; line-height: .85; }
+.calendarDate span { font-size: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: .08em; writing-mode: vertical-rl; }
+.calendarImage { width: min(100%,175px); margin: auto; padding: 8px 0 24px; }
+.calendarName { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: clamp(16px,2.2vw,26px); font-weight: 800; letter-spacing: -.04em; overflow-wrap: anywhere; }
+.calendarName span { font-size: 23px; }
+.calendarType { display: block; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-top: 5px; }
+.noEvent { border-top: 1px dashed var(--color-ink); border-bottom: 1px dashed var(--color-ink); padding: 16px 0; opacity: .35; min-height: 190px; }
+.noEvent p { margin-top: 24px; font-size: 11px; }
+@media (max-width: 900px) {
+  .calendarGrid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .feature { gap: 36px; }
+}
+@media (max-width: 600px) {
+  .mastheadBody { grid-template-columns: 1fr; padding: 24px 0 28px; gap: 28px; }
+  .mastheadAside { grid-template-columns: 1fr auto; align-items: center; justify-items: start; }
+  .mastheadAside svg { width: 50px; height: 50px; order: 2; }
+  .mastheadAside p { max-width: 29ch; font-size: 12px; }
+  .mastheadFoot { font-size: 8px; gap: 8px; }
+  .mastheadFoot > span:last-child { display: none; }
+  .mastheadRail { font-size: 9px; letter-spacing: .06em; }
+  .mastheadRail a { gap: 6px; }
+  .feature { grid-template-columns: minmax(0,1fr); padding: 0 0 32px; gap: 32px; }
+  .featureCopy { padding: 26px; }
+  .featureImage { max-width: 290px; }
+  .dateDisplay strong { font-size: 96px; }
+  .featureCopy h2 { font-size: 40px; }
+  .dateRow { grid-template-columns: 48px minmax(0,1fr) 50px 14px; gap: 14px; padding: 22px 0; }
+  .rowDate strong { font-size: 38px; }
+  .rowDate span { font-size: 8px; }
+  .rowName strong { font-size: 21px; }
+  .rowName small { font-size: 8px; letter-spacing: .06em; }
+  .rowArrow { font-size: 18px; }
+  .monthHeader { gap: 14px; margin-bottom: 24px; }
+  .monthNumber { min-width: 52px; height: 56px; font-size: 30px; }
+  .monthCount { font-size: 8px; max-width: 7ch; text-align: right; }
+  .calendarDate strong { font-size: 52px; }
+  .calendarImage { width: 88%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .calendarCard, .rowArrow, .cta span, .past summary span { transition: none; }
+}

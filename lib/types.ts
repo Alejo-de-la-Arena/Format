@@ -6,6 +6,7 @@
  */
 
 import type { StaticImageData } from "next/image";
+import type { IntroMotion } from "./season-intro";
 
 /** URL (Supabase Storage) o asset importado localmente. */
 export type ImageSrc = string | StaticImageData;
@@ -82,6 +83,25 @@ export interface Season {
   aftermovieUrl?: string;
   /** Clips de FORMAT Lab de esta Season, en orden. */
   labClips: LabClip[];
+  /**
+   * Contenido largo de identidad para /about, editable desde /admin. Todos
+   * los campos son texto libre con saltos de línea; `""` cuando todavía no
+   * se cargó. El trago no está acá: se lee de la fecha Experience de la
+   * Season (ver `Fecha.tragoAutor`).
+   */
+  about: SeasonAbout;
+  /** Optional until migration 0010 is applied; no duplicated identity data. */
+  intro?: { text: string; motion: IntroMotion };
+}
+
+/** Bloques de texto de /about para una Season (ver migración 0009). */
+export interface SeasonAbout {
+  /** El relato de la Season — más largo que `concepto`. */
+  relato: string;
+  /** Qué comunica el color característico. */
+  colorDescripcion: string;
+  /** Qué representa la forma de la Season. */
+  formaDescripcion: string;
 }
 
 /**
