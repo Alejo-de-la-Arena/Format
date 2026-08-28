@@ -133,7 +133,7 @@ export default async function Home() {
           <HomeReveal><SectionTitle
             title="Ediciones anteriores"
             moreHref="/archivo"
-            moreLabel="Ver calendario →"
+            moreLabel="Ver calendario"
           /></HomeReveal>
           {pasados.length > 0 ? (
             <HomeReveal className="slider" staggered>

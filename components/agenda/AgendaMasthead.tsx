@@ -7,7 +7,7 @@ export default function AgendaMasthead({ title, emphasis, label, note, href, lin
   title: string; emphasis?: string; label: string; note: string; href: string; link: string; forma?: Forma;
 }) {
   return <header className={styles.masthead}>
-    <div className={styles.mastheadRail}><span>FORMAT / {label}</span><Link href={href}>{link} <span aria-hidden>↗</span></Link></div>
+    <div className={styles.mastheadRail}><span>FORMAT / {label}</span><Link href={href}>{link}</Link></div>
     <div className={styles.mastheadBody}>
       <h1>{title}{emphasis && <> <span>{emphasis}</span></>}</h1>
       <div className={styles.mastheadAside}>

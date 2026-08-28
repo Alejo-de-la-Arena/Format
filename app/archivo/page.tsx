@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import Link from "next/link";
+import ActionIcon from "@/components/ActionIcon";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import HomeReveal from "@/components/home/HomeReveal";
@@ -54,7 +55,7 @@ export default async function ArchivoPage() {
               aria-label={`${season.nombre} — viernes ${Number(day)} de ${monthName} ${year}`}>
               <time dateTime={iso} className={styles.calendarDate}><strong>{day}</strong><span>Viernes</span></time>
               <div className={styles.calendarImage}><AgendaFlyer fecha={f} season={season} /></div>
-              <span className={styles.calendarName}>{season.nombre}<span aria-hidden>↗</span></span>
+              <span className={styles.calendarName}>{season.nombre}</span>
               <span className={styles.calendarType}>{f.especial ? "Opening / Experience" : "Residence"}</span>
             </Link></li>;
           })}
@@ -63,8 +64,8 @@ export default async function ArchivoPage() {
     }) : <section className={styles.empty}>
       <p className={styles.eyebrow}>El archivo empieza con vos.</p>
       <h2>Todavía no hay ediciones anteriores.</h2>
-      <Link href="/fechas" className={styles.emptyLink}>Ver las próximas fechas <span aria-hidden>↗</span></Link>
+      <Link href="/fechas" className={styles.emptyLink}>Ver las próximas fechas <ActionIcon /></Link>
     </section>}
-    <div className={styles.bottomRail}><Link href="/fechas">Nos vemos el próximo viernes <span aria-hidden>↗</span></Link><InstagramLink /></div>
+    <div className={styles.bottomRail}><Link href="/fechas">Nos vemos el próximo viernes</Link><InstagramLink /></div>
   </main><Footer /></>;
 }

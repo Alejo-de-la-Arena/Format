@@ -4,6 +4,7 @@ import { useEffect, useRef, type CSSProperties } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, type Variants } from "motion/react";
 import InstagramLink from "@/components/InstagramLink";
+import ActionIcon from "@/components/ActionIcon";
 import { getShapePath } from "@/components/shapePaths";
 import styles from "./navigation.module.css";
 import { EDGES } from "@/components/TapeBlock";
@@ -135,12 +136,6 @@ export default function MobileMenu({
                   className="group flex min-h-11 items-baseline justify-between gap-3 py-3 text-[clamp(24px,6.5vw,29px)] font-extrabold uppercase leading-none tracking-tight transition-colors hover:text-accent-1"
                 >
                   Inicio
-                  <span
-                    aria-hidden
-                    className="text-[0.5em] text-accent-1 transition-transform group-hover:translate-x-1"
-                  >
-                    ▸
-                  </span>
                 </Link>
               </motion.div>
 
@@ -178,12 +173,7 @@ export default function MobileMenu({
                     className="group flex min-h-11 items-baseline justify-between gap-3 py-3 text-[clamp(20px,5.5vw,25px)] font-extrabold uppercase leading-tight tracking-tight transition-colors hover:text-accent-1"
                   >
                     {p.label}
-                    <span
-                      aria-hidden
-                      className="text-[0.55em] text-accent-1 transition-transform group-hover:translate-x-1"
-                    >
-                      →
-                    </span>
+                    <ActionIcon kind="chevron" className="text-[0.6em] text-ink/60 motion-safe:transition-transform motion-safe:group-hover:translate-x-1" />
                   </Link>
                   {i < PAGES.length - 1 && <MenuRule thin />}
                 </motion.div>

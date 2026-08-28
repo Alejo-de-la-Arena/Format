@@ -2,8 +2,7 @@
 .masthead { margin-bottom: clamp(36px,5vw,64px); }
 .mastheadRail, .mastheadFoot { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; }
 .mastheadRail { border-top: 1px solid var(--color-ink); padding: 14px 0; }
-.mastheadRail a { display: inline-flex; align-items: center; gap: 12px; min-height: 32px; }
-.mastheadRail a span { font-size: 22px; }
+.mastheadRail a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1px; }
 .mastheadBody { display: grid; grid-template-columns: minmax(0,1fr) 210px; align-items: end; gap: 20px; padding: 24px 0 36px; }
 .masthead h1 { display: flex; flex-wrap: wrap; align-items: center; gap: .14em .24em; margin: 0; font-size: clamp(48px,7vw,100px); font-weight: 800; line-height: .92; letter-spacing: -.07em; overflow-wrap: anywhere; }
 .masthead h1 > span { display: table; padding: .03em .13em .1em; background: var(--color-ink); color: var(--color-paper); transform: rotate(-2deg); }
@@ -29,8 +28,8 @@
 .featureMeta { display: grid; gap: 4px; font-size: 12px; line-height: 1.65; color: #dde3e4bb; }
 .lineup { list-style: none; display: flex; flex-wrap: wrap; gap: 5px 14px; padding: 18px 0 0; margin: 18px 0 0; border-top: 1px solid #c8d0d233; font-size: 14px; font-weight: 600; }
 .cta { display: flex; justify-content: space-between; align-items: center; gap: 24px; min-height: 48px; margin-top: 26px; padding: 12px 0; border-top: 1px solid currentColor; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-.cta span { font-size: 24px; transition: transform .2s; }
-.cta:hover span { transform: translateX(4px); }
+.cta svg { font-size: 24px; transition: transform .2s; }
+.cta:hover svg, .cta:focus-visible svg { transform: translateX(4px); }
 .sectionHeading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; border-bottom: 2px solid var(--color-ink); padding: 16px 0; margin-top: 24px; }
 .sectionHeading h2 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -.04em; }
 .sectionHeading > span { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
@@ -42,8 +41,8 @@
 .rowName { display: grid; gap: 8px; }
 .rowName strong { font-size: 26px; line-height: 1; letter-spacing: -.04em; overflow-wrap: anywhere; }
 .rowName small { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; }
-.rowArrow { font-size: 22px; transition: transform .2s; }
-.dateRow:hover .rowArrow { transform: translate(3px,-3px); }
+.rowArrow { font-size: 16px; opacity: .65; transition: transform .2s; }
+.dateRow:hover .rowArrow, .dateRow:focus-visible .rowArrow { transform: translateX(3px); }
 .rowImage { transform: rotate(2deg); }
 .rowName::before { content: ""; height: 3px; width: 32px; background: var(--date-accent,var(--color-accent-1)); }
 .empty { position: relative; isolation: isolate; padding: clamp(30px,5vw,64px); background: var(--color-ink); color: var(--color-paper-2); }
@@ -56,6 +55,7 @@
 .past summary span { font-size: 32px; font-weight: 400; transition: transform .2s; }
 .past[open] summary span { transform: rotate(45deg); }
 .bottomRail { margin-top: 48px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; padding-top: 24px; border-top: 1px solid var(--color-ink); font-size: 12px; }
+.bottomRail > a:first-child { display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; text-underline-offset: 5px; }
 .month { margin-bottom: 64px; }
 .monthHeader { display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: center; border-bottom: 1px solid var(--color-ink); padding-bottom: 20px; margin-bottom: 28px; }
 .monthNumber { display: grid; place-items: center; min-width: 72px; height: 72px; background: var(--color-ink); color: var(--color-paper); font-size: 38px; font-weight: 800; letter-spacing: -.07em; transform: rotate(-3deg); }
@@ -70,7 +70,7 @@
 .calendarDate span { font-size: 10px; text-transform: uppercase; font-weight: 700; letter-spacing: .08em; writing-mode: vertical-rl; }
 .calendarImage { width: min(100%,175px); margin: auto; padding: 8px 0 24px; }
 .calendarName { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: clamp(16px,2.2vw,26px); font-weight: 800; letter-spacing: -.04em; overflow-wrap: anywhere; }
-.calendarName span { font-size: 23px; }
+.calendarCard:hover .calendarName, .calendarCard:focus-visible .calendarName { text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1px; }
 .calendarType { display: block; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-top: 5px; }
 .noEvent { border-top: 1px dashed var(--color-ink); border-bottom: 1px dashed var(--color-ink); padding: 16px 0; opacity: .35; min-height: 190px; }
 .noEvent p { margin-top: 24px; font-size: 11px; }
@@ -86,7 +86,6 @@
   .mastheadFoot { font-size: 8px; gap: 8px; }
   .mastheadFoot > span:last-child { display: none; }
   .mastheadRail { font-size: 9px; letter-spacing: .06em; }
-  .mastheadRail a { gap: 6px; }
   .feature { grid-template-columns: minmax(0,1fr); padding: 0 0 32px; gap: 32px; }
   .featureCopy { padding: 26px; }
   .featureImage { max-width: 290px; }
@@ -97,7 +96,7 @@
   .rowDate span { font-size: 8px; }
   .rowName strong { font-size: 21px; }
   .rowName small { font-size: 8px; letter-spacing: .06em; }
-  .rowArrow { font-size: 18px; }
+  .rowArrow { font-size: 14px; }
   .monthHeader { gap: 14px; margin-bottom: 24px; }
   .monthNumber { min-width: 52px; height: 56px; font-size: 30px; }
   .monthCount { font-size: 8px; max-width: 7ch; text-align: right; }
@@ -105,5 +104,5 @@
   .calendarImage { width: 88%; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .calendarCard, .rowArrow, .cta span, .past summary span { transition: none; }
+  .calendarCard, .rowArrow, .cta svg, .past summary span { transition: none; }
 }

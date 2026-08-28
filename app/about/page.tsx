@@ -217,7 +217,7 @@ export default async function AboutPage() {
             {[cadence.slice(opening, experience), cadence.slice(experience, residence), cadence.slice(residence)].map((text, i) => (
               <AboutReveal key={i} delay={i * 0.06}>
                 <div className={styles.sequenceStep}>
-                  <span aria-hidden="true" className={styles.stepNumber}>{String(i + 1).padStart(2, "0")}<span>↗</span></span>
+                  <span aria-hidden="true" className={styles.stepNumber}>{String(i + 1).padStart(2, "0")}</span>
                   <p data-about-copy>{text}</p>
                 </div>
               </AboutReveal>

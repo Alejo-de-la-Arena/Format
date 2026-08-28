@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ActionIcon from "@/components/ActionIcon";
 import HomeReveal from "@/components/home/HomeReveal";
 import InstagramLink from "@/components/InstagramLink";
 import { getSeasonColors } from "@/lib/season-colors";
@@ -23,7 +24,7 @@ function DateList({ fechas, seasons }: { fechas: Fecha[]; seasons: Map<string, S
       <span className={styles.rowName}><strong>{season.nombre}</strong><small>{f.especial ? "Experience" : "Residence"}</small>
         {f.horaInicio && <small>{rangoHorario(f.horaInicio, f.horaFin)}</small>}</span>
       <div className={styles.rowImage}><AgendaFlyer fecha={f} season={season} /></div>
-      <span className={styles.rowArrow} aria-hidden>↗</span>
+      <ActionIcon kind="chevron" className={styles.rowArrow} />
     </Link></li>;
   })}</ul>;
 }
@@ -56,7 +57,7 @@ export default function DatesView({ proximas, pasadas, seasons, activeSeason }: 
             {destacado.horaInicio && <span>{rangoHorario(destacado.horaInicio,destacado.horaFin)}</span>}
             <span>{VENUE}</span></div>
           {Boolean(destacado.lineup?.length) && <ul className={styles.lineup}>{destacado.lineup!.map((slot) => <li key={slot.orden}>{slot.artistas.join(" b2b ")}</li>)}</ul>}
-          <Link className={styles.cta} href={`/eventos/${season.slug}?fecha=${destacado.fecha}`}>Ver evento <span aria-hidden>↗</span></Link>
+          <Link className={styles.cta} href={`/eventos/${season.slug}?fecha=${destacado.fecha}`}>Ver evento <ActionIcon /></Link>
         </HomeReveal>
       </section>
       {upcoming.length > 1 && <section aria-label="Agenda">
@@ -68,13 +69,13 @@ export default function DatesView({ proximas, pasadas, seasons, activeSeason }: 
         <p className={styles.eyebrow}>La próxima, pronto.</p>
         <h2>Aún no hay más fechas anunciadas.</h2>
         <p>Las novedades del próximo viernes, en nuestro Instagram.</p>
-        <a href={SOCIAL.instagram} {...EXTERNAL_LINK} className={styles.emptyLink}>Seguí las novedades <span aria-hidden>↗</span></a>
+        <a href={SOCIAL.instagram} {...EXTERNAL_LINK} className={styles.emptyLink}>Seguí las novedades</a>
       </HomeReveal>
       {previous.length > 0 && <details className={styles.past}>
         <summary>Ver fechas anteriores <span aria-hidden>+</span></summary>
         <DateList fechas={previous} seasons={seasonBySlug} />
       </details>}
     </>}
-    <div className={styles.bottomRail}><Link href="/archivo">Las noches que ya pasaron <span aria-hidden>↗</span></Link><InstagramLink /></div>
+    <div className={styles.bottomRail}><Link href="/archivo">Las noches que ya pasaron</Link><InstagramLink /></div>
   </main>;
 }

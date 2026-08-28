@@ -12,6 +12,6 @@ export default function InstagramLink({ className = "" }: { className?: string }
         <circle cx="17.4" cy="6.6" r="1" fill="currentColor" stroke="none" />
       </svg>
     </span>
-    <span>Instagram</span><span className={styles.external} aria-hidden>↗</span>
+    <span>Instagram</span>
   </a>;
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import HoverUnderline from "@/components/HoverUnderline";
 import TapeBlock from "@/components/TapeBlock";
+import HoverArrow from "@/components/HoverArrow";
 
 const MotionLink = motion.create(Link);
 
@@ -11,7 +12,7 @@ const MotionLink = motion.create(Link);
 export default function SectionTitle({
   title,
   moreHref,
-  moreLabel = "Ver todos →",
+  moreLabel = "Ver todos",
   dark = false,
 }: {
   title: string;
@@ -37,11 +38,12 @@ export default function SectionTitle({
           initial="rest"
           whileHover="hover"
           whileFocus="hover"
-          className={`label-mono relative ml-auto w-fit transition-colors hover:text-accent-1 ${
+          className={`label-mono relative ml-auto inline-flex w-fit items-center gap-2 transition-colors hover:text-accent-1 ${
             dark ? "text-paper/70" : "text-muted"
           }`}
         >
           {moreLabel}
+          <HoverArrow />
           <HoverUnderline />
         </MotionLink>
       )}

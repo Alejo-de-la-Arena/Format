@@ -3,8 +3,6 @@
 .instagram { display: inline-flex; align-items: center; gap: 10px; min-height: 42px; flex-shrink: 0; padding: 4px 12px 4px 4px; border: 1px solid var(--color-ink); border-radius: 24px; color: var(--color-ink); font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; background: transparent; text-decoration: none; }
 .instagramIcon { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--color-ink); border-radius: 50%; }
 .instagramIcon svg { width: 18px; height: 18px; }
-.external { font-size: 17px; line-height: 1; transition: transform .2s; }
-.instagram:hover .external { transform: translate(2px,-2px); }
 .instagram:hover .instagramIcon { background: var(--color-ink); color: var(--color-paper); }
 .instagram:focus-visible { outline: 2px solid var(--color-ink); outline-offset: 4px; }
 .menuButton { display: grid; place-content: center; gap: 6px; width: 44px; height: 44px; border: 1px solid color-mix(in srgb,var(--color-ink) 25%,transparent); }
@@ -16,4 +14,3 @@
 .menuArt svg:nth-child(3) { top: auto; bottom: 50px; right: auto; left: -125px; transform: rotate(8deg) scale(.66); opacity: .45; }
 @media (min-width: 768px) { .menuButton { display: none; } }
 @media (max-width: 390px) { .instagram { gap: 7px; padding-right: 10px; font-size: 9px; } }
-@media (prefers-reduced-motion: reduce) { .external { transition: none; } }

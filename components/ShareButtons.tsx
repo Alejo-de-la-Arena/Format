@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "motion/react";
-import ExternalArrow from "@/components/ExternalArrow";
+import ActionIcon from "@/components/ActionIcon";
 
 /** Compartir nativo (mobile) con fallback de copiar link (desktop). */
 export default function ShareButtons({
@@ -38,7 +38,7 @@ export default function ShareButtons({
       className="label-mono flex w-full items-center justify-center gap-1.5 border border-line px-4 py-3 text-center transition-colors hover:border-accent-1"
     >
       {copied ? "Link copiado" : "Compartir"}
-      {!copied && <ExternalArrow />}
+      <ActionIcon kind={copied ? "check" : "share"} />
     </motion.button>
   );
 }
