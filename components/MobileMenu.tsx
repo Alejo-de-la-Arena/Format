@@ -32,11 +32,10 @@ const itemVariants: Variants = {
   },
 };
 
-/** Páginas de primer nivel del menú. Las anclas de la home van como
- *  sub-nivel de "Inicio" (ver `homeSections`). */
+/** Páginas de primer nivel del menú. */
 const PAGES: { href: string; label: string }[] = [
-  { href: "/fechas", label: "Próximas fechas" },
-  { href: "/archivo", label: "Calendario" },
+  { href: "/proximas-fechas", label: "Próximas fechas" },
+  { href: "/calendario", label: "Calendario" },
   { href: "/experience", label: "Conocé la Experience" },
   { href: "/about", label: "About" },
 ];
@@ -52,13 +51,11 @@ export default function MobileMenu({
   onClose,
   accent,
   forma,
-  homeSections,
 }: {
   open: boolean;
   onClose: () => void;
   accent: string;
   forma: Forma;
-  homeSections: { href: string; label: string }[];
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -138,29 +135,6 @@ export default function MobileMenu({
                   Inicio
                 </Link>
               </motion.div>
-
-              <motion.ul
-                variants={itemVariants}
-                className="mb-2 mt-1 flex flex-col border-l-2 pl-4"
-                style={{ borderColor: accent }}
-              >
-                {homeSections.map((s) => (
-                  <li key={s.href}>
-                    <Link
-                      href={s.href}
-                      onClick={onClose}
-                      className="group flex min-h-[44px] items-center gap-3 py-1.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-muted transition-colors hover:text-ink"
-                    >
-                      <span
-                        aria-hidden
-                        className="block h-2 w-2 shrink-0 rotate-45 transition-transform group-hover:rotate-0"
-                        style={{ backgroundColor: accent }}
-                      />
-                      {s.label}
-                    </Link>
-                  </li>
-                ))}
-              </motion.ul>
 
               <MenuRule />
 

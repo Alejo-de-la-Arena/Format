@@ -108,7 +108,7 @@ export default async function Home() {
       {proximosConFlyer.length > 0 && (
         <section id="proximos" className={`bg-ink text-white ${sectionPad}`}>
           <div className={wrap}>
-            <HomeReveal><SectionTitle title="Próximos eventos" moreHref="/fechas" dark /></HomeReveal>
+            <HomeReveal><SectionTitle title="Próximos eventos" moreHref="/proximas-fechas" dark /></HomeReveal>
             <HomeReveal className="slider" staggered>
               {proximosConFlyer.map((f) => {
                 const season = seasonBySlug.get(f.seasonSlug);
@@ -132,7 +132,7 @@ export default async function Home() {
         <div className={wrap}>
           <HomeReveal><SectionTitle
             title="Ediciones anteriores"
-            moreHref="/archivo"
+            moreHref="/calendario"
             moreLabel="Ver calendario"
           /></HomeReveal>
           {pasados.length > 0 ? (
@@ -189,6 +189,7 @@ export default async function Home() {
                 kicker="Aftermovie"
                 forma={experienceSeason.forma}
                 accent={experienceColors[0]}
+                preview
                 className="mx-auto w-full md:max-w-[calc(min(68vh,600px)*9/16)]"
               />
             ) : (

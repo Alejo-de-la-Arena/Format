@@ -13,6 +13,8 @@ export type SeasonFormState =
 function revalidateSite(slug?: string) {
   revalidatePath("/");
   revalidatePath("/fechas");
+  revalidatePath("/proximas-fechas");
+  revalidatePath("/calendario");
   revalidatePath("/archivo");
   revalidatePath("/about");
   revalidatePath("/experience");

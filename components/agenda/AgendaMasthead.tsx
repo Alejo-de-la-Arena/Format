@@ -1,13 +1,11 @@
-import Link from "next/link";
 import { getShapePath } from "@/components/shapePaths";
 import type { Forma } from "@/lib/types";
 import styles from "./agenda.module.css";
 
-export default function AgendaMasthead({ title, emphasis, label, note, href, link, forma }: {
-  title: string; emphasis?: string; label: string; note: string; href: string; link: string; forma?: Forma;
+export default function AgendaMasthead({ title, emphasis, note, forma }: {
+  title: string; emphasis?: string; note: string; forma?: Forma;
 }) {
   return <header className={styles.masthead}>
-    <div className={styles.mastheadRail}><span>FORMAT / {label}</span><Link href={href}>{link}</Link></div>
     <div className={styles.mastheadBody}>
       <h1>{title}{emphasis && <> <span>{emphasis}</span></>}</h1>
       <div className={styles.mastheadAside}>

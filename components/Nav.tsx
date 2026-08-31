@@ -12,5 +12,5 @@ export default async function Nav() {
   const season = await getActiveSeason();
   const accent = season ? getSeasonColors(season)[0] : "#111111";
   const forma = season?.forma ?? "square";
-  return <NavClient accent={accent} forma={forma} />;
+  return <NavClient accent={accent} forma={forma} seasonName={season?.nombre ?? "FORMAT"} />;
 }

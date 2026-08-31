@@ -1,24 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "motion/react";
 import MobileMenu from "@/components/MobileMenu";
 import HoverUnderline from "@/components/HoverUnderline";
-import InstagramLink from "@/components/InstagramLink";
+import MusicControls from "@/components/MusicControls";
+import { getShapePath } from "@/components/shapePaths";
 import styles from "./navigation.module.css";
 import type { Forma } from "@/lib/types";
 
 const MotionLink = motion.create(Link);
 
-/** Anclas a las secciones de la home. Compartidas por la barra desktop y el
- *  sub-nivel "Inicio" del menú mobile. */
-export const HOME_SECTIONS: { href: string; label: string }[] = [
-  { href: "/#proximos", label: "Eventos" },
-  { href: "/#archivo", label: "Ediciones" },
-  { href: "/#experience", label: "Experience" },
-  { href: "/#lab", label: "Lab" },
+/** Páginas reales disponibles en la navegación principal. */
+const PAGE_LINKS: { href: string; label: string }[] = [
+  { href: "/", label: "Inicio" },
+  { href: "/proximas-fechas", label: "Próximas fechas" },
+  { href: "/calendario", label: "Calendario" },
+  { href: "/experience", label: "Experience" },
+  { href: "/about", label: "About" },
   // FORMAT Special: página futura, fuera de la navegación por ahora.
   // { href: "/special", label: "Special" },
 ];
@@ -26,15 +27,25 @@ export const HOME_SECTIONS: { href: string; label: string }[] = [
 export default function NavClient({
   accent,
   forma,
+  seasonName,
 }: {
   accent: string;
   forma: Forma;
+  seasonName: string;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <nav className={`sticky top-0 z-[60] bg-paper ${styles.header}`}>
-      <div className={`mx-auto flex h-[64px] max-w-[1400px] items-center px-[clamp(18px,4vw,48px)] ${styles.bar}`}>
+    <nav
+      className={`sticky top-0 z-[60] overflow-hidden bg-paper ${styles.header}`}
+      style={{ "--header-accent": accent } as CSSProperties}
+    >
+      <span className={styles.headerBackdrop} aria-hidden>
+        <svg viewBox="0 0 72 72"><path d={getShapePath(forma)} /></svg>
+        <svg viewBox="0 0 72 72"><path d={getShapePath(forma, "header-offset")} /></svg>
+        <svg viewBox="0 0 72 72"><path d={getShapePath(forma, "header-stamp")} /></svg>
+      </span>
+      <div className={`relative z-10 mx-auto flex h-[78px] max-w-[1400px] items-center px-[clamp(18px,4vw,48px)] ${styles.bar}`}>
         <Link href="/" className="flex items-center" aria-label="FORMAT — inicio">
           {/* Logo apilado FOR/MAT. Alto fijado al del wordmark tipográfico
               anterior (text-xl · leading-[0.78], ~34px en dos líneas). */}
@@ -49,7 +60,7 @@ export default function NavClient({
           />
         </Link>
         <div className="hidden gap-7 md:flex">
-          {HOME_SECTIONS.map((l) => (
+          {PAGE_LINKS.map((l) => (
             <MotionLink
               key={l.href}
               href={l.href}
@@ -64,7 +75,13 @@ export default function NavClient({
           ))}
         </div>
 
-        <InstagramLink className="ml-auto" />
+        <div className={styles.seasonTicker} aria-label={`Season actual: ${seasonName}`}>
+          <span className={styles.seasonTickerKicker}>Season actual</span>
+          <strong>{seasonName}</strong>
+          <span className={styles.seasonTickerMeta}>BA · Viernes</span>
+        </div>
+
+        <MusicControls />
 
         <button
           type="button"
@@ -83,7 +100,6 @@ export default function NavClient({
         onClose={() => setMenuOpen(false)}
         accent={accent}
         forma={forma}
-        homeSections={HOME_SECTIONS}
       />
     </nav>
   );

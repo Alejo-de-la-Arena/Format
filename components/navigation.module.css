@@ -1,11 +1,40 @@
-.header { border-bottom: 1px solid var(--color-ink); box-shadow: 0 3px 0 color-mix(in srgb,var(--color-ink) 8%,transparent); }
+.header { position: relative; isolation: isolate; border-bottom: 2px solid var(--color-ink); box-shadow: 0 3px 0 color-mix(in srgb,var(--color-ink) 12%,transparent); }
+.header::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .2; background-image: linear-gradient(90deg, transparent 0 46%, color-mix(in srgb, var(--color-ink) 20%, transparent) 46% 46.35%, transparent 46.35% 100%), repeating-linear-gradient(0deg, transparent 0 5px, color-mix(in srgb, var(--color-ink) 9%, transparent) 5px 6px); mix-blend-mode: multiply; }
+.header::after { content: ""; position: absolute; z-index: 0; left: clamp(120px, 18vw, 260px); right: 0; bottom: -2px; height: 5px; pointer-events: none; background: var(--header-accent); clip-path: polygon(0 36%, 12% 0, 29% 66%, 46% 12%, 63% 76%, 82% 20%, 100% 55%, 100% 100%, 0 100%); }
 .bar { gap: clamp(16px,3vw,40px); }
-.instagram { display: inline-flex; align-items: center; gap: 10px; min-height: 42px; flex-shrink: 0; padding: 4px 12px 4px 4px; border: 1px solid var(--color-ink); border-radius: 24px; color: var(--color-ink); font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; background: transparent; text-decoration: none; }
-.instagramIcon { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--color-ink); border-radius: 50%; }
-.instagramIcon svg { width: 18px; height: 18px; }
-.instagram:hover .instagramIcon { background: var(--color-ink); color: var(--color-paper); }
+.instagram { position: relative; display: inline-flex; flex-direction: column; align-items: flex-end; gap: 0; flex-shrink: 0; color: var(--color-ink); font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; text-decoration: none; }
+.instagramIcon { display: block; line-height: 0; }
+.instagramIcon img { display: block; width: 72px; height: 48px; object-fit: contain; }
+.instagramLabel { position: absolute; left: 50%; margin-top: 40px; transform: translateX(-50%); white-space: nowrap; font-size: 7px; }
 .instagram:focus-visible { outline: 2px solid var(--color-ink); outline-offset: 4px; }
-.menuButton { display: grid; place-content: center; gap: 6px; width: 44px; height: 44px; border: 1px solid color-mix(in srgb,var(--color-ink) 25%,transparent); }
+.headerBackdrop { position: absolute; inset: 0; overflow: hidden; pointer-events: none; color: var(--header-accent); }
+.headerBackdrop svg { position: absolute; width: 112px; height: 112px; opacity: .22; filter: drop-shadow(4px 4px 0 color-mix(in srgb, var(--color-ink) 18%, transparent)); }
+.headerBackdrop svg:first-child { top: -51px; right: 8%; transform: rotate(-16deg); }
+.headerBackdrop svg:first-child path { fill: currentColor; }
+.headerBackdrop svg:last-child { top: -22px; right: calc(8% - 37px); opacity: .46; transform: rotate(18deg); }
+.headerBackdrop svg:last-child path { fill: none; stroke: currentColor; stroke-width: .7; }
+.headerBackdrop svg:nth-child(2) { top: 18px; right: 24%; width: 46px; height: 46px; opacity: .78; transform: rotate(12deg); }
+.headerBackdrop svg:nth-child(2) path { fill: currentColor; }
+.headerBackdrop svg:nth-child(3) { top: -38px; right: calc(8% - 37px); opacity: .46; transform: rotate(18deg); }
+.headerBackdrop svg:nth-child(3) path { fill: none; stroke: currentColor; stroke-width: .7; }
+.seasonTicker { position: relative; z-index: 1; display: grid; grid-template-columns: auto auto; align-items: center; column-gap: 8px; row-gap: 2px; margin-left: auto; color: var(--color-ink); line-height: 1; }
+.seasonTicker::before { content: ""; position: absolute; inset: -7px -10px -6px -12px; z-index: -1; border-left: 1px solid color-mix(in srgb, var(--color-ink) 35%, transparent); background: color-mix(in srgb, var(--color-paper) 70%, transparent); transform: rotate(-1deg); }
+.seasonTickerKicker, .seasonTickerMeta { font-size: 7px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.seasonTickerKicker { color: var(--header-accent); }
+.seasonTicker strong { grid-row: span 2; padding: 5px 8px 4px; background: var(--color-ink); color: var(--color-paper); font-size: 13px; font-weight: 900; letter-spacing: -.04em; text-transform: uppercase; transform: rotate(-2deg); }
+.musicControls { display: flex; align-items: center; gap: 8px; padding: 4px 7px 4px 5px; border: 1px solid color-mix(in srgb, var(--color-ink) 32%, transparent); background: color-mix(in srgb, var(--color-paper-2) 74%, transparent); transform: rotate(1.3deg); }
+.musicToggle { display: inline-flex; min-height: 34px; align-items: center; gap: 6px; border: 0; color: var(--color-ink); font-size: 8px; font-weight: 900; letter-spacing: .08em; line-height: 1; text-transform: uppercase; }
+.soundIcon { display: grid; place-items: center; width: 22px; height: 22px; background: var(--color-ink); color: var(--color-paper); clip-path: polygon(5% 12%, 92% 0, 100% 83%, 14% 100%, 0 50%); }
+.soundIcon svg { width: 15px; height: 15px; }
+.musicLabel { max-width: 52px; }
+.volumeControl { display: flex; align-items: center; }
+.volumeControl input { appearance: none; width: 48px; height: 12px; margin: 0; background: transparent; cursor: pointer; }
+.volumeControl input::-webkit-slider-runnable-track { height: 3px; background: linear-gradient(to right, var(--header-accent) 0 var(--music-volume), color-mix(in srgb, var(--color-ink) 25%, transparent) var(--music-volume) 100%); }
+.volumeControl input::-webkit-slider-thumb { appearance: none; width: 9px; height: 9px; margin-top: -3px; background: var(--color-ink); border-radius: 0; }
+.volumeControl input::-moz-range-track { height: 3px; background: color-mix(in srgb, var(--color-ink) 25%, transparent); }
+.volumeControl input::-moz-range-progress { height: 3px; background: var(--header-accent); }
+.volumeControl input::-moz-range-thumb { width: 9px; height: 9px; border: 0; border-radius: 0; background: var(--color-ink); }
+.menuButton { display: grid; place-content: center; gap: 6px; width: 44px; height: 44px; border: none; }
 .menuButton span { height: 1px; background: var(--color-ink); width: 21px; }
 .menuButton span:last-child { width: 14px; justify-self: end; }
 .menuArt { position: absolute; inset: 0; pointer-events: none; color: var(--nav-accent); opacity: .14; overflow: hidden; }
@@ -13,4 +42,5 @@
 .menuArt svg:nth-child(2) { transform: rotate(2deg) scale(.82); }
 .menuArt svg:nth-child(3) { top: auto; bottom: 50px; right: auto; left: -125px; transform: rotate(8deg) scale(.66); opacity: .45; }
 @media (min-width: 768px) { .menuButton { display: none; } }
-@media (max-width: 390px) { .instagram { gap: 7px; padding-right: 10px; font-size: 9px; } }
+@media (max-width: 680px) { .musicLabel { display: none; } .musicControls { gap: 4px; padding: 3px; } .musicToggle { min-height: 36px; min-width: 36px; justify-content: center; } .volumeControl input { width: 38px; } .headerBackdrop svg:nth-child(2) { display: none; } }
+@media (max-width: 390px) { .headerBackdrop svg { width: 92px; height: 92px; } .headerBackdrop svg:first-child { right: 15%; } .headerBackdrop svg:nth-child(3) { right: calc(15% - 30px); } .seasonTicker { column-gap: 5px; } .seasonTicker::before { inset: -5px -5px -5px -8px; } .seasonTickerKicker, .seasonTickerMeta { display: none; } .seasonTicker strong { padding: 5px 6px 4px; font-size: 11px; } .instagram { font-size: 9px; } .bar { gap: 9px; } .volumeControl input { width: 30px; } }

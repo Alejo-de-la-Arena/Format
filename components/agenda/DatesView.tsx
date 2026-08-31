@@ -1,7 +1,6 @@
 import Link from "next/link";
 import ActionIcon from "@/components/ActionIcon";
 import HomeReveal from "@/components/home/HomeReveal";
-import InstagramLink from "@/components/InstagramLink";
 import { getSeasonColors } from "@/lib/season-colors";
 import { fechaCorta, fechaLarga, rangoHorario } from "@/lib/dates";
 import { EXTERNAL_LINK, SOCIAL } from "@/lib/social";
@@ -39,7 +38,7 @@ export default function DatesView({ proximas, pasadas, seasons, activeSeason }: 
   const destacado = upcoming[0];
   const season = destacado ? seasonBySlug.get(destacado.seasonSlug)! : null;
   return <main className={styles.page}>
-    <AgendaMasthead title="Próximas" emphasis="Fechas" label="Agenda" note="El próximo encuentro en la terraza." href="/archivo" link="Ver calendario" forma={activeSeason?.forma} />
+    <AgendaMasthead title="Próximas" emphasis="Fechas" note="El próximo encuentro en la terraza." forma={activeSeason?.forma} />
     {destacado && season ? <>
       <section className={styles.feature} aria-label={`Próximo evento: ${season.nombre}`} style={{ "--date-accent": getSeasonColors(season)[0] } as CSSProperties}>
         <HomeReveal className={styles.featureImage}>
@@ -76,6 +75,6 @@ export default function DatesView({ proximas, pasadas, seasons, activeSeason }: 
         <DateList fechas={previous} seasons={seasonBySlug} />
       </details>}
     </>}
-    <div className={styles.bottomRail}><Link href="/archivo">Las noches que ya pasaron</Link><InstagramLink /></div>
+    <div className={`${styles.bottomRail} ${styles.bottomRailUpcoming}`}><Link href="/calendario" className={styles.bottomCta}><span>Las noches que ya pasaron</span><ActionIcon kind="forward" className={styles.bottomCtaArrow} /></Link></div>
   </main>;
 }

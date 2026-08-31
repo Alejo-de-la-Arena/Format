@@ -4,7 +4,7 @@ import { useState, type CSSProperties } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { getShapePath } from "@/components/shapePaths";
 import { EDGES } from "@/components/TapeBlock";
-import { parseVideoUrl, withAutoplay } from "@/lib/embed";
+import { parseVideoUrl, withAutoplay, withMutedPreview } from "@/lib/embed";
 import type { Forma } from "@/lib/types";
 
 const EASE = [0.65, 0, 0.35, 1] as const;
@@ -33,6 +33,7 @@ export default function VideoPlayer({
   /** CSS aspect-ratio del marco. Vertical por defecto: el aftermovie y los
    *  clips de Lab se filman en 9:16. */
   aspect = "9 / 16",
+  preview = false,
   className,
 }: {
   url: string;
@@ -43,6 +44,8 @@ export default function VideoPlayer({
   forma: Forma;
   accent: string;
   aspect?: string;
+  /** Muestra el video real en silencio antes de la interacción. */
+  preview?: boolean;
   className?: string;
 }) {
   const [playing, setPlaying] = useState(false);
@@ -57,9 +60,9 @@ export default function VideoPlayer({
       className={`relative w-full overflow-hidden border border-line bg-ink ${className ?? ""}`}
       style={{ aspectRatio: aspect }}
     >
-      {playing ? (
+      {playing || preview ? (
         <iframe
-          src={withAutoplay(embed)}
+          src={playing ? withAutoplay(embed) : withMutedPreview(embed)}
           title={titulo}
           className="absolute inset-0 h-full w-full"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -136,6 +139,19 @@ export default function VideoPlayer({
             </span>
           </span>
         </motion.button>
+      )}
+      {preview && !playing && (
+        <button
+          type="button"
+          onClick={() => setPlaying(true)}
+          className="group absolute inset-0 flex items-end justify-start bg-gradient-to-t from-ink/85 via-transparent to-transparent p-4 text-left"
+          aria-label={`Reproducir ${titulo} con sonido`}
+        >
+          <span className="label-mono inline-flex items-center gap-2 bg-paper px-3 py-2 text-ink transition-transform group-hover:-translate-y-1">
+            <span aria-hidden className="text-base leading-none">▶</span>
+            Ver con sonido
+          </span>
+        </button>
       )}
     </div>
   );

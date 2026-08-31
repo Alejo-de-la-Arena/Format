@@ -5,7 +5,6 @@ import ActionIcon from "@/components/ActionIcon";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import HomeReveal from "@/components/home/HomeReveal";
-import InstagramLink from "@/components/InstagramLink";
 import AgendaMasthead from "@/components/agenda/AgendaMasthead";
 import AgendaFlyer from "@/components/agenda/AgendaFlyer";
 import styles from "@/components/agenda/agenda.module.css";
@@ -29,16 +28,15 @@ export default async function ArchivoPage() {
   const byDate = new Map(dates.map((f) => [f.fecha, f]));
   const months = [...new Set(dates.map((f) => f.fecha.slice(0,7)))].sort().reverse();
   return <><Nav /><main className={styles.page}>
-    <AgendaMasthead title="Calendario" label="Archivo" note="Cada viernes deja algo. Volvé a esa noche." href="/fechas" link="Próximas fechas" forma={activeSeason?.forma} />
+    <AgendaMasthead title="Calendario" note="Cada viernes deja algo. Volvé a esa noche." forma={activeSeason?.forma} />
     {months.length ? months.map((ym) => {
       const [year, month] = ym.split("-").map(Number);
-      const fridays = pastFridaysOf(year,month,today);
+      const fridays = pastFridaysOf(year,month,today).reverse();
       const monthName = new Intl.DateTimeFormat("es-AR",{month:"long",timeZone:"UTC"}).format(new Date(`${ym}-01T12:00:00Z`));
       const count = dates.filter((f) => f.fecha.startsWith(ym)).length;
       return <section key={ym} className={styles.month} aria-label={`${monthName} ${year}`}>
         <HomeReveal className={styles.monthHeader}>
-          <span aria-hidden className={styles.monthNumber}>{ym.slice(5)}</span>
-          <div><h2 className="capitalize">{monthName}</h2><p>{year} / VIERNES</p></div>
+          <div className={styles.monthTitle}><h2 className="capitalize">{monthName}</h2><p>{year} / VIERNES</p></div>
           <span className={styles.monthCount}>{String(count).padStart(2,"0")} {count === 1 ? "noche" : "noches"}</span>
         </HomeReveal>
         <ul className={styles.calendarGrid} style={{"--friday-count": Math.max(fridays.length,1)} as CSSProperties}>
@@ -64,8 +62,8 @@ export default async function ArchivoPage() {
     }) : <section className={styles.empty}>
       <p className={styles.eyebrow}>El archivo empieza con vos.</p>
       <h2>Todavía no hay ediciones anteriores.</h2>
-      <Link href="/fechas" className={styles.emptyLink}>Ver las próximas fechas <ActionIcon /></Link>
+      <Link href="/proximas-fechas" className={styles.emptyLink}>Ver las próximas fechas <ActionIcon /></Link>
     </section>}
-    <div className={styles.bottomRail}><Link href="/fechas">Nos vemos el próximo viernes</Link><InstagramLink /></div>
+    <div className={styles.bottomRail}><Link href="/proximas-fechas" className={styles.bottomCta}><span>Te esperamos el próximo viernes</span><ActionIcon kind="forward" className={styles.bottomCtaArrow} /></Link></div>
   </main><Footer /></>;
 }

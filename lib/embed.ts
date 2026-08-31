@@ -111,3 +111,11 @@ export function isVideoUrl(url: string): boolean {
 export function withAutoplay(embed: VideoEmbed): string {
   return `${embed.embedUrl}&autoplay=1`;
 }
+
+/** Preview real del aftermovie: autoplay permitido sólo en silencio y loop. */
+export function withMutedPreview(embed: VideoEmbed): string {
+  if (embed.platform === "youtube") {
+    return `${embed.embedUrl}&autoplay=1&mute=1&loop=1&playlist=${embed.id}&controls=0&disablekb=1`;
+  }
+  return `${embed.embedUrl}&autoplay=1&muted=1&loop=1&background=1`;
+}

@@ -104,7 +104,7 @@ export default function EventGallery({
             role="dialog"
             aria-modal="true"
             aria-label="Foto ampliada"
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/92 p-6"
+            className="fixed inset-0 z-[1100] flex min-h-screen w-screen items-center justify-center bg-black/92 p-4 sm:p-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -115,7 +115,7 @@ export default function EventGallery({
               type="button"
               onClick={close}
               aria-label="Cerrar"
-              className="absolute right-5 top-5 label-mono text-white/70 transition-colors hover:text-accent-1"
+              className="absolute right-4 top-4 z-10 rounded-sm bg-paper px-3 py-2 label-mono text-ink transition-colors hover:bg-accent-1 sm:right-6 sm:top-6"
             >
               Cerrar ✕
             </button>

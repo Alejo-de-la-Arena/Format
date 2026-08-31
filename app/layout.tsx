@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { MotionConfig } from "motion/react";
 import { getActiveSeason, getSeasons } from "@/lib/data/seasons";
 import HomeMotion from "@/components/home/HomeMotion";
+import { MusicProvider } from "@/components/MusicProvider";
 import { getIntroSeasons, introCopy } from "@/lib/season-intro";
 import { getSeasonColors } from "@/lib/season-colors";
 import type { Season } from "@/lib/types";
@@ -43,9 +44,11 @@ export default async function RootLayout({
         style={seasonAccentVars(activeSeason)}
       >
         <div className="grain" aria-hidden />
-        <MotionConfig reducedMotion="user">
-          <HomeMotion current={identity(current)} previous={identity(previous)}>{children}</HomeMotion>
-        </MotionConfig>
+        <MusicProvider>
+          <MotionConfig reducedMotion="user">
+            <HomeMotion current={identity(current)} previous={identity(previous)}>{children}</HomeMotion>
+          </MotionConfig>
+        </MusicProvider>
       </body>
     </html>
   );
