@@ -121,17 +121,19 @@ export default function Footer() {
             escalen juntos en cualquier viewport. `brightness-0 invert` deja el
             SVG en blanco sólido sobre el negro del footer. */}
         <div className="mt-[clamp(38px,5vw,68px)] border-t border-paper/12 pt-[clamp(22px,3vw,38px)] text-[clamp(48px,11vw,158px)]">
-          <Image
-            src="/logos/logo-format-horizontal.svg"
-            alt="FORMAT"
-            width={256}
-            height={58}
-            unoptimized
-            className="block h-[0.82em] w-auto select-none brightness-0 invert"
-          />
-          <span className="label-mono mt-3 flex justify-end text-[10px] text-paper/55">
-            Desarrollado por ADLA
-          </span>
+          <div className="flex items-end justify-between gap-4">
+            <Image
+              src="/logos/logo-format-horizontal.svg"
+              alt="FORMAT"
+              width={256}
+              height={58}
+              unoptimized
+              className="block h-[0.82em] w-auto select-none brightness-0 invert"
+            />
+            <span className="label-mono shrink-0 text-[10px] text-paper/45">
+              Desarrollado por ADLA
+            </span>
+          </div>
           <span
             aria-hidden
             className="mt-[0.08em] block h-[max(3px,0.045em)] w-full bg-accent-1"
