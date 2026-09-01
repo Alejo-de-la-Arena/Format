@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import TapeBlock from "@/components/TapeBlock";
@@ -164,13 +163,13 @@ export default async function AboutPage() {
   }
 
   // Exact slices of the existing copy, in its original reading order.
-  const cadence = IDENTIDAD[1].cuerpo;
+  const cadence = "FORMAT no piensa en fechas sueltas sino en Temporadas. Una Season es un mes: varios viernes bajo una misma identidad. El primer viernes es el Opening, la noche Experience, con escenografía completa, invitado y cocktail propio; Los viernes que siguen son Residence, la misma identidad en formato semanal.";
   const opening = cadence.indexOf("Una Season");
   const experience = cadence.indexOf("El primer viernes");
-  const residence = cadence.indexOf("los viernes");
-  const world = IDENTIDAD[2].cuerpo;
+  const residence = cadence.indexOf("Los viernes");
+  const world = "Cada Temporada trae su forma, su color, su escenografía y su trago. Una forma ancla la identidad; el color la tiñe entera; la escenografía cambia la terraza por completo; el trago de autor la vuelve algo que se prueba. Cuando termina, no vuelve: empieza otra.";
   const worldDetail = world.indexOf("Una forma");
-  const worldClosing = world.indexOf("Cuando la Season");
+  const worldClosing = world.indexOf("Cuando termina");
 
   return (
     <>
@@ -179,19 +178,14 @@ export default async function AboutPage() {
         <section className={`${styles.wrap} ${styles.intro}`} aria-labelledby="about-title">
           <AboutReveal>
             <h1 id="about-title" className={styles.pageTitle}>
-              <TapeBlock rotate={-2} className={styles.aboutTape}>About</TapeBlock>{" "}
-              <span className={styles.formatTitle}>
-                <span className="sr-only">FORMAT</span>
-                <Image src="/logos/logo-format-horizontal.svg" alt="" aria-hidden="true" width={1812} height={662} priority unoptimized />
-              </span>
+              Qué es <TapeBlock rotate={-1.5} className={styles.aboutTape}>FORMAT</TapeBlock>
             </h1>
           </AboutReveal>
           <div className={styles.introLayout}>
             <AboutReveal className={styles.introCopy}>
-              <h2 className={styles.eyebrow}>{IDENTIDAD[0].titulo}</h2>
               <p data-about-copy>
-                <span className={styles.introLead}>{IDENTIDAD[0].cuerpo.slice(0, IDENTIDAD[0].cuerpo.indexOf(" en la terraza"))}</span>
-                {IDENTIDAD[0].cuerpo.slice(IDENTIDAD[0].cuerpo.indexOf(" en la terraza"))}
+                <span className={styles.introLead}>Un ciclo de música electrónica, todos los viernes, en la terraza de JET</span>
+                <span className={styles.venue}>Av. Costanera Rafael Obligado 4801 · Buenos Aires</span>
               </p>
             </AboutReveal>
             {activeSeason && (
@@ -207,7 +201,6 @@ export default async function AboutPage() {
 
         <section className={`${styles.wrap} ${styles.cadence}`} aria-labelledby="seasons-title">
           <AboutReveal className={styles.chapterHeading}>
-            <span aria-hidden="true" className={styles.chapterIndex}>01 /</span>
             <h2 id="seasons-title">{IDENTIDAD[1].titulo}</h2>
           </AboutReveal>
           <AboutReveal>
@@ -228,8 +221,7 @@ export default async function AboutPage() {
         <section className={styles.world} aria-labelledby="world-title">
           <div className={styles.wrap}>
             <AboutReveal className={styles.chapterHeading}>
-              <span aria-hidden="true" className={styles.chapterIndex}>02 /</span>
-              <h2 id="world-title">{IDENTIDAD[2].titulo}</h2>
+              <h2 id="world-title">Cada <span>Season</span> es un mundo.</h2>
             </AboutReveal>
             <div className={styles.worldLayout}>
               <AboutReveal>

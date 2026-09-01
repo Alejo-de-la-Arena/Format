@@ -18,10 +18,10 @@ export default function Hero({ season }: { season: Season }) {
   const { introOpen, ready } = useHomeMotion();
 
   return (
-    <header className="relative flex h-[100svh] items-center justify-center overflow-hidden border-b border-line bg-paper text-center md:h-auto md:min-h-[clamp(360px,58vh,620px)] md:items-end md:justify-start md:text-left">
+    <header className="relative flex min-h-[calc(100svh-78px)] items-center justify-center overflow-hidden border-b border-line bg-paper text-center">
       <HeroBackground forma={season.forma} accent={accent} paused={introOpen || !ready} />
 
-      <div className="relative z-[2] mx-auto w-full max-w-[1400px] px-[clamp(18px,4vw,48px)] py-[clamp(28px,4vw,52px)] md:pb-[clamp(28px,4vw,52px)] md:pt-0">
+      <div className="relative z-[2] mx-auto flex w-full max-w-[1400px] flex-col items-center px-[clamp(18px,4vw,48px)] py-[clamp(28px,4vw,52px)]">
         <HomeReveal><div
           className="relative inline-block"
           style={{ transform: "rotate(-1.5deg)" }}
@@ -36,12 +36,12 @@ export default function Hero({ season }: { season: Season }) {
               height={662}
               priority
               unoptimized
-              className="h-[clamp(115px,11.5vw,140px)] w-auto"
+              className="h-[clamp(104px,12vw,168px)] w-auto"
             />
           </h1>
         </div></HomeReveal>
 
-        <h2 className="flex flex-col items-center gap-0.5 font-body text-[clamp(20px,6vw,42px)] font-semibold uppercase tracking-[0.08em] text-ink md:mt-5 md:items-start">
+        <h2 className="mt-5 flex flex-col items-center gap-0.5 font-body text-[clamp(20px,4vw,48px)] font-semibold uppercase tracking-[0.08em] text-ink">
           <GlitchText accent={accent} speed={1.8} enableOnHover>
             Made by sound
           </GlitchText>

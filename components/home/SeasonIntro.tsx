@@ -13,7 +13,7 @@ export interface IntroIdentity {
 
 const seenInMemory = new Set<string>();
 
-export default function SeasonIntro({ current, previous, onState, showReplay = true, pathname }: {
+export default function SeasonIntro({ current, previous, onState, showReplay = false, pathname }: {
   current: IntroIdentity; previous: IntroIdentity | null;
   onState: (state: { introOpen: boolean; ready: boolean }) => void;
   showReplay?: boolean;

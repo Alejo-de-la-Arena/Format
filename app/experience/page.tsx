@@ -56,7 +56,7 @@ export default async function ExperiencePage() {
         </div>
         <div className={styles.heroCopy}>
           <TapeBlock as="p" edge={1} rotate={-1.2} className={styles.kicker}>FORMAT Experience · {isUpcoming ? "Próxima fecha" : "Última edición"}</TapeBlock>
-          <h1>La noche que<span> abre la Season.</span></h1>
+          <h1>FORMAT <span>Experience</span></h1>
           <p className={styles.heroLead}>Una vez por temporada, FORMAT concentra la apertura: una fecha especial, un cocktail propio y un line-up que marca el arranque.</p>
           <Link href={featuredHref} className={styles.heroLink}>Ver {featuredSeason.nombre} <ActionIcon kind="forward" /></Link>
         </div>

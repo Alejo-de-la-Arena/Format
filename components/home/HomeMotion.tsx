@@ -18,7 +18,7 @@ export default function HomeMotion({ current, previous, children }: {
     <HomeMotionContext.Provider value={state}>
       <div className={styles.home} data-intro-open={state.introOpen || undefined}>
         {children}
-        {current && publicPage && <SeasonIntro current={current} previous={previous} onState={setState} showReplay={pathname === "/"} pathname={pathname} />}
+        {current && publicPage && <SeasonIntro current={current} previous={previous} onState={setState} pathname={pathname} />}
       </div>
     </HomeMotionContext.Provider>
   );

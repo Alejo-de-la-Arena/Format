@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
+import Image from "next/image";
 import { motion, useReducedMotion } from "motion/react";
 import { getShapePath } from "@/components/shapePaths";
 import { EDGES } from "@/components/TapeBlock";
@@ -34,6 +35,7 @@ export default function VideoPlayer({
    *  clips de Lab se filman en 9:16. */
   aspect = "9 / 16",
   preview = false,
+  posterSrc,
   className,
 }: {
   url: string;
@@ -46,6 +48,7 @@ export default function VideoPlayer({
   aspect?: string;
   /** Muestra el video real en silencio antes de la interacción. */
   preview?: boolean;
+  posterSrc?: string;
   className?: string;
 }) {
   const [playing, setPlaying] = useState(false);
@@ -80,11 +83,20 @@ export default function VideoPlayer({
           className="absolute inset-0 flex cursor-pointer items-center justify-center overflow-hidden"
           style={{ "--poster-accent": accent } as CSSProperties}
         >
+          {posterSrc && (
+            <Image
+              src={posterSrc}
+              alt=""
+              fill
+              sizes="(max-width: 767px) 100vw, 500px"
+              className="object-cover"
+            />
+          )}
           {/* Trama de semitono en el acento sobre ink: dos rejillas
               desfasadas media celda, igual que el resto del sitio. */}
           <span
             aria-hidden
-            className="absolute inset-0 opacity-40"
+            className={`absolute inset-0 opacity-40 ${posterSrc ? "hidden" : ""}`}
             style={{
               backgroundImage:
                 "radial-gradient(var(--poster-accent) 1px, transparent 1.2px), radial-gradient(var(--poster-accent) 1px, transparent 1.2px)",
@@ -97,7 +109,7 @@ export default function VideoPlayer({
           <motion.svg
             aria-hidden
             viewBox="0 0 72 72"
-            className="absolute left-1/2 top-1/2 h-auto w-[64%] -translate-x-1/2 -translate-y-1/2"
+            className={`absolute left-1/2 top-1/2 h-auto w-[64%] -translate-x-1/2 -translate-y-1/2 ${posterSrc ? "hidden" : ""}`}
             variants={{ rest: { rotate: -7 }, hover: { rotate: reduced ? -7 : -2.5 } }}
             transition={{ duration: reduced ? 0 : 0.28, ease: [...EASE] }}
           >
@@ -122,7 +134,7 @@ export default function VideoPlayer({
           </motion.span>
 
           {/* Cinta con el título, colgada del borde inferior. */}
-          <span className="absolute inset-x-0 bottom-[6%] flex flex-col items-center gap-1.5 px-3">
+          <span className={`absolute inset-x-0 bottom-[6%] flex flex-col items-center gap-1.5 px-3 ${posterSrc ? "hidden" : ""}`}>
             {kicker && (
               <span
                 className="label-mono inline-block bg-paper px-2 py-1 text-ink"

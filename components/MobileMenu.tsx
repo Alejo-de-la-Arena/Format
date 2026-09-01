@@ -37,7 +37,7 @@ const PAGES: { href: string; label: string }[] = [
   { href: "/proximas-fechas", label: "Próximas fechas" },
   { href: "/calendario", label: "Calendario" },
   { href: "/experience", label: "Conocé la Experience" },
-  { href: "/about", label: "About" },
+  { href: "/about", label: "Qué es FORMAT" },
 ];
 
 /**

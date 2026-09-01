@@ -18,8 +18,8 @@ const PAGE_LINKS: { href: string; label: string }[] = [
   { href: "/", label: "Inicio" },
   { href: "/proximas-fechas", label: "Próximas fechas" },
   { href: "/calendario", label: "Calendario" },
-  { href: "/experience", label: "Experience" },
-  { href: "/about", label: "About" },
+  { href: "/experience", label: "Conocé la Experience" },
+  { href: "/about", label: "Qué es FORMAT" },
   // FORMAT Special: página futura, fuera de la navegación por ahora.
   // { href: "/special", label: "Special" },
 ];
@@ -36,10 +36,12 @@ export default function NavClient({
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <nav
-      className={`sticky top-0 z-[60] overflow-hidden bg-paper ${styles.header}`}
-      style={{ "--header-accent": accent } as CSSProperties}
-    >
+    <>
+      <div aria-hidden className="h-[78px] shrink-0" />
+      <nav
+        className={`inset-x-0 top-0 z-[60] overflow-hidden bg-paper ${styles.header}`}
+        style={{ "--header-accent": accent } as CSSProperties}
+      >
       <span className={styles.headerBackdrop} aria-hidden>
         <svg viewBox="0 0 72 72"><path d={getShapePath(forma)} /></svg>
         <svg viewBox="0 0 72 72"><path d={getShapePath(forma, "header-offset")} /></svg>
@@ -101,6 +103,7 @@ export default function NavClient({
         accent={accent}
         forma={forma}
       />
-    </nav>
+      </nav>
+    </>
   );
 }

@@ -162,7 +162,7 @@ export default async function Home() {
       <section id="experience" className={`bg-ink text-paper ${sectionPad}`}>
         <div className={wrap}>
           <HomeReveal><SectionTitle title="FORMAT Experience" dark /></HomeReveal>
-          <div className="grid items-center gap-[clamp(24px,4vw,60px)] md:grid-cols-[1.1fr_0.9fr]">
+          <div className="grid items-center gap-[clamp(28px,5vw,76px)] md:items-start md:grid-cols-[minmax(0,0.85fr)_minmax(360px,1.15fr)]">
             <HomeReveal staggered>
               <h3 className="m-0 text-[clamp(30px,4.6vw,56px)] font-extrabold leading-none tracking-[-0.025em]">
                 Nuestro evento
@@ -189,11 +189,11 @@ export default async function Home() {
                 kicker="Aftermovie"
                 forma={experienceSeason.forma}
                 accent={experienceColors[0]}
-                preview
-                className="mx-auto w-full md:max-w-[calc(min(68vh,600px)*9/16)]"
+                posterSrc="/images/aftermovie-portada.png"
+                className="mx-auto w-full md:-mt-[62px] md:max-w-[calc(min(92svh,980px)*9/16)]"
               />
             ) : (
-              <div className="relative mx-auto flex aspect-[9/16] w-full flex-col items-center justify-center gap-4 overflow-hidden border border-paper/15 bg-ink md:max-w-[calc(min(68vh,600px)*9/16)]">
+              <div className="relative mx-auto flex aspect-[9/16] w-full flex-col items-center justify-center gap-4 overflow-hidden border border-paper/15 bg-ink md:-mt-[62px] md:max-w-[calc(min(92svh,980px)*9/16)]">
                 {/* Misma trama que el poster del player: el hueco lee como
                     fotocopia y no como un rectángulo negro vacío. */}
                 {experienceColors && (
@@ -229,6 +229,7 @@ export default async function Home() {
       {/* FORMAT LAB — clips de video de la Season activa, uno por DJ.
           Mismo player que el aftermovie: poster propio, el iframe recién
           se monta al apretar play. */}
+      {false && <>
       <section id="lab" className={sectionPad}>
         <div className={wrap}>
           <HomeReveal><SectionTitle title="FORMAT Lab" /></HomeReveal>
@@ -259,6 +260,7 @@ export default async function Home() {
       </section>
 
       {/* Identidad iniciada y el único adelanto autorizado: Origin → Ascent. */}
+      </>}
       <WhatIsFormat
         activa={
           startedSeason

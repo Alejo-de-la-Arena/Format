@@ -154,7 +154,7 @@ const FRAGMENT = /* glsl */ `
     vec2 aspect = uResolution.x > uResolution.y
       ? vec2(uResolution.x / uResolution.y, 1.0)
       : vec2(1.0, uResolution.y / uResolution.x);
-    vec2 center = uResolution.x > uResolution.y * 1.2 ? vec2(.66,.54) : vec2(.5,.54);
+    vec2 center = vec2(.5, .52);
     vec2 p = (uv - center) * 2.0 * aspect;
     p -= vec2(sin(uTime * .25), cos(uTime * .31)) * .09;
     p += vec2(snoise(p + uTime * .12), snoise(p + vec2(5.2,1.3) + uTime * .12)) * .075;
@@ -162,7 +162,7 @@ const FRAGMENT = /* glsl */ `
     float id = mod(floor(phase), 8.0);
     float nextId = mod(id + 1.0, 8.0);
     float morph = smoothstep(.56, 1.0, fract(phase));
-    float d = mix(sdVariant(p, uShape, id, .95), sdVariant(p, uShape, nextId, .95), morph);
+    float d = mix(sdVariant(p, uShape, id, 1.18), sdVariant(p, uShape, nextId, 1.18), morph);
     return 1.0 - smoothstep(-.028, .028, d);
   }
 

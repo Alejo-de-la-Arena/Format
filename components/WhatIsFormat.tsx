@@ -1,3 +1,4 @@
+import Link from "next/link";
 import SectionTitle from "@/components/SectionTitle";
 import { EDGES } from "@/components/TapeBlock";
 import { getShapePath } from "@/components/shapePaths";
@@ -23,6 +24,9 @@ export default function WhatIsFormat({ activa, className, wrapClassName }: {
             <p className="mt-3 max-w-[44ch] text-[15px] text-muted">
               Música electrónica, escenografía completa y un cocktail para el opening de cada Season.
             </p>
+            <Link href="/about" className="label-mono mt-5 inline-flex w-fit items-center gap-2 bg-ink px-4 py-3 text-paper transition-transform hover:-translate-y-1 hover:rotate-[-1deg] hover:bg-accent-1 hover:text-ink">
+              Conocé FORMAT <span aria-hidden>→</span>
+            </Link>
           </div>
           {activa && <div className="flex items-center gap-5 justify-self-center py-6 sm:gap-8">
             <div className="relative flex flex-col items-center">

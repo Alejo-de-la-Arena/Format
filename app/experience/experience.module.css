@@ -71,9 +71,13 @@
 }
 
 .hero h1 span {
-  color: var(--color-accent-1);
-  background: none;
-  text-shadow: 3px 3px 0 var(--color-ink);
+  display: inline-block;
+  padding: .04em .14em .1em;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  box-shadow: 5px 5px 0 var(--color-accent-1);
+  text-shadow: none;
+  transform: rotate(-1.5deg);
 }
 
 .heroLead {
@@ -298,23 +302,31 @@
   display: inline-flex;
   align-items: center;
   justify-self: end;
-  gap: 8px;
+  gap: 10px;
   align-self: end;
-  color: var(--color-accent-1);
-  font-size: clamp(13px, 1.35vw, 18px);
-  font-weight: 700;
-  letter-spacing: .06em;
+  padding: 9px 11px 8px 13px;
+  background: var(--color-ink);
+  box-shadow: 4px 4px 0 var(--color-accent-1);
+  color: var(--color-paper);
+  font-size: clamp(10px, .9vw, 12px);
+  font-weight: 800;
+  letter-spacing: .11em;
   line-height: 1;
   text-transform: uppercase;
   white-space: nowrap;
+  transform: rotate(-1.5deg);
+  transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease;
 }
+
+.featuredHead:hover .toggle,
+.featuredHead:focus-visible .toggle { background: var(--color-accent-1); color: var(--color-ink); box-shadow: 6px 6px 0 var(--color-ink); transform: rotate(1deg) translateY(-2px); }
 
 .toggleIcon {
   position: relative;
   display: grid;
   width: 1em;
   height: 1em;
-  font-size: 32px;
+  font-size: 20px;
   line-height: .7;
 }
 
@@ -539,17 +551,17 @@
 .closing {
   display: grid;
   place-items: center;
-  min-height: min(62vw, 650px);
-  padding: 48px 18px;
+  min-height: min(34vw, 380px);
+  padding: clamp(44px, 6vw, 76px) 18px;
   background: var(--color-accent-1);
   color: var(--color-ink);
-  text-align: left;
+  text-align: center;
 }
 
 .closing p {
   max-width: none;
   margin: 0;
-  font-size: clamp(62px, 7.2vw, 124px);
+  font-size: clamp(42px, 5vw, 76px);
   color: var(--color-ink);
   font-weight: 900;
   line-height: .78;
@@ -574,8 +586,9 @@
 }
 
 .closing a {
-  margin-top: 36px;
+  margin-top: 24px;
   border-color: var(--color-ink);
+  font-size: 11px;
 }
 
 .empty {
@@ -682,7 +695,7 @@
 
   .closing p {
     max-width: none;
-    font-size: 50px;
+    font-size: clamp(40px, 11vw, 54px);
   }
 
   .closing {
