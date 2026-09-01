@@ -4,6 +4,7 @@ import { useState, type CSSProperties } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "motion/react";
+import BackButton from "@/components/BackButton";
 import MobileMenu from "@/components/MobileMenu";
 import HoverUnderline from "@/components/HoverUnderline";
 import MusicControls from "@/components/MusicControls";
@@ -104,6 +105,10 @@ export default function NavClient({
         forma={forma}
       />
       </nav>
+
+      {/* Fuera del <nav> fijo: queda en flujo, arriba a la izquierda del
+          contenido de la página. En la home no se renderiza. */}
+      <BackButton />
     </>
   );
 }
