@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import type { Forma, ImageSrc } from "@/lib/types";
 import ShapeSticker from "@/components/ShapeSticker";
 
@@ -27,9 +28,14 @@ export default function EventGallery({
   forma: Forma;
 }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [mounted, setMounted] = useState(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const dialogRef = useRef<HTMLDialogElement | null>(null);
 
-  const close = () => setOpenIndex(null);
+  const close = () => {
+    setOpenIndex(null);
+    window.requestAnimationFrame(() => triggerRef.current?.focus());
+  };
   const prev = () =>
     setOpenIndex((i) => (i === null ? i : (i - 1 + fotos.length) % fotos.length));
   const next = () =>
@@ -45,6 +51,29 @@ export default function EventGallery({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [openIndex, fotos.length]);
+
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (openIndex === null) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    try {
+      dialog.showModal();
+    } catch {
+      // Respaldo para navegadores sin top layer nativo: el portal evita que
+      // los contextos de apilado del detalle oculten el lightbox.
+      dialog.setAttribute("open", "");
+    }
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      if (dialog.open) dialog.close();
+    };
+  }, [openIndex]);
 
   if (fotos.length === 0) {
     return (
@@ -98,18 +127,23 @@ export default function EventGallery({
         ))}
       </div>
 
-      <AnimatePresence>
-        {openIndex !== null && (
-          <motion.div
-            role="dialog"
-            aria-modal="true"
+      {mounted &&
+        openIndex !== null &&
+        createPortal(
+          <motion.dialog
+            ref={dialogRef}
             aria-label="Foto ampliada"
-            className="fixed inset-0 z-[1100] flex min-h-screen w-screen items-center justify-center bg-black/92 p-4 sm:p-6"
+            className="fixed inset-0 z-[2147483647] m-0 flex h-screen max-h-none w-screen max-w-none items-center justify-center border-0 bg-black/92 p-4 text-inherit sm:p-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            onClick={close}
+            onCancel={(event) => {
+              event.preventDefault();
+              close();
+            }}
+            onClick={(event) => {
+              if (event.target === event.currentTarget) close();
+            }}
           >
             <button
               type="button"
@@ -129,7 +163,7 @@ export default function EventGallery({
                     prev();
                   }}
                   aria-label="Foto anterior"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 p-3 text-2xl text-white/70 transition-colors hover:text-accent-1 sm:left-6"
+                  className="absolute left-1 top-1/2 z-10 -translate-y-1/2 p-4 text-3xl text-white/70 transition-colors hover:text-accent-1 sm:left-6"
                 >
                   ‹
                 </button>
@@ -140,7 +174,7 @@ export default function EventGallery({
                     next();
                   }}
                   aria-label="Foto siguiente"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-3 text-2xl text-white/70 transition-colors hover:text-accent-1 sm:right-6"
+                  className="absolute right-1 top-1/2 z-10 -translate-y-1/2 p-4 text-3xl text-white/70 transition-colors hover:text-accent-1 sm:right-6"
                 >
                   ›
                 </button>
@@ -187,9 +221,9 @@ export default function EventGallery({
                 {openIndex + 1} / {fotos.length}
               </span>
             )}
-          </motion.div>
+          </motion.dialog>,
+          document.body,
         )}
-      </AnimatePresence>
     </>
   );
 }

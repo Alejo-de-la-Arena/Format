@@ -12,6 +12,20 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
+    // En dev, Next sirve los bundles con `eval` (HMR / react-refresh) y habla
+    // por WebSocket. Sin estas dos excepciones el CSP mata todo el JS de
+    // cliente y la página queda sin hidratar: nada interactivo responde.
+    const isDev = process.env.NODE_ENV !== "production";
+    const scriptSrc = [
+      "script-src 'self' 'unsafe-inline'",
+      isDev ? "'unsafe-eval'" : "",
+      "https://challenges.cloudflare.com",
+    ].filter(Boolean).join(" ");
+    const connectSrc = [
+      "connect-src 'self' https://omwzsphshgrcbxdcghli.supabase.co https://challenges.cloudflare.com",
+      isDev ? "ws://localhost:* http://localhost:*" : "",
+    ].filter(Boolean).join(" ");
+
     const contentSecurityPolicy = [
       "default-src 'self'",
       "base-uri 'self'",
@@ -21,8 +35,8 @@ const nextConfig: NextConfig = {
       "img-src 'self' data: https://omwzsphshgrcbxdcghli.supabase.co",
       "font-src 'self' data:",
       "style-src 'self' 'unsafe-inline'",
-      "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
-      "connect-src 'self' https://omwzsphshgrcbxdcghli.supabase.co https://challenges.cloudflare.com",
+      scriptSrc,
+      connectSrc,
       "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://challenges.cloudflare.com",
       "upgrade-insecure-requests",
     ].join("; ");
