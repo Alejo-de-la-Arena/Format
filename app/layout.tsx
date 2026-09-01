@@ -24,6 +24,10 @@ export const metadata: Metadata = {
   title: "FORMAT — Av. Costanera Rafael Obligado 4801 · Buenos Aires",
   description:
     "Electrónica en Av. Costanera Rafael Obligado 4801, Buenos Aires. Próximos eventos y archivo de ediciones.",
+  icons: {
+    icon: [{ url: "/logos/logo-format-columna.svg", type: "image/svg+xml", sizes: "any" }],
+    shortcut: ["/logos/logo-format-columna.svg"],
+  },
 };
 
 export default async function RootLayout({

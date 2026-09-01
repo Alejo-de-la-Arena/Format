@@ -1,9 +1,11 @@
 "use client";
 
 import { useActionState } from "react";
+import Script from "next/script";
 import { signIn, type SignInState } from "./actions";
 
 export default function LoginForm() {
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const [state, formAction, pending] = useActionState<SignInState, FormData>(
     signIn,
     undefined,
@@ -11,6 +13,7 @@ export default function LoginForm() {
 
   return (
     <form action={formAction} className="flex w-full flex-col gap-4">
+      {turnstileSiteKey && <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />}
       <div className="flex flex-col gap-1.5">
         <label htmlFor="email" className="label-mono text-muted">
           Email
@@ -38,6 +41,7 @@ export default function LoginForm() {
         />
       </div>
       {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {turnstileSiteKey && <div className="cf-turnstile" data-sitekey={turnstileSiteKey} />}
       <button
         type="submit"
         disabled={pending}

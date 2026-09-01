@@ -129,6 +129,9 @@ export default function Footer() {
             unoptimized
             className="block h-[0.82em] w-auto select-none brightness-0 invert"
           />
+          <span className="label-mono mt-3 flex justify-end text-[10px] text-paper/55">
+            Desarrollado por ADLA
+          </span>
           <span
             aria-hidden
             className="mt-[0.08em] block h-[max(3px,0.045em)] w-full bg-accent-1"

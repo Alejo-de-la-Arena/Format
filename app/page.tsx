@@ -87,11 +87,15 @@ export default async function Home() {
     experienceSeason?.aftermovieUrl && isVideoUrl(experienceSeason.aftermovieUrl)
       ? experienceSeason.aftermovieUrl
       : null;
-  // FORMAT Lab muestra los clips de la Season ACTIVA (no la de la próxima
-  // Experience): son los DJs que están tocando este mes.
-  const labSeason = activeSeason;
-  const labColors = labSeason ? getSeasonColors(labSeason) : null;
-  const labClips = (labSeason?.labClips ?? []).filter((c) => isVideoUrl(c.url));
+  // FORMAT Lab está desactivado: por ahora no hay sets ni clips para mostrar.
+  // Al reactivarlo, restaurar este dato derivado junto con la sección de abajo.
+  // const lab = activeSeason
+  //   ? {
+  //       season: activeSeason,
+  //       colors: getSeasonColors(activeSeason),
+  //       clips: activeSeason.labClips.filter((clip) => isVideoUrl(clip.url)),
+  //     }
+  //   : null;
 
   return (
     <>
@@ -226,41 +230,42 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* FORMAT LAB — clips de video de la Season activa, uno por DJ.
-          Mismo player que el aftermovie: poster propio, el iframe recién
-          se monta al apretar play. */}
-      {false && <>
+      {/*
+      FORMAT Lab está desactivado temporalmente: no hay sets ni clips para
+      mostrar en la home. Reactivar este bloque y el dato `lab` de arriba
+      cuando vuelva a existir contenido publicado para las Seasons.
+
       <section id="lab" className={sectionPad}>
         <div className={wrap}>
           <HomeReveal><SectionTitle title="FORMAT Lab" /></HomeReveal>
-          <p className="-mt-4 mb-6 text-[15px] text-muted">
-            Los DJs de la Season, en corto.
-          </p>
-          {labSeason && labColors && labClips.length > 0 ? (
-            <HomeReveal className="grid gap-4 sm:grid-cols-2 md:grid-cols-3" staggered>
-              {labClips.map((clip, i) => (
-                <VideoPlayer
-                  // `orden` no tiene unique en la base: se combina con la
-                  // URL para que la key no colisione entre dos clips.
-                  key={`${clip.orden}-${clip.url}`}
-                  url={clip.url}
-                  titulo={clip.titulo || `Clip ${i + 1}`}
-                  kicker={labSeason.nombre}
-                  forma={labSeason.forma}
-                  accent={labColors[0]}
-                />
-              ))}
-            </HomeReveal>
-          ) : (
-            <p className="text-sm text-muted">
-              Todavía no hay clips de esta Season.
+            <p className="-mt-4 mb-6 text-[15px] text-muted">
+              Los DJs de la Season, en corto.
             </p>
-          )}
-        </div>
-      </section>
+            {lab.clips.length > 0 ? (
+              <HomeReveal className="grid gap-4 sm:grid-cols-2 md:grid-cols-3" staggered>
+                {lab.clips.map((clip, i) => (
+                  <VideoPlayer
+                    // `orden` no tiene unique en la base: se combina con la
+                    // URL para que la key no colisione entre dos clips.
+                    key={`${clip.orden}-${clip.url}`}
+                    url={clip.url}
+                    titulo={clip.titulo || `Clip ${i + 1}`}
+                    kicker={lab.season.nombre}
+                    forma={lab.season.forma}
+                    accent={lab.colors[0]}
+                  />
+                ))}
+              </HomeReveal>
+            ) : (
+              <p className="text-sm text-muted">
+                Todavía no hay clips de esta Season.
+              </p>
+            )}
+          </div>
+        </section>
+      */}
 
       {/* Identidad iniciada y el único adelanto autorizado: Origin → Ascent. */}
-      </>}
       <WhatIsFormat
         activa={
           startedSeason
