@@ -22,6 +22,19 @@ function revalidateSite(slug?: string) {
   revalidatePath("/admin");
 }
 
+async function assertExperienceFecha(fechaId: string) {
+  const supabase = await createClient();
+  const { data: fecha, error } = await supabase
+    .from("fechas")
+    .select("especial")
+    .eq("id", fechaId)
+    .single();
+  if (error || !fecha?.especial) {
+    throw new Error("Los clips sólo se pueden cargar en una fecha Experience.");
+  }
+  return supabase;
+}
+
 export async function upsertSeason(
   _prevState: SeasonFormState,
   formData: FormData,
@@ -107,11 +120,11 @@ export async function deleteSeason(id: string, slug: string) {
 }
 
 /**
- * FORMAT LAB — clips por URL. No hay objetos en Storage: el video vive en
- * YouTube/Vimeo, así que borrar un clip es borrar la fila y nada más.
+ * FORMAT LAB — clips por URL de una fecha Experience. No hay objetos en
+ * Storage: borrar un clip es borrar la fila y nada más.
  */
 export async function upsertLabClip(
-  seasonId: string,
+  fechaId: string,
   slug: string,
   clip: { id?: string; titulo: string; url: string; orden: number },
 ): Promise<{ id: string }> {
@@ -122,9 +135,10 @@ export async function upsertLabClip(
     throw new Error("La URL tiene que ser de YouTube o Vimeo.");
   }
 
-  const supabase = await createClient();
+  const supabase = await assertExperienceFecha(fechaId);
+
   const payload = {
-    season_id: seasonId,
+    fecha_id: fechaId,
     titulo,
     video_url: url,
     orden: clip.orden,
@@ -134,7 +148,8 @@ export async function upsertLabClip(
     const { error } = await supabase
       .from("season_lab_clips")
       .update(payload)
-      .eq("id", clip.id);
+      .eq("id", clip.id)
+      .eq("fecha_id", fechaId);
     if (error) throw new Error(error.message);
     revalidateSite(slug);
     return { id: clip.id };
@@ -150,12 +165,13 @@ export async function upsertLabClip(
   return { id: data.id };
 }
 
-export async function deleteLabClip(id: string, slug: string) {
-  const supabase = await createClient();
+export async function deleteLabClip(id: string, fechaId: string, slug: string) {
+  const supabase = await assertExperienceFecha(fechaId);
   const { data, error } = await supabase
     .from("season_lab_clips")
     .delete()
     .eq("id", id)
+    .eq("fecha_id", fechaId)
     .select("id");
   if (error) throw new Error(error.message);
   if (!data || data.length === 0) {
@@ -167,13 +183,20 @@ export async function deleteLabClip(id: string, slug: string) {
 /** `orden` no tiene unique, así que alcanza con un update por fila. */
 export async function reorderLabClips(
   clips: { id: string; orden: number }[],
+  fechaId: string,
   slug: string,
 ) {
-  const supabase = await createClient();
-  await Promise.all(
+  const supabase = await assertExperienceFecha(fechaId);
+  const results = await Promise.all(
     clips.map((c) =>
-      supabase.from("season_lab_clips").update({ orden: c.orden }).eq("id", c.id),
+      supabase
+        .from("season_lab_clips")
+        .update({ orden: c.orden })
+        .eq("id", c.id)
+        .eq("fecha_id", fechaId),
     ),
   );
+  const error = results.find((result) => result.error)?.error;
+  if (error) throw new Error(error.message);
   revalidateSite(slug);
 }

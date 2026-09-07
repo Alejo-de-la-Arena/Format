@@ -24,7 +24,6 @@ export interface AdminSeason {
   introText: string;
   introMotion: IntroMotion;
   introAvailable: boolean;
-  labClips: AdminLabClip[];
 }
 
 /** Un clip de FORMAT Lab en /admin. Sólo URL: no hay objeto en Storage. */
@@ -66,6 +65,7 @@ export interface AdminFecha {
   tragoDescripcion: string | null;
   lineup: AdminLineupSlot[];
   fotos: AdminFoto[];
+  labClips: AdminLabClip[];
 }
 
 export interface AdminSeasonWithFechas extends AdminSeason {
@@ -78,17 +78,17 @@ export async function getAdminSeasons(): Promise<AdminSeasonWithFechas[]> {
 
   const { data: seasonRows, error: seasonsError } = await supabase
     .from("seasons")
-    .select("*, season_lab_clips(*)")
-    .order("fecha_inicio", { ascending: true })
-    .order("orden", { referencedTable: "season_lab_clips", ascending: true });
+    .select("*")
+    .order("fecha_inicio", { ascending: true });
   if (seasonsError) throw seasonsError;
 
   const { data: fechaRows, error: fechasError } = await supabase
     .from("fechas")
-    .select("*, lineup_slots(*), fotos_galeria(*)")
+    .select("*, lineup_slots(*), fotos_galeria(*), season_lab_clips(*)")
     .order("fecha", { ascending: true })
     .order("orden", { referencedTable: "lineup_slots", ascending: true })
-    .order("orden", { referencedTable: "fotos_galeria", ascending: true });
+    .order("orden", { referencedTable: "fotos_galeria", ascending: true })
+    .order("orden", { referencedTable: "season_lab_clips", ascending: true });
   if (fechasError) throw fechasError;
 
   // Cache-busting con updated_at — flyer/foto_escena se suben a un path
@@ -135,6 +135,14 @@ export async function getAdminSeasons(): Promise<AdminSeasonWithFechas[]> {
           storagePath: f.storage_path,
           url: galeriaUrl(f.storage_path)!,
         })),
+      labClips: (row.season_lab_clips ?? [])
+        .sort((a: { orden: number }, b: { orden: number }) => a.orden - b.orden)
+        .map((clip: { id: string; orden: number; titulo: string; video_url: string }) => ({
+          id: clip.id,
+          orden: clip.orden,
+          titulo: clip.titulo,
+          url: clip.video_url,
+        })),
     };
     const list = fechasBySeason.get(row.season_id) ?? [];
     list.push(fecha);
@@ -158,14 +166,6 @@ export async function getAdminSeasons(): Promise<AdminSeasonWithFechas[]> {
     introText: row.intro_text ?? "",
     introMotion: isIntroMotion(row.intro_motion) ? row.intro_motion : "signal",
     introAvailable: "intro_text" in row && "intro_motion" in row,
-    labClips: (row.season_lab_clips ?? [])
-      .sort((a: { orden: number }, b: { orden: number }) => a.orden - b.orden)
-      .map((c: { id: string; orden: number; titulo: string; video_url: string }) => ({
-        id: c.id,
-        orden: c.orden,
-        titulo: c.titulo,
-        url: c.video_url,
-      })),
     fechas: fechasBySeason.get(row.id) ?? [],
   }));
 }

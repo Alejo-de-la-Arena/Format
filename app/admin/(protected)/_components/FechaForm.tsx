@@ -7,6 +7,7 @@ import { upsertFecha, type FechaFormState } from "../fechas/actions";
 import FlyerDropzone from "./FlyerDropzone";
 import LineupEditor from "./LineupEditor";
 import GalleryManager from "./GalleryManager";
+import LabClipsManager from "./LabClipsManager";
 
 export default function FechaForm({
   season,
@@ -121,6 +122,13 @@ export default function FechaForm({
             fecha={fecha.fecha}
             seasonSlug={season.slug}
           />
+          {fecha.especial && (
+            <LabClipsManager
+              clips={fecha.labClips}
+              fechaId={fecha.id}
+              seasonSlug={season.slug}
+            />
+          )}
         </>
       ) : (
         <p className="text-xs text-muted">

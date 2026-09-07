@@ -1,5 +1,5 @@
 import { cache } from "react";
-import type { Fecha, LineupSlot } from "@/lib/types";
+import type { Fecha, LabClip, LineupSlot } from "@/lib/types";
 import { createClient } from "@/lib/supabase/public";
 import { esPasado } from "@/lib/dates";
 
@@ -24,6 +24,7 @@ interface FechaRow {
     artistas: string[];
   }[];
   fotos_galeria: { orden: number; storage_path: string }[];
+  season_lab_clips: { orden: number; titulo: string; video_url: string }[];
 }
 
 /**
@@ -60,6 +61,10 @@ function mapFecha(supabase: SupabaseClient, row: FechaRow): Fecha {
     .map((f) => publicUrl(supabase, "galerias", f.storage_path))
     .filter((url): url is string => Boolean(url));
 
+  const labClips: LabClip[] = [...(row.season_lab_clips ?? [])]
+    .sort((a, b) => a.orden - b.orden)
+    .map((clip) => ({ titulo: clip.titulo, url: clip.video_url, orden: clip.orden }));
+
   return {
     seasonSlug: row.seasons?.slug ?? "",
     fecha: row.fecha,
@@ -70,6 +75,7 @@ function mapFecha(supabase: SupabaseClient, row: FechaRow): Fecha {
     flyer: publicUrl(supabase, "flyers", row.flyer_path, row.updated_at),
     fotoEscena: publicUrl(supabase, "galerias", row.foto_escena_path, row.updated_at),
     galeria: galeria.length > 0 ? galeria : undefined,
+    labClips: labClips.length > 0 ? labClips : undefined,
     barraLibre: row.especial ? row.barra_libre : undefined,
     tragoAutor:
       row.especial && row.trago_nombre
@@ -87,9 +93,10 @@ const getAllFechas = cache(async (): Promise<Fecha[]> => {
     const supabase = createClient();
     const { data, error } = await supabase
       .from("fechas")
-      .select("*, seasons(slug), lineup_slots(*), fotos_galeria(*)")
+      .select("*, seasons(slug), lineup_slots(*), fotos_galeria(*), season_lab_clips(*)")
       .order("orden", { referencedTable: "lineup_slots", ascending: true })
-      .order("orden", { referencedTable: "fotos_galeria", ascending: true });
+      .order("orden", { referencedTable: "fotos_galeria", ascending: true })
+      .order("orden", { referencedTable: "season_lab_clips", ascending: true });
     if (error) throw error;
     return (data ?? []).map((row) => mapFecha(supabase, row as unknown as FechaRow));
   } catch (err) {

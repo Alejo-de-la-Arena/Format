@@ -43,6 +43,16 @@ export async function upsertFecha(
   }
 
   const supabase = await createClient();
+  if (id && !especial) {
+    const { count, error: clipsError } = await supabase
+      .from("season_lab_clips")
+      .select("id", { count: "exact", head: true })
+      .eq("fecha_id", id);
+    if (clipsError) return { error: clipsError.message };
+    if (count && count > 0) {
+      return { error: "Borrá los clips de FORMAT Lab antes de convertir esta fecha en Residence." };
+    }
+  }
   const payload = {
     season_id: seasonId,
     fecha,

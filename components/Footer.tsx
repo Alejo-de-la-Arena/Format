@@ -10,14 +10,15 @@ import { EXTERNAL_LINK, SOCIAL } from "@/lib/social";
 const MotionLink = motion.create(Link);
 
 const EXPLORAR: [string, string][] = [
-  ["Eventos", "/#proximos"],
-  ["Ediciones", "/#archivo"],
-  ["Lab", "/#lab"],
+  ["Inicio", "/"],
+  ["Próximas fechas", "/proximas-fechas"],
+  ["Calendario", "/calendario"],
+  ["Conocé la Experience", "/experience"],
+  ["Qué es FORMAT", "/about"],
 ];
 
 const SEGUINOS: [string, string][] = [
   ["Instagram", SOCIAL.instagram],
-  ["SoundCloud", SOCIAL.soundcloud],
   ["YouTube", SOCIAL.youtube],
 ];
 

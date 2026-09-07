@@ -12,12 +12,14 @@ import HoverAnchor from "@/components/HoverAnchor";
 import SectionTitle from "@/components/SectionTitle";
 import TapeBlock from "@/components/TapeBlock";
 import PrintSheetFrame from "@/components/PrintSheetFrame";
+import VideoPlayer from "@/components/VideoPlayer";
 import { getSeasons, getSeason, getAccentsExcept } from "@/lib/data/seasons";
 import { EXTERNAL_LINK, SOCIAL } from "@/lib/social";
 import { getSeasonColors } from "@/lib/season-colors";
 import { seasonAccentVars } from "@/lib/theme";
 import { getFechasBySeason } from "@/lib/data/fechas";
 import { fechaCorta, esPasado, rangoHorario } from "@/lib/dates";
+import { isVideoUrl } from "@/lib/embed";
 import type { Fecha, Season } from "@/lib/types";
 
 const wrap = "mx-auto max-w-[1400px] px-[clamp(18px,4vw,48px)]";
@@ -172,6 +174,7 @@ function FechaRow({
 }) {
   const pasado = esPasado(fecha.fecha);
   const colors = getSeasonColors(season);
+  const labClips = (fecha.labClips ?? []).filter((clip) => isVideoUrl(clip.url));
 
   // La página muestra un solo viernes: abierto de entrada, sin pedir un click.
   return (
@@ -227,6 +230,47 @@ function FechaRow({
           </div>
         ) : (
           <p className="mt-4 text-sm text-muted">Line-up, pronto.</p>
+        )}
+
+        {labClips.length > 0 && (
+          <section className="mt-8 border-y border-line py-6">
+            <div className="mb-5 flex items-end justify-between gap-4">
+              <TapeBlock
+                as="h3"
+                edge={3}
+                rotate={-1.4}
+                className="w-fit text-[clamp(22px,3vw,36px)] font-black uppercase leading-none tracking-[-0.04em]"
+              >
+                FORMAT LAB
+              </TapeBlock>
+              <span className="label-mono text-accent-1">
+                {String(labClips.length).padStart(2, "0")} clips
+              </span>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {labClips.map((clip, index) => (
+                <div
+                  key={`${clip.orden}-${clip.url}`}
+                  className="relative bg-paper-2 p-2 odd:-rotate-[0.7deg] even:rotate-[0.7deg]"
+                >
+                  <span
+                    aria-hidden
+                    className="label-mono absolute -left-1 -top-2 z-10 bg-accent-1 px-2 py-1 text-[10px] text-ink"
+                  >
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <VideoPlayer
+                    url={clip.url}
+                    titulo={clip.titulo || `Clip ${index + 1}`}
+                    kicker="FORMAT LAB"
+                    forma={season.forma}
+                    accent={colors[0]}
+                    aspect="5 / 4"
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
         )}
 
         {pasado && (

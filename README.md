@@ -24,7 +24,6 @@ Los tipos viven en `lib/types.ts`. La fuente de verdad es Supabase (tablas `seas
 | `concepto` | `string` | 1 frase, tono evocativo. Es lo único descriptivo que ve el público. |
 | `fechaInicio` / `fechaFin` | `string` | ISO `yyyy-mm-dd`, primer y último viernes de la Season. |
 | `aftermovieUrl` | `string?` | URL de YouTube/Vimeo del aftermovie de la Season. Ver § Video. |
-| `labClips` | `LabClip[]` | Clips de FORMAT Lab de la Season, en orden. Ver § Video. |
 
 ### `Fecha`
 
@@ -40,6 +39,7 @@ Un viernes individual dentro de una Season.
 | `flyer` | `ImageSrc?` | Poster de esa fecha; cargarlo la hace aparecer en el slider de próximos. |
 | `fotoEscena` | `ImageSrc?` | Foto de la puesta en escena de esa noche; card del archivo. |
 | `galeria` | `string[]?` | Fotos de la noche (detalle de fechas pasadas), reordenables desde `/admin`. |
+| `labClips` | `LabClip[]?` | Clips de FORMAT Lab de la fecha Experience, en orden. Ver § Video. |
 | `barraLibre` | `boolean?` | Sólo relevante si `especial = true`. |
 | `tragoAutor` | `Cocktail?` | `{ nombre, descripcion }`. Cocktail de autor de esta fecha Experience — sólo relevante si `especial = true`; se muestra en el detalle de la fecha y persiste después de que pasó. |
 
@@ -49,7 +49,7 @@ Un viernes individual dentro de una Season.
 
 ### `LabClip`
 
-`{ titulo: string; url: string; orden: number }` — un clip de FORMAT Lab, típicamente uno por DJ de la Season. `titulo` es el nombre del DJ.
+`{ titulo: string; url: string; orden: number }` — un clip de FORMAT Lab de una fecha Experience. `titulo` es el nombre del DJ.
 
 ## Bienvenida por Season
 
@@ -69,7 +69,7 @@ Al comenzar una visita a cualquier página pública se presenta una introducció
 FORMAT **no aloja video propio**: Supabase Storage no hace transcoding ni streaming adaptativo, y pegar una URL es más rápido que esperar un upload. El aftermovie y los clips de Lab viven en YouTube o Vimeo, y en `/admin` se carga sólo la URL.
 
 - **Aftermovie** — `seasons.aftermovie_url`, uno por Season. Va contra la Season y no contra una Fecha porque una Season son varios viernes y el aftermovie los resume a todos; ponerlo en `fechas` obligaría a elegir arbitrariamente qué viernes lo "posee". Se muestra en la banda FORMAT Experience de la home.
-- **FORMAT Lab** — tabla `season_lab_clips` (`season_id`, `titulo`, `video_url`, `orden`), cantidad libre, reordenable con dnd-kit. Misma decisión de modelo: el clip es del DJ dentro del concepto de la Season, no de un viernes puntual. Al ser sólo URLs, borrar un clip es borrar la fila — no hay objetos en Storage que limpiar.
+- **FORMAT Lab** — tabla `season_lab_clips` (`fecha_id`, `titulo`, `video_url`, `orden`), cantidad libre, reordenable con dnd-kit y disponible sólo para fechas Experience. Al ser sólo URLs, borrar un clip es borrar la fila — no hay objetos en Storage que limpiar.
 
 `lib/embed.ts` parsea las dos plataformas (`youtube.com/watch`, `youtu.be`, `/shorts`, `/live`, `/embed`, `vimeo.com/ID`, `/ID/HASH` no listado, `player.vimeo.com`, canales y grupos) y arma la URL del embed con el chrome de la plataforma al mínimo. La **misma** función valida en las Server Actions, así lo que queda guardado es siempre embebible.
 
@@ -85,5 +85,5 @@ Cierra la primera temporada combinando las 5 Seasons anteriores: en vez de un co
 - `/fechas` — los viernes en orden cronológico (destacado + lista completa); la repetición del nombre de cada Season con fecha distinta comunica la cadencia semanal.
 - `/eventos/[slug]?fecha=YYYY-MM-DD` — detalle de **un** viernes de la Season (el que se clickeó): flyer, lineup y fotos de esa noche, con los colores de su Season. Sin `?fecha=` (o con una fecha que no es de esa Season) muestra el próximo viernes de la Season, y si ya pasaron todos, el último. Los links entran siempre con `?fecha=` desde `ArchiveCard` y `/fechas`.
 - `/experience` — página de FORMAT Experience (fechas Experience de cada Season).
-- `/admin` — panel de carga (Supabase Auth email/password, sin registro público): Seasons y sus Fechas en acordeón, flyer/lineup/galería, colores con preview, URL del aftermovie y clips de FORMAT Lab.
+- `/admin` — panel de carga (Supabase Auth email/password, sin registro público): Seasons y sus Fechas en acordeón, flyer/lineup/galería, colores con preview, URL del aftermovie y clips de FORMAT Lab en cada Experience.
 - `/special` — comentada, no desarrollar hasta nuevo aviso.

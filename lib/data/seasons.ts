@@ -1,5 +1,5 @@
 import { cache } from "react";
-import type { LabClip, Season } from "@/lib/types";
+import type { Season } from "@/lib/types";
 import { createClient } from "@/lib/supabase/public";
 import { isIntroMotion, buenosAiresDay } from "@/lib/season-intro";
 
@@ -20,14 +20,9 @@ interface SeasonRow {
   forma_descripcion: string | null;
   intro_text?: string | null;
   intro_motion?: string | null;
-  season_lab_clips: { orden: number; titulo: string; video_url: string }[];
 }
 
 function mapSeason(row: SeasonRow): Season {
-  const labClips: LabClip[] = [...(row.season_lab_clips ?? [])]
-    .sort((a, b) => a.orden - b.orden)
-    .map((c) => ({ titulo: c.titulo, url: c.video_url, orden: c.orden }));
-
   return {
     slug: row.slug,
     numero: row.numero,
@@ -38,7 +33,6 @@ function mapSeason(row: SeasonRow): Season {
     fechaInicio: row.fecha_inicio,
     fechaFin: row.fecha_fin,
     aftermovieUrl: row.aftermovie_url ?? undefined,
-    labClips,
     intro: {
       text: row.intro_text ?? "",
       motion: isIntroMotion(row.intro_motion) ? row.intro_motion : "signal",
@@ -62,9 +56,8 @@ export const getSeasons = cache(async (): Promise<Season[]> => {
     const supabase = createClient();
     const { data, error } = await supabase
       .from("seasons")
-      .select("*, season_lab_clips(*)")
-      .order("fecha_inicio", { ascending: true })
-      .order("orden", { referencedTable: "season_lab_clips", ascending: true });
+      .select("*")
+      .order("fecha_inicio", { ascending: true });
     if (error) throw error;
     return (data ?? []).map(mapSeason);
   } catch (err) {

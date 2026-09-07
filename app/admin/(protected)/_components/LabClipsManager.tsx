@@ -27,13 +27,13 @@ interface DraftClip extends AdminLabClip {
 
 function ClipRow({
   clip,
-  seasonId,
+  fechaId,
   seasonSlug,
   onSaved,
   onDeleted,
 }: {
   clip: DraftClip;
-  seasonId: string;
+  fechaId: string;
   seasonSlug: string;
   onSaved: (clip: DraftClip) => void;
   onDeleted: (id: string) => void;
@@ -55,7 +55,7 @@ function ClipRow({
     setError(null);
     startTransition(async () => {
       try {
-        const { id } = await upsertLabClip(seasonId, seasonSlug, {
+        const { id } = await upsertLabClip(fechaId, seasonSlug, {
           id: clip.isNew ? undefined : clip.id,
           titulo,
           url,
@@ -68,8 +68,8 @@ function ClipRow({
     });
   }
 
-  // Estos inputs viven dentro del <form> de SeasonForm: sin esto, Enter
-  // submitea la Season entera en vez de guardar el clip.
+  // Estos inputs viven dentro del <form> de FechaForm: sin esto, Enter
+  // submitea la fecha entera en vez de guardar el clip.
   function onEnter(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key !== "Enter") return;
     e.preventDefault();
@@ -113,7 +113,7 @@ function ClipRow({
             label="Borrar"
             confirmLabel="¿Borrar el clip?"
             action={async () => {
-              if (!clip.isNew) await deleteLabClip(clip.id, seasonSlug);
+              if (!clip.isNew) await deleteLabClip(clip.id, fechaId, seasonSlug);
               onDeleted(clip.id);
             }}
           />
@@ -147,7 +147,7 @@ function ClipRow({
 }
 
 /**
- * FORMAT Lab: clips de video de la Season, uno por DJ. Cantidad libre,
+ * FORMAT Lab: clips de video de una fecha Experience. Cantidad libre,
  * reordenables (mismo patrón de dnd-kit que LineupEditor y GalleryManager)
  * y con borrado individual confirmado.
  *
@@ -157,11 +157,11 @@ function ClipRow({
  */
 export default function LabClipsManager({
   clips: initialClips,
-  seasonId,
+  fechaId,
   seasonSlug,
 }: {
   clips: AdminLabClip[];
-  seasonId: string;
+  fechaId: string;
   seasonSlug: string;
 }) {
   const [clips, setClips] = useState<DraftClip[]>(initialClips);
@@ -185,6 +185,7 @@ export default function LabClipsManager({
     // en el próximo refresh.
     reorderLabClips(
       reordered.filter((c) => !c.isNew).map((c) => ({ id: c.id, orden: c.orden })),
+      fechaId,
       seasonSlug,
     ).catch(() =>
       setOrdenError("No se pudo guardar el orden. Recargá y probá de nuevo."),
@@ -218,7 +219,7 @@ export default function LabClipsManager({
               <ClipRow
                 key={clip.id}
                 clip={clip}
-                seasonId={seasonId}
+                fechaId={fechaId}
                 seasonSlug={seasonSlug}
                 onSaved={(saved) =>
                   setClips((cs) => cs.map((c) => (c.id === clip.id ? saved : c)))
@@ -234,7 +235,7 @@ export default function LabClipsManager({
 
       {clips.length === 0 && (
         <p className="text-xs text-muted">
-          Todavía no hay clips. Normalmente van 3, uno por DJ de la Season.
+          Todavía no hay clips para esta fecha Experience.
         </p>
       )}
 

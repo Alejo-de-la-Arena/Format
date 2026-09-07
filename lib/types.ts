@@ -35,10 +35,8 @@ export interface Cocktail {
 }
 
 /**
- * Un clip de FORMAT Lab: video corto alojado en YouTube/Vimeo, típicamente
- * uno por DJ de la Season. Va contra la Season y no contra una Fecha — el
- * clip es del DJ dentro del concepto de la Season, no de un viernes puntual.
- * La cantidad es libre.
+ * Un clip de FORMAT Lab: video corto alojado en YouTube/Vimeo, asociado a
+ * una fecha Experience. La cantidad es libre.
  */
 export interface LabClip {
   /** Nombre del DJ, o título del clip. */
@@ -81,8 +79,6 @@ export interface Season {
    * la URL y el embed se arma en el cliente — ver lib/embed.ts.
    */
   aftermovieUrl?: string;
-  /** Clips de FORMAT Lab de esta Season, en orden. */
-  labClips: LabClip[];
   /**
    * Contenido largo de identidad para /about, editable desde /admin. Todos
    * los campos son texto libre con saltos de línea; `""` cuando todavía no
@@ -125,6 +121,8 @@ export interface Fecha {
   fotoEscena?: ImageSrc;
   /** Fotos de la noche (detalle, fecha ya pasada). */
   galeria?: string[];
+  /** Clips de FORMAT Lab de esta fecha Experience, en orden. */
+  labClips?: LabClip[];
   /** Sólo relevante cuando especial = true. */
   barraLibre?: boolean;
   /** Cocktail de autor de esta fecha Experience. */

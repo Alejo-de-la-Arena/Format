@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import type { Forma } from "@/lib/types";
 import type { AdminSeason } from "../data";
 import ColorFieldset from "./ColorFieldset";
-import LabClipsManager from "./LabClipsManager";
 import { parseVideoUrl } from "@/lib/embed";
 import { upsertSeason, type SeasonFormState } from "../seasons/actions";
 
@@ -175,21 +174,6 @@ export default function SeasonForm({
             </span>
           )}
         </label>
-
-        {season ? (
-          <LabClipsManager
-            clips={season.labClips}
-            seasonId={season.id}
-            seasonSlug={season.slug}
-          />
-        ) : (
-          <div className="flex flex-col gap-2">
-            <span className="label-mono text-muted">FORMAT Lab</span>
-            <p className="text-xs text-muted">
-              Guardá la Season primero para poder cargar clips.
-            </p>
-          </div>
-        )}
 
       </div>
 
