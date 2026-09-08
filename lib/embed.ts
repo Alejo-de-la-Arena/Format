@@ -15,22 +15,39 @@ export interface VideoEmbed {
   hash?: string;
   /** URL lista para el src del iframe, sin autoplay. */
   embedUrl: string;
+  /** URL canónica que se guarda en Supabase, nunca el HTML pegado. */
+  normalizedUrl: string;
 }
 
 /**
  * Formatos soportados, en el orden en que los tira cada plataforma al
  * compartir:
- *   youtube.com/watch?v=ID · youtu.be/ID · youtube.com/embed/ID
+ *   youtube.com/watch?v=ID · youtu.be/ID · youtube.com/embed/ID · iframe
  *   youtube.com/shorts/ID  · youtube.com/live/ID
  *   vimeo.com/ID · vimeo.com/ID/HASH (no listado) · player.vimeo.com/video/ID
  *   vimeo.com/channels/xxx/ID · vimeo.com/groups/xxx/videos/ID
  * Los ids de YouTube son siempre 11 caracteres; los de Vimeo, numéricos.
  */
 const YOUTUBE_RE =
-  /(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([\w-]{11})/;
+  /(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:[^#]*&)?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([\w-]{11})/;
 
 const VIMEO_RE =
   /vimeo\.com\/(?:video\/|channels\/[\w-]+\/|groups\/[\w-]+\/videos\/)?(\d+)(?:\/([\w]+))?/;
+
+const IFRAME_RE = /^\s*<iframe\b([^>]*)>/i;
+const IFRAME_SRC_RE = /\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i;
+
+function parseIframe(input: string): { src: string } | null {
+  const iframe = input.match(IFRAME_RE);
+  if (!iframe) return null;
+
+  const attributes = iframe[1];
+  const src = attributes.match(IFRAME_SRC_RE);
+  const value = src?.[1] ?? src?.[2] ?? src?.[3];
+  if (!value) return null;
+
+  return { src: value };
+}
 
 /**
  * Hash de video oculto en la query (`?h=…`). Vimeo lo pone en el path
@@ -57,7 +74,7 @@ function vimeoHashDeQuery(url: string): string | undefined {
  * (`modestbranding=1`) y sin fullscreen forzado en iOS (`playsinline=1`).
  */
 const YOUTUBE_PARAMS =
-  "rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&color=white";
+  "rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&fs=0&color=white";
 
 /** Vimeo: sin título, sin autor, sin avatar, sin badge, y con Do Not Track. */
 const VIMEO_PARAMS = "title=0&byline=0&portrait=0&badge=0&dnt=1";
@@ -69,9 +86,14 @@ const VIMEO_PARAMS = "title=0&byline=0&portrait=0&badge=0&dnt=1";
  * al guardar y el render del player, así que lo que se guarda es siempre
  * embebible.
  */
-export function parseVideoUrl(url: string): VideoEmbed | null {
-  const limpia = url.trim();
-  if (!limpia) return null;
+export function parseVideoUrl(input: string): VideoEmbed | null {
+  const raw = input.trim();
+  if (!raw) return null;
+  const iframe = parseIframe(raw);
+  // Si parece HTML pero no es un iframe válido, no intentamos rescatar una
+  // URL suelta: así jamás se guarda markup crudo por accidente.
+  if (/^<iframe\b/i.test(raw) && !iframe) return null;
+  const limpia = (iframe?.src ?? raw).trim();
 
   const yt = limpia.match(YOUTUBE_RE);
   if (yt) {
@@ -79,6 +101,7 @@ export function parseVideoUrl(url: string): VideoEmbed | null {
       platform: "youtube",
       id: yt[1],
       embedUrl: `https://www.youtube-nocookie.com/embed/${yt[1]}?${YOUTUBE_PARAMS}`,
+      normalizedUrl: `https://www.youtube.com/watch?v=${yt[1]}`,
     };
   }
 
@@ -92,6 +115,7 @@ export function parseVideoUrl(url: string): VideoEmbed | null {
       id,
       hash,
       embedUrl: `https://player.vimeo.com/video/${id}?${params}`,
+      normalizedUrl: `https://vimeo.com/${id}${hash ? `/${hash}` : ""}`,
     };
   }
 
@@ -101,6 +125,14 @@ export function parseVideoUrl(url: string): VideoEmbed | null {
 /** `true` si la URL es embebible. Atajo para la validación de formularios. */
 export function isVideoUrl(url: string): boolean {
   return parseVideoUrl(url) !== null;
+}
+
+/** Miniatura original de YouTube. Vimeo no expone una URL equivalente sin
+ * pedir oEmbed, así que esos clips conservan el poster de marca. */
+export function getPlatformThumbnail(embed: VideoEmbed): string | undefined {
+  return embed.platform === "youtube"
+    ? `https://i.ytimg.com/vi/${embed.id}/maxresdefault.jpg`
+    : undefined;
 }
 
 /**

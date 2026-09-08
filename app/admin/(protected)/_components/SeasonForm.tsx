@@ -154,14 +154,14 @@ export default function SeasonForm({
             name="aftermovieUrl"
             value={aftermovie}
             onChange={(e) => setAftermovie(e.target.value)}
-            placeholder="https://youtube.com/watch?v=… o https://vimeo.com/…"
+            placeholder="URL o iframe de YouTube/Vimeo"
             className={`border bg-paper px-3 py-2 outline-none focus:border-accent-1 ${
               aftermovieInvalido ? "border-red-600" : "border-line"
             }`}
           />
           {aftermovieInvalido ? (
             <span className="text-xs text-red-600">
-              No es una URL de video de YouTube ni de Vimeo.
+              Pegá una URL o iframe válido de YouTube o Vimeo.
             </span>
           ) : aftermovieEmbed ? (
             <span className="label-mono text-muted">

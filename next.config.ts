@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
         hostname: "omwzsphshgrcbxdcghli.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
+      {
+        protocol: "https",
+        hostname: "i.ytimg.com",
+        pathname: "/vi/**",
+      },
     ],
   },
   async headers() {
@@ -32,7 +37,7 @@ const nextConfig: NextConfig = {
       "object-src 'none'",
       "frame-ancestors 'none'",
       "form-action 'self'",
-      "img-src 'self' data: https://omwzsphshgrcbxdcghli.supabase.co",
+      "img-src 'self' data: https://omwzsphshgrcbxdcghli.supabase.co https://i.ytimg.com",
       "font-src 'self' data:",
       "style-src 'self' 'unsafe-inline'",
       scriptSrc,

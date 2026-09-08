@@ -5,21 +5,25 @@ import Image from "next/image";
 import { motion, useReducedMotion } from "motion/react";
 import { getShapePath } from "@/components/shapePaths";
 import { EDGES } from "@/components/TapeBlock";
-import { parseVideoUrl, withAutoplay, withMutedPreview } from "@/lib/embed";
+import {
+  getPlatformThumbnail,
+  parseVideoUrl,
+  withAutoplay,
+  withMutedPreview,
+} from "@/lib/embed";
 import type { Forma } from "@/lib/types";
 
 const EASE = [0.65, 0, 0.35, 1] as const;
 
 /**
- * Player de YouTube/Vimeo con poster propio.
+ * Player de YouTube/Vimeo con poster propio o miniatura de plataforma.
  *
  * El iframe NO existe hasta que se aprieta play: antes hay un poster armado
  * con los mecanismos de la marca (sticker de la forma de la Season sobre
  * trama de puntos en el acento, cinta con el título). Resuelve tres cosas de
- * una: cero chrome de la plataforma en reposo, cero requests a Google/Vimeo
- * hasta que hay intención de mirar, y un thumbnail que es nuestro y no el
- * frame que eligió el algoritmo — que además, en video vertical, viene con
- * bandas negras a los costados.
+ * una: cero chrome de la plataforma en reposo y cero requests a Google/Vimeo
+ * hasta que hay intención de mirar. FORMAT Lab puede usar la miniatura
+ * original de YouTube sin superponer tratamiento de marca.
  *
  * Los sugeridos del final se limitan con los parámetros de cada plataforma
  * (ver lib/embed.ts). El movimiento del poster es puramente decorativo, así
@@ -31,11 +35,12 @@ export default function VideoPlayer({
   kicker,
   forma,
   accent,
-  /** CSS aspect-ratio del marco. Vertical por defecto: el aftermovie y los
-   *  clips de Lab se filman en 9:16. */
+  /** CSS aspect-ratio del marco. El aftermovie mantiene 9:16 por defecto;
+   * los clips de Lab pasan su proporción guardada. */
   aspect = "9 / 16",
   preview = false,
   posterSrc,
+  posterStyle = "brand",
   className,
 }: {
   url: string;
@@ -49,14 +54,21 @@ export default function VideoPlayer({
   /** Muestra el video real en silencio antes de la interacción. */
   preview?: boolean;
   posterSrc?: string;
+  /** Para clips de YouTube: su miniatura real, sin placa ni overlay propio. */
+  posterStyle?: "brand" | "platform";
   className?: string;
 }) {
   const [playing, setPlaying] = useState(false);
+  const [thumbnailFallback, setThumbnailFallback] = useState(false);
   const reduced = useReducedMotion();
   const embed = parseVideoUrl(url);
 
   // URL inválida: no dibujamos un marco roto, la sección decide qué mostrar.
   if (!embed) return null;
+  const platformThumbnail = posterStyle === "platform" ? getPlatformThumbnail(embed) : undefined;
+  const thumbnailSrc = thumbnailFallback
+    ? platformThumbnail?.replace("maxresdefault.jpg", "hqdefault.jpg")
+    : platformThumbnail;
 
   return (
     <div
@@ -70,8 +82,23 @@ export default function VideoPlayer({
           className="absolute inset-0 h-full w-full"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           referrerPolicy="strict-origin-when-cross-origin"
-          allowFullScreen
         />
+      ) : thumbnailSrc ? (
+        <button
+          type="button"
+          onClick={() => setPlaying(true)}
+          aria-label={`Reproducir ${titulo}`}
+          className="absolute inset-0 block overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-accent-1"
+        >
+          <Image
+            src={thumbnailSrc}
+            alt=""
+            fill
+            sizes="(max-width: 1023px) 100vw, 50vw"
+            className="object-cover"
+            onError={() => setThumbnailFallback(true)}
+          />
+        </button>
       ) : (
         <motion.button
           type="button"

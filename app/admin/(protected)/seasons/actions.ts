@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { isVideoUrl } from "@/lib/embed";
+import { parseVideoUrl } from "@/lib/embed";
 import type { Forma } from "@/lib/types";
 import { isIntroMotion, isIntroText } from "@/lib/season-intro";
 
@@ -72,10 +72,11 @@ export async function upsertSeason(
   }
   // Se valida acá y no sólo en el input para que lo que queda guardado sea
   // siempre embebible: el player parsea con la misma función (lib/embed.ts).
-  if (aftermovieUrl && !isVideoUrl(aftermovieUrl)) {
+  const aftermovieEmbed = aftermovieUrl ? parseVideoUrl(aftermovieUrl) : null;
+  if (aftermovieUrl && !aftermovieEmbed) {
     return {
       error:
-        "El aftermovie tiene que ser una URL de YouTube o Vimeo (youtube.com/watch?v=…, youtu.be/…, vimeo.com/…).",
+        "El aftermovie tiene que ser una URL o iframe válido de YouTube o Vimeo.",
     };
   }
 
@@ -89,7 +90,7 @@ export async function upsertSeason(
     fecha_inicio: fechaInicio,
     fecha_fin: fechaFin,
     colores,
-    aftermovie_url: aftermovieUrl || null,
+    aftermovie_url: aftermovieEmbed?.normalizedUrl ?? null,
     about_relato: aboutRelato,
     color_descripcion: colorDescripcion,
     forma_descripcion: formaDescripcion,
@@ -131,8 +132,9 @@ export async function upsertLabClip(
   const titulo = clip.titulo.trim();
   const url = clip.url.trim();
   if (!url) throw new Error("Falta la URL del clip.");
-  if (!isVideoUrl(url)) {
-    throw new Error("La URL tiene que ser de YouTube o Vimeo.");
+  const embed = parseVideoUrl(url);
+  if (!embed) {
+    throw new Error("Pegá una URL o iframe válido de YouTube o Vimeo.");
   }
 
   const supabase = await assertExperienceFecha(fechaId);
@@ -140,7 +142,7 @@ export async function upsertLabClip(
   const payload = {
     fecha_id: fechaId,
     titulo,
-    video_url: url,
+    video_url: embed.normalizedUrl,
     orden: clip.orden,
   };
 

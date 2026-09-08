@@ -63,7 +63,11 @@ function mapFecha(supabase: SupabaseClient, row: FechaRow): Fecha {
 
   const labClips: LabClip[] = [...(row.season_lab_clips ?? [])]
     .sort((a, b) => a.orden - b.orden)
-    .map((clip) => ({ titulo: clip.titulo, url: clip.video_url, orden: clip.orden }));
+    .map((clip) => ({
+      titulo: clip.titulo,
+      url: clip.video_url,
+      orden: clip.orden,
+    }));
 
   return {
     seasonSlug: row.seasons?.slug ?? "",

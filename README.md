@@ -66,12 +66,12 @@ Al comenzar una visita a cualquier página pública se presenta una introducció
 
 ## Video
 
-FORMAT **no aloja video propio**: Supabase Storage no hace transcoding ni streaming adaptativo, y pegar una URL es más rápido que esperar un upload. El aftermovie y los clips de Lab viven en YouTube o Vimeo, y en `/admin` se carga sólo la URL.
+FORMAT **no aloja video propio**: Supabase Storage no hace transcoding ni streaming adaptativo. El aftermovie y los clips de Lab viven en YouTube o Vimeo; en `/admin` se acepta una URL o el iframe de “Insertar”, pero sólo se guarda una URL normalizada.
 
 - **Aftermovie** — `seasons.aftermovie_url`, uno por Season. Va contra la Season y no contra una Fecha porque una Season son varios viernes y el aftermovie los resume a todos; ponerlo en `fechas` obligaría a elegir arbitrariamente qué viernes lo "posee". Se muestra en la banda FORMAT Experience de la home.
-- **FORMAT Lab** — tabla `season_lab_clips` (`fecha_id`, `titulo`, `video_url`, `orden`), cantidad libre, reordenable con dnd-kit y disponible sólo para fechas Experience. Al ser sólo URLs, borrar un clip es borrar la fila — no hay objetos en Storage que limpiar.
+- **FORMAT Lab** — tabla `season_lab_clips` (`fecha_id`, `titulo`, `video_url`, `orden`), cantidad libre, reordenable con dnd-kit y disponible sólo para fechas Experience. Todos los clips usan el marco 16:9 nativo del player de YouTube; las medidas del iframe compartido no describen el video fuente. Al ser sólo URLs, borrar un clip es borrar la fila — no hay objetos en Storage que limpiar.
 
-`lib/embed.ts` parsea las dos plataformas (`youtube.com/watch`, `youtu.be`, `/shorts`, `/live`, `/embed`, `vimeo.com/ID`, `/ID/HASH` no listado, `player.vimeo.com`, canales y grupos) y arma la URL del embed con el chrome de la plataforma al mínimo. La **misma** función valida en las Server Actions, así lo que queda guardado es siempre embebible.
+`lib/embed.ts` parsea las dos plataformas (`youtube.com/watch`, `youtu.be`, `/shorts`, `/live`, `/embed`, iframes de YouTube, `vimeo.com/ID`, `/ID/HASH` no listado, `player.vimeo.com`, canales y grupos) y arma la URL del embed con el chrome de la plataforma al mínimo. La **misma** función valida en las Server Actions, así lo que queda guardado es siempre embebible.
 
 `components/VideoPlayer.tsx` renderiza un poster propio (sticker de la forma de la Season sobre trama en el acento, cinta con el título) y **no monta el iframe hasta que se aprieta play** — ni un request a Google/Vimeo antes de que haya intención de mirar. Vertical (9:16) por defecto, configurable con `aspect`.
 

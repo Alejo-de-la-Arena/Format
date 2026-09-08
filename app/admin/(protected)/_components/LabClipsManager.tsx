@@ -124,8 +124,8 @@ function ClipRow({
         value={url}
         onChange={(e) => setUrl(e.target.value)}
         onKeyDown={onEnter}
-        placeholder="https://youtube.com/watch?v=… o https://vimeo.com/…"
-        aria-label="URL del video"
+        placeholder="URL o iframe de YouTube/Vimeo"
+        aria-label="URL o iframe del video"
         className={`w-full border px-2 py-1 text-sm outline-none focus:border-accent-1 ${
           urlInvalida ? "border-red-600" : "border-line"
         }`}
@@ -133,7 +133,7 @@ function ClipRow({
 
       {urlInvalida && (
         <p className="text-xs text-red-600">
-          No es una URL de video de YouTube ni de Vimeo.
+          Pegá una URL o iframe válido de YouTube o Vimeo.
         </p>
       )}
       {embed && (

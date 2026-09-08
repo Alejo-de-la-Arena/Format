@@ -233,7 +233,7 @@ function FechaRow({
         )}
 
         {labClips.length > 0 && (
-          <section className="mt-8 border-y border-line py-6">
+          <section className="mt-8 border-y border-line py-6 lg:w-[calc(215%+5vw)]">
             <div className="mb-5 flex items-end justify-between gap-4">
               <TapeBlock
                 as="h3"
@@ -247,11 +247,11 @@ function FechaRow({
                 {String(labClips.length).padStart(2, "0")} clips
               </span>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-6">
               {labClips.map((clip, index) => (
                 <div
                   key={`${clip.orden}-${clip.url}`}
-                  className="relative bg-paper-2 p-2 odd:-rotate-[0.7deg] even:rotate-[0.7deg]"
+                  className="relative"
                 >
                   <span
                     aria-hidden
@@ -262,11 +262,14 @@ function FechaRow({
                   <VideoPlayer
                     url={clip.url}
                     titulo={clip.titulo || `Clip ${index + 1}`}
-                    kicker="FORMAT LAB"
                     forma={season.forma}
                     accent={colors[0]}
-                    aspect="5 / 4"
+                    aspect="16 / 9"
+                    posterStyle="platform"
                   />
+                  <p className="mt-2 max-w-[52ch] pl-3 text-[clamp(16px,2vw,21px)] font-bold leading-tight tracking-tight">
+                    {clip.titulo || `Clip ${index + 1}`}
+                  </p>
                 </div>
               ))}
             </div>
