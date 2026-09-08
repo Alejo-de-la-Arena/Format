@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* El script de preflight sólo agrega este atributo en una primera visita que
+   va a abrir la intro. React lo retira sincrónicamente después de showModal,
+   así la home nunca alcanza a pintar detrás del diálogo. */
+html[data-intro-preflight] body { visibility: hidden; }
+
 /*
  * FORMAT — zine / fotocopia / collage de stickers. Gris papel y negro son
  * constantes del sistema; el color lo pone la Season activa (o la propia,
@@ -9,31 +14,31 @@
 
 /* Acentos de la Season: custom properties tipadas para que el color
    transicione suave cuando cambian (Season activa distinta, navegación a
-   /eventos/[slug], etc). Los initial-value son los de Origin. */
+   /eventos/[slug], etc). Sin Season, el fallback es tinta neutra. */
 @property --accent-1 {
   syntax: "<color>";
   inherits: true;
-  initial-value: #1e38f5;
+  initial-value: #111111;
 }
 @property --accent-2 {
   syntax: "<color>";
   inherits: true;
-  initial-value: #5470ff;
+  initial-value: #111111;
 }
 @property --accent-3 {
   syntax: "<color>";
   inherits: true;
-  initial-value: #b9c4ff;
+  initial-value: #111111;
 }
 @property --accent-4 {
   syntax: "<color>";
   inherits: true;
-  initial-value: #14247a;
+  initial-value: #111111;
 }
 @property --accent-5 {
   syntax: "<color>";
   inherits: true;
-  initial-value: #2ee6e6;
+  initial-value: #111111;
 }
 
 @theme {
@@ -43,12 +48,6 @@
   --color-muted: #52565a;
   --color-line: rgba(17, 17, 17, 0.16);
 
-  --color-accent-1: var(--accent-1);
-  --color-accent-2: var(--accent-2);
-  --color-accent-3: var(--accent-3);
-  --color-accent-4: var(--accent-4);
-  --color-accent-5: var(--accent-5);
-
   /* Sólo Inter. El wordmark FORMAT va como SVG (public/logos/), no hay
      fuente display. */
   --font-body: var(--font-inter), "Helvetica Neue", Helvetica, Arial,
@@ -56,7 +55,7 @@
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-accent-1);
+  outline: 2px solid var(--accent-1);
   outline-offset: 3px;
 }
 
@@ -66,6 +65,15 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 76px;
+}
+
+/* Resolve Season tokens on the element, including historical detail wrappers. */
+@theme inline {
+  --color-accent-1: var(--accent-1);
+  --color-accent-2: var(--accent-2);
+  --color-accent-3: var(--accent-3);
+  --color-accent-4: var(--accent-4);
+  --color-accent-5: var(--accent-5);
 }
 
 /* Etiquetas: fechas, kickers, datos. Antes monoespaciadas — el sitio usa
@@ -155,12 +163,12 @@ html {
 
 .glitch-text:not(.glitch-text--hover)::after {
   left: 2px;
-  text-shadow: var(--after-shadow, -2px 0 var(--color-accent-1));
+  text-shadow: var(--after-shadow, -2px 0 var(--accent-1));
   animation: glitch-text-shift var(--after-duration, 5.4s) infinite linear alternate-reverse;
 }
 .glitch-text:not(.glitch-text--hover)::before {
   left: -2px;
-  text-shadow: var(--before-shadow, 2px 0 var(--color-accent-1));
+  text-shadow: var(--before-shadow, 2px 0 var(--accent-1));
   animation: glitch-text-shift var(--before-duration, 3.6s) infinite linear alternate-reverse;
 }
 
@@ -174,14 +182,14 @@ html {
   content: attr(data-text);
   opacity: 1;
   left: 2px;
-  text-shadow: var(--after-shadow, -2px 0 var(--color-accent-1));
+  text-shadow: var(--after-shadow, -2px 0 var(--accent-1));
   animation: glitch-text-shift var(--after-duration, 5.4s) infinite linear alternate-reverse;
 }
 .glitch-text--hover:hover::before {
   content: attr(data-text);
   opacity: 1;
   left: -2px;
-  text-shadow: var(--before-shadow, 2px 0 var(--color-accent-1));
+  text-shadow: var(--before-shadow, 2px 0 var(--accent-1));
   animation: glitch-text-shift var(--before-duration, 3.6s) infinite linear alternate-reverse;
 }
 

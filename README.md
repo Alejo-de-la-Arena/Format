@@ -53,23 +53,29 @@ Un viernes individual dentro de una Season.
 
 ## Bienvenida por Season
 
-Al comenzar una visita a cualquier página pública se presenta una introducción de 3,8 segundos: la señal se ensambla, toma el color de la Season y da paso a la página. No hay botón de saltar; cierra automáticamente, admite Escape y se puede repetir desde el hero. No representa una carga ni retrasa los datos de la página.
+La intro son tres momentos encadenados, 10,8 segundos en total, con la forma, el color y el nombre de las filas reales de Supabase:
 
-- `seasons.intro_text`: frase opcional (hasta 160 caracteres; el panel admite 3 líneas). Vacío usa el nombre real de la Season; Origin usa «WELCOME TO / THE ORIGIN.».
-- `seasons.intro_motion`: `signal` (ensamblado), `ascend` (ascenso) o `expand` (expansión). Son movimientos genéricos, sin nombres ni identidades futuras en el cliente.
-- Aplicar manualmente `supabase/migrations/0010_season_intro.sql` antes de editar estos campos en `/admin`. Son columnas de `seasons` porque la relación y el ciclo de vida son 1:1; conservan las políticas RLS existentes. No se duplica forma, color, nombre ni cocktail. Antes de migrar, la lectura pública usa defaults y el panel mantiene operativas las otras ediciones.
-- La intro selecciona la última Season cuyo inicio ya ocurrió en `America/Argentina/Buenos_Aires`, y a lo sumo la anterior. No anticipa la próxima. La home conserva la política existente para anunciar fechas futuras reales; la bienvenida tiene su propia selección por inicio.
-- Se recuerda por sesión de pestaña con `format:visit-intro:v2:<slug>:<fechaInicio>` en sessionStorage (sin datos personales). Si el almacenamiento está bloqueado, se recuerda en memoria. No se repite al navegar o recargar en esa sesión; una nueva sesión independiente vuelve a mostrarla. No aparece en admin ni con movimiento reducido. La revalidación sigue siendo de 300 segundos.
-- Única excepción de adelanto autorizada: «Qué es FORMAT» muestra Origin → Ascent, con el triángulo violeta invertido. Vive sólo en ese componente de la home, no se usa en intro, navegación, calendario, fechas ni About. No se importa el catálogo de Seasons futuras.
-- Hero: ocho variantes de la misma forma, cambio cada 2,8 segundos. Un plano WebGL; DPR limitado a 1 en mobile / 1,5 desktop; reloj pausado fuera del viewport, con la pestaña oculta o la intro abierta. Sin muestreo de scroll ni lecturas de layout por frame.
-- Pruebas de selección/fecha/persistencia: `node --test tests/season-intro.test.mjs` (usa TypeScript ya instalado).
+1. **La Season anterior se arma** (0–2,1 s) con su animación de siempre: los cuatro cuartos de la forma convergen, el color inunda el cuadro y queda el contorno en papel. Sin texto.
+2. **El viaje** (2,1–4,8 s): la tira entera —tres pantallas apiladas— se traslada en Y y el marco se queda quieto, así que lo que sube es el punto de vista. En el medio se recorren dos pantallas de tramo con las marcas del trayecto; el contador de edición pasa de una Season a la otra a mitad de camino. Arriba entra la frase del viaje descomprimiéndose: arranca con el tracking cerrado y se abre hasta el final.
+3. **La Season activa** (7,2 s en adelante): se va la frase y entra la bienvenida junto con la forma nueva armándose, en su color.
+
+Ascent usa «It was time to ascend» y después «Welcome to Ascent»; para otras Seasons la frase del viaje es genérica, salvo que tengan `intro_motion=ascend`. Sin Season anterior no hay de dónde subir: queda sólo el tercer momento, con los 2,8 segundos de siempre.
+
+- `seasons.intro_text`: bienvenida opcional (hasta 160 caracteres y 3 líneas). Vacío usa «Welcome to / Nombre». Si su primera línea repite la frase del viaje, se descarta: esa frase ya tiene su propio momento y en pantalla iría dos veces. Se conserva la edición desde admin y la compatibilidad con la migración existente `0010_season_intro.sql`; esta entrega no requiere SQL nuevo.
+- Tema, hero, intro y sección «Qué es FORMAT» comparten selección: Season en curso, próxima durante un intervalo, última si todas terminaron. La fecha se calcula en Buenos Aires. La intro sólo recibe esa identidad y la inmediatamente anterior.
+- Misma persistencia: `format:visit-intro:v2:<slug>:<fechaInicio>` en sessionStorage, con memoria como fallback. No se repite al navegar/recargar en esa sesión. Nueva sesión independiente: nueva intro. Escape cierra; con movimiento reducido entra directo, sin modal. No aparece en admin.
+- «Qué es FORMAT» resuelve en servidor la activa y un único adelanto siguiente. Prioriza los datos reales y usa la secuencia editorial como fallback; no serializa el catálogo completo ni las identidades posteriores. La constante de Pulse permanece sin cambios.
+- Ascent: `triangle`, vértice arriba, paleta `#7B3FE4`, `#2E1065`, `#A06BFF`, `#D9C7FF`, `#FFFFFF`. El triángulo ya está permitido por el CHECK de `0001_init.sql` y por el selector del admin.
+- Hero: ocho variantes de la forma activa, con el mismo tiempo, densidad, opacidad y recorrido. Un plano WebGL; DPR limitado a 1 en mobile y 1,5 en desktop; pausado fuera del viewport, con pestaña oculta o intro abierta. Las repeticiones no reflejan/invierten el triángulo.
+- Acentos Tailwind resueltos con `@theme inline`; CSS consume `--accent-1..5` en el elemento. El detalle de cada Season, incluido su header y menú, conserva su identidad; calendario y archivo usan la identidad de cada fecha.
+- Pruebas: `node --test tests/*.test.mjs`, `npx tsc --noEmit`, `npm run build`. Preview aislada: `node tests/ascent-preview.mjs`; capturas con Playwright instalado: `node tests/ascent-visual.mjs` (admite `FORMAT_PLAYWRIGHT` y `FORMAT_CHROME`). Las fixtures no se conectan a Supabase y no cambian datos.
 
 ## Video
 
 FORMAT **no aloja video propio**: Supabase Storage no hace transcoding ni streaming adaptativo. El aftermovie y los clips de Lab viven en YouTube o Vimeo; en `/admin` se acepta una URL o el iframe de “Insertar”, pero sólo se guarda una URL normalizada.
 
 - **Aftermovie** — `seasons.aftermovie_url`, uno por Season. Va contra la Season y no contra una Fecha porque una Season son varios viernes y el aftermovie los resume a todos; ponerlo en `fechas` obligaría a elegir arbitrariamente qué viernes lo "posee". Se muestra en la banda FORMAT Experience de la home.
-- **FORMAT Lab** — tabla `season_lab_clips` (`fecha_id`, `titulo`, `video_url`, `orden`), cantidad libre, reordenable con dnd-kit y disponible sólo para fechas Experience. Todos los clips usan el marco 16:9 nativo del player de YouTube; las medidas del iframe compartido no describen el video fuente. Al ser sólo URLs, borrar un clip es borrar la fila — no hay objetos en Storage que limpiar.
+- **FORMAT Lab** — tabla `season_lab_clips` (`fecha_id`, `titulo`, `video_url`, `orden`), cantidad libre, reordenable con dnd-kit y disponible sólo para fechas Experience. Todos los clips usan el marco 16:9 nativo del player de YouTube; las medidas del iframe compartido no describen el video fuente. En mobile el marco sale del margen de lectura y llega a los bordes de pantalla: con el 16:9 y la columna única fijos, el ancho es lo único que da altura (390 px de viewport → 219 px de alto, contra 186 px cuando respetaba el margen). En desktop la columna ya es ancha y no cambia. Al ser sólo URLs, borrar un clip es borrar la fila — no hay objetos en Storage que limpiar.
 
 `lib/embed.ts` parsea las dos plataformas (`youtube.com/watch`, `youtu.be`, `/shorts`, `/live`, `/embed`, iframes de YouTube, `vimeo.com/ID`, `/ID/HASH` no listado, `player.vimeo.com`, canales y grupos) y arma la URL del embed con el chrome de la plataforma al mínimo. La **misma** función valida en las Server Actions, así lo que queda guardado es siempre embebible.
 
@@ -84,6 +90,6 @@ Cierra la primera temporada combinando las 5 Seasons anteriores: en vez de un co
 - `/` — home: próximos viernes, ediciones anteriores, Experience, Lab.
 - `/fechas` — los viernes en orden cronológico (destacado + lista completa); la repetición del nombre de cada Season con fecha distinta comunica la cadencia semanal.
 - `/eventos/[slug]?fecha=YYYY-MM-DD` — detalle de **un** viernes de la Season (el que se clickeó): flyer, lineup y fotos de esa noche, con los colores de su Season. Sin `?fecha=` (o con una fecha que no es de esa Season) muestra el próximo viernes de la Season, y si ya pasaron todos, el último. Los links entran siempre con `?fecha=` desde `ArchiveCard` y `/fechas`.
-- `/experience` — página de FORMAT Experience (fechas Experience de cada Season).
+- `/experience` — página de FORMAT Experience (fechas Experience de cada Season). Toma su acento de la **Season activa**, como el resto del sitio; el único subárbol con acento propio es el bloque destacado, que adopta el de *su* Season porque es historia y no tema global (lo mismo cada `<details>` del archivo). Ese bloque arranca **cerrado**: la página abre con la fecha y el venue a la vista, y el flyer, el line-up, el cocktail y la galería se despliegan con «Ver información».
 - `/admin` — panel de carga (Supabase Auth email/password, sin registro público): Seasons y sus Fechas en acordeón, flyer/lineup/galería, colores con preview, URL del aftermovie y clips de FORMAT Lab en cada Experience.
 - `/special` — comentada, no desarrollar hasta nuevo aviso.

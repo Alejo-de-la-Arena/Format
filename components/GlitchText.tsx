@@ -21,7 +21,7 @@ export default function GlitchText({
   enableShadows = true,
   enableOnHover = false,
   className = "",
-  accent = "var(--color-accent-1)",
+  accent = "var(--accent-1)",
 }: {
   children: string;
   speed?: number;

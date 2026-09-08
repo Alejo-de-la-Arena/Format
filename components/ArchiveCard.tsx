@@ -3,6 +3,7 @@ import { getSeasonColors } from "@/lib/season-colors";
 import FlyerImage, { FLYER_CARD_WIDTH } from "@/components/FlyerImage";
 import HoverLink from "@/components/HoverLink";
 import HoverArrow from "@/components/HoverArrow";
+import { seasonAccentVars } from "@/lib/theme";
 
 /**
  * Card del slider de ediciones anteriores: el flyer, nada más — mismo
@@ -22,6 +23,7 @@ export default function ArchiveCard({
   return (
     <HoverLink
       href={`/eventos/${season.slug}?fecha=${fecha.fecha}`}
+      style={seasonAccentVars(season)}
       className={`group block ${FLYER_CARD_WIDTH} shrink-0 overflow-hidden`}
     >
       <FlyerImage

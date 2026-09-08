@@ -1,6 +1,7 @@
 import { getActiveSeason } from "@/lib/data/seasons";
 import { getSeasonColors } from "@/lib/season-colors";
 import NavClient from "@/components/NavClient";
+import type { Season } from "@/lib/types";
 
 /**
  * Wrapper server de la barra de navegación: resuelve la Season activa para
@@ -8,8 +9,8 @@ import NavClient from "@/components/NavClient";
  * tratamiento zine: stickers de fondo y color de acento). El resto de la
  * interacción vive en NavClient.
  */
-export default async function Nav() {
-  const season = await getActiveSeason();
+export default async function Nav({ season: ownSeason }: { season?: Season } = {}) {
+  const season = ownSeason ?? await getActiveSeason();
   const accent = season ? getSeasonColors(season)[0] : "#111111";
   const forma = season?.forma ?? "square";
   return <NavClient accent={accent} forma={forma} seasonName={season?.nombre ?? "FORMAT"} />;

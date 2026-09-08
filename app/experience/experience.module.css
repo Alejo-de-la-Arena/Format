@@ -20,7 +20,7 @@
   z-index: -2;
   inset: 0;
   opacity: .58;
-  background-image: radial-gradient(var(--color-accent-1) .8px, transparent .9px);
+  background-image: radial-gradient(var(--accent-1) .8px, transparent .9px);
   background-size: 13px 13px;
   mask-image: linear-gradient(110deg, #000 0 24%, transparent 69%);
 }
@@ -75,7 +75,7 @@
   padding: .04em .14em .1em;
   background: var(--color-ink);
   color: var(--color-paper);
-  box-shadow: 5px 5px 0 var(--color-accent-1);
+  box-shadow: 5px 5px 0 var(--accent-1);
   text-shadow: none;
   transform: rotate(-1.5deg);
 }
@@ -150,7 +150,7 @@
   place-content: center;
   border: 2px solid var(--color-ink);
   border-radius: 50%;
-  background: var(--color-accent-1);
+  background: var(--accent-1);
   color: #fff;
   text-align: center;
   transform: rotate(-12deg);
@@ -195,7 +195,7 @@
 
 .sectionIntro p {
   margin: 0;
-  color: var(--color-accent-1);
+  color: var(--accent-1);
   font-size: clamp(11px, .72vw, 14px);
 }
 
@@ -234,7 +234,7 @@
 
 .principles span {
   display: block;
-  color: var(--color-accent-1);
+  color: var(--accent-1);
   font-size: 25px;
   font-weight: 800;
   letter-spacing: .1em;
@@ -306,7 +306,7 @@
   align-self: end;
   padding: 9px 11px 8px 13px;
   background: var(--color-ink);
-  box-shadow: 4px 4px 0 var(--color-accent-1);
+  box-shadow: 4px 4px 0 var(--accent-1);
   color: var(--color-paper);
   font-size: clamp(10px, .9vw, 12px);
   font-weight: 800;
@@ -319,7 +319,7 @@
 }
 
 .featuredHead:hover .toggle,
-.featuredHead:focus-visible .toggle { background: var(--color-accent-1); color: var(--color-ink); box-shadow: 6px 6px 0 var(--color-ink); transform: rotate(1deg) translateY(-2px); }
+.featuredHead:focus-visible .toggle { background: var(--accent-1); color: var(--color-ink); box-shadow: 6px 6px 0 var(--color-ink); transform: rotate(1deg) translateY(-2px); }
 
 .toggleIcon {
   position: relative;
@@ -553,7 +553,7 @@
   place-items: center;
   min-height: min(34vw, 380px);
   padding: clamp(44px, 6vw, 76px) 18px;
-  background: var(--color-accent-1);
+  background: var(--accent-1);
   color: var(--color-ink);
   text-align: center;
 }

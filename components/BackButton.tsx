@@ -34,7 +34,7 @@ export default function BackButton() {
       <button
         type="button"
         onClick={() => (hasHistory ? router.back() : router.push("/"))}
-        className="group inline-flex -rotate-[1.5deg] items-center gap-2 border-2 border-ink bg-paper-2 px-3 py-2 label-mono text-ink shadow-[3px_3px_0_0_var(--color-accent-1)] transition-[transform,box-shadow,background-color] duration-150 hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-paper hover:shadow-[1px_1px_0_0_var(--color-accent-1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none motion-reduce:transition-none"
+        className="group inline-flex -rotate-[1.5deg] items-center gap-2 border-2 border-ink bg-paper-2 px-3 py-2 label-mono text-ink shadow-[3px_3px_0_0_var(--accent-1)] transition-[transform,box-shadow,background-color] duration-150 hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-paper hover:shadow-[1px_1px_0_0_var(--accent-1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none motion-reduce:transition-none"
       >
         {/* Flecha dibujada, no un carácter: mantiene el grosor del trazo
             igual al borde del bloque en cualquier tamaño de texto. */}

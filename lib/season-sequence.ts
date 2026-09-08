@@ -40,7 +40,7 @@ export const SEASON_SEQUENCE: SeasonSequenceItem[] = [
     numero: "002",
     nombre: "Ascent",
     forma: "triangle",
-    colores: ["#7B3FE4", "#4C1D95", "#A78BFA", "#DDD6FE", "#FFFFFF"],
+    colores: ["#7B3FE4", "#2E1065", "#A06BFF", "#D9C7FF", "#FFFFFF"],
     tilt: 3,
   },
   {

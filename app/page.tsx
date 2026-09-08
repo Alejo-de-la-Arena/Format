@@ -9,7 +9,6 @@ import ShapeSticker from "@/components/ShapeSticker";
 import WhatIsFormat from "@/components/WhatIsFormat";
 import VideoPlayer from "@/components/VideoPlayer";
 import HomeReveal from "@/components/home/HomeReveal";
-import { getIntroSeasons } from "@/lib/season-intro";
 import {
   getFechasProximasConFlyer,
   getFechasPasadas,
@@ -62,10 +61,9 @@ export default async function Home() {
     ]);
 
   const seasonBySlug = new Map(seasons.map((s) => [s.slug, s]));
-  const { current: startedSeason } = getIntroSeasons(seasons);
   const proximosConFlyer = proximosConFlyerAll.slice(0, 6);
   const pasados = pasadosAll.slice(0, 6);
-  const heroSeason = startedSeason ?? activeSeason;
+  const heroSeason = activeSeason;
   const proximaExperienceSeason = proximaExperience
     ? seasonBySlug.get(proximaExperience.seasonSlug)
     : undefined;
@@ -211,9 +209,9 @@ export default async function Home() {
                     }}
                   />
                 )}
-                {experienceColors && (
+                {experienceColors && experienceSeason && (
                   <ShapeSticker
-                    forma={experienceSeason?.forma ?? "square"}
+                    forma={experienceSeason.forma}
                     color={experienceColors[0]}
                     size={132}
                     rotate={-6}
@@ -265,15 +263,15 @@ export default async function Home() {
         </section>
       */}
 
-      {/* Identidad iniciada y el único adelanto autorizado: Origin → Ascent. */}
+      {/* Identidad activa y sólo el adelanto siguiente, resuelto en servidor. */}
       <WhatIsFormat
         activa={
-          startedSeason
+          activeSeason
             ? {
-                numero: startedSeason.numero,
-                nombre: startedSeason.nombre,
-                forma: startedSeason.forma,
-                color: getSeasonColors(startedSeason)[0],
+                numero: activeSeason.numero,
+                nombre: activeSeason.nombre,
+                forma: activeSeason.forma,
+                color: getSeasonColors(activeSeason)[0],
               }
             : null
         }

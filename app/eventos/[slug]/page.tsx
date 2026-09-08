@@ -259,14 +259,19 @@ function FechaRow({
                   >
                     {String(index + 1).padStart(2, "0")}
                   </span>
-                  <VideoPlayer
-                    url={clip.url}
-                    titulo={clip.titulo || `Clip ${index + 1}`}
-                    forma={season.forma}
-                    accent={colors[0]}
-                    aspect="16 / 9"
-                    posterStyle="platform"
-                  />
+                  {/* En mobile el clip sale del margen de lectura y llega a
+                      los bordes: es la única forma de ganar altura sin tocar
+                      el 16:9. En desktop la columna ya es ancha, no cambia. */}
+                  <div className="max-lg:-mx-[calc(clamp(18px,4vw,48px)+12px)]">
+                    <VideoPlayer
+                      url={clip.url}
+                      titulo={clip.titulo || `Clip ${index + 1}`}
+                      forma={season.forma}
+                      accent={colors[0]}
+                      aspect="16 / 9"
+                      posterStyle="platform"
+                    />
+                  </div>
                   <p className="mt-2 max-w-[52ch] pl-3 text-[clamp(16px,2vw,21px)] font-bold leading-tight tracking-tight">
                     {clip.titulo || `Clip ${index + 1}`}
                   </p>
@@ -342,7 +347,7 @@ export default async function SeasonPage({
 
   return (
     <div style={seasonAccentVars(season)}>
-      <Nav />
+      <Nav season={season} />
       <main>
         <div className={`${wrap} py-[clamp(28px,4vw,52px)]`}>
           <PrintSheetFrame colors={getSeasonColors(season)} pliego={pliego}>

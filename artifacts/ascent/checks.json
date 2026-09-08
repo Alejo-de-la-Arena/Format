@@ -1,0 +1,30 @@
+{
+  "results": [
+    {
+      "width": 1440,
+      "theme": "Ascent",
+      "detail": "Origin blue",
+      "overflow": false,
+      "hiddenSeasons": "absent",
+      "persistence": "passed"
+    },
+    {
+      "width": 390,
+      "theme": "Ascent",
+      "detail": "Origin blue",
+      "overflow": false,
+      "hiddenSeasons": "absent",
+      "persistence": "passed"
+    },
+    {
+      "width": 360,
+      "theme": "Ascent",
+      "detail": "Origin blue",
+      "overflow": false,
+      "hiddenSeasons": "absent",
+      "persistence": "passed"
+    }
+  ],
+  "reducedMotion": "passed",
+  "errors": []
+}

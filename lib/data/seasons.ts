@@ -1,7 +1,7 @@
 import { cache } from "react";
 import type { Season } from "@/lib/types";
 import { createClient } from "@/lib/supabase/public";
-import { isIntroMotion, buenosAiresDay } from "@/lib/season-intro";
+import { isIntroMotion, getIntroSeasons } from "@/lib/season-intro";
 
 export { getSeasonColors } from "@/lib/season-colors";
 
@@ -79,22 +79,7 @@ export async function getSeason(slug: string): Promise<Season | null> {
  */
 export async function getActiveSeason(): Promise<Season | null> {
   const seasons = await getSeasons();
-  if (seasons.length === 0) return null;
-
-  const hoy = buenosAiresDay();
-
-  const enCurso = seasons.find(
-    (s) =>
-      hoy >= s.fechaInicio && hoy <= s.fechaFin,
-  );
-  if (enCurso) return enCurso;
-
-  const proxima = seasons.find(
-    (s) => s.fechaInicio > hoy,
-  );
-  if (proxima) return proxima;
-
-  return seasons[seasons.length - 1];
+  return getIntroSeasons(seasons).current;
 }
 
 /** Color principal de todas las Seasons salvo la indicada, en orden cronológico. */

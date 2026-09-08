@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
@@ -45,14 +44,17 @@ export default async function ExperiencePage() {
   const isUpcoming = !esPasado(featured.fecha);
   const featuredHref = `/eventos/${featuredSeason.slug}?fecha=${featured.fecha}`;
   const heroImage = featured.fotoEscena ?? featured.galeria?.[0] ?? featured.flyer;
+  const activeColors = activeSeason ? getSeasonColors(activeSeason) : null;
 
-  return <div style={seasonAccentVars(featuredSeason) as CSSProperties}>
+  return <div style={seasonAccentVars(activeSeason)}>
     <Nav />
     <main className={styles.page}>
       <section className={styles.hero}>
         <div className={styles.heroStickers} aria-hidden>
-          <ShapeSticker forma={featuredSeason.forma} color={colors[0]} size={180} rotate={-17} opacity={0.9} />
-          <ShapeSticker forma={featuredSeason.forma} color={colors[0]} size={128} rotate={12} opacity={0.58} />
+          {activeSeason && activeColors && <>
+            <ShapeSticker forma={activeSeason.forma} color={activeColors[0]} size={180} rotate={-17} opacity={0.9} />
+            <ShapeSticker forma={activeSeason.forma} color={activeColors[0]} size={128} rotate={12} opacity={0.58} />
+          </>}
         </div>
         <div className={styles.heroCopy}>
           <TapeBlock as="p" edge={1} rotate={-1.2} className={styles.kicker}>FORMAT Experience · {isUpcoming ? "Próxima fecha" : "Última edición"}</TapeBlock>
@@ -75,8 +77,8 @@ export default async function ExperiencePage() {
         </div>
       </section></HomeReveal>
 
-      <HomeReveal><section className={styles.featured} aria-labelledby="edicion-destacada">
-        <details open className={styles.featuredDetails}>
+      <HomeReveal><section className={styles.featured} aria-labelledby="edicion-destacada" style={seasonAccentVars(featuredSeason)}>
+        <details className={styles.featuredDetails}>
           <summary className={styles.featuredHead}>
             <div className={styles.featuredTitleBlock}>
               <p className="label-mono">{isUpcoming ? "Próxima Experience" : "Experience más reciente"}</p>
@@ -114,7 +116,7 @@ export default async function ExperiencePage() {
         <div className={styles.archiveGrid}>{archive.map((fecha) => {
           const season = seasonBySlug.get(fecha.seasonSlug);
           if (!season) return null;
-          return <details key={fecha.fecha} className={styles.archiveDetails}>
+          return <details key={fecha.fecha} className={styles.archiveDetails} style={seasonAccentVars(season)}>
             <summary className={styles.archiveCard}>
               <div className={styles.archiveImage}><EventImage src={fecha.fotoEscena ?? fecha.flyer} alt={`Experience ${season.nombre}`} colors={getSeasonColors(season)} forma={season.forma} label="Experience" sizes="(max-width: 700px) 90vw, 25vw" variant="shot" /></div>
               <span>{fechaLarga(fecha.fecha)}</span><strong>{season.nombre}</strong><ActionIcon kind="forward" />

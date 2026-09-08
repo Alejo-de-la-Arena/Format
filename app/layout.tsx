@@ -4,7 +4,7 @@ import { MotionConfig } from "motion/react";
 import { getActiveSeason, getSeasons } from "@/lib/data/seasons";
 import HomeMotion from "@/components/home/HomeMotion";
 import { MusicProvider } from "@/components/MusicProvider";
-import { getIntroSeasons, introCopy } from "@/lib/season-intro";
+import { getIntroSeasons, introCopy, introLead, introStorageKey } from "@/lib/season-intro";
 import { getSeasonColors } from "@/lib/season-colors";
 import type { Season } from "@/lib/types";
 import { seasonAccentVars } from "@/lib/theme";
@@ -35,14 +35,25 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const [activeSeason, seasons] = await Promise.all([getActiveSeason(), getSeasons()]);
   const { current, previous } = getIntroSeasons(seasons);
+  // Con Season anterior la intro hace el viaje y muestra el lead aparte; sin
+  // ella no, y el texto cargado va entero (ver introCopy).
+  const journey = previous !== null;
   const identity = (season: Season | null) => season ? {
     slug: season.slug, fechaInicio: season.fechaInicio, numero: season.numero,
     nombre: season.nombre, forma: season.forma, color: getSeasonColors(season)[0],
-    text: introCopy(season), motion: season.intro?.motion ?? "signal" as const,
+    text: introCopy(season, journey), lead: introLead(season), motion: season.intro?.motion ?? "signal" as const,
   } : null;
+  // Corre antes del primer paint. Sólo tapa una visita que el cliente también
+  // va a convertir en intro; las visitas ya recordadas no reciben el flag.
+  const preflightScript = current
+    ? `(()=>{try{const k=${JSON.stringify(introStorageKey(current)).replace(/</g, "\\u003c")};const n=performance.getEntriesByType("navigation")[0];if(!location.pathname.startsWith("/admin")&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&sessionStorage.getItem(k)!=="1"&&n?.type!=="back_forward")document.documentElement.dataset.introPreflight=""}catch{if(!location.pathname.startsWith("/admin")&&!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.dataset.introPreflight=""}})()`
+    : "";
 
   return (
-    <html lang="es" className={inter.variable} data-scroll-behavior="smooth">
+    <html lang="es" className={inter.variable} data-scroll-behavior="smooth" suppressHydrationWarning>
+      <head>
+        {preflightScript && <script dangerouslySetInnerHTML={{ __html: preflightScript }} />}
+      </head>
       <body
         className="overflow-x-hidden bg-paper font-body text-ink antialiased"
         style={seasonAccentVars(activeSeason)}

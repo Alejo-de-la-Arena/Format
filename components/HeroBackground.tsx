@@ -132,7 +132,8 @@ const FRAGMENT = /* glsl */ `
       abs(sdShape(rotatePoint(p, .16), shapeId, r * .66)) - .03),
       sdShape(p, shapeId, r * .28));
     else if (variantId < 3.5) {
-      vec2 q = abs(p) - vec2(.36 + .07 * sin(uTime * 1.5));
+      // Repeat without reflecting the top row into upside-down triangles.
+      vec2 q = p - sign(p) * vec2(.36 + .07 * sin(uTime * 1.5));
       d = sdShape(rotatePoint(q, sin(uTime) * .16), shapeId, r * .36);
     }
     else if (variantId < 4.5) d = abs(sdShape(rotatePoint(p, .7854), shapeId, r * .92)) - .09;

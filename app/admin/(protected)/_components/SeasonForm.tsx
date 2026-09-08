@@ -17,7 +17,7 @@ const FORMAS: { value: Forma; label: string }[] = [
   { value: "infinity", label: "Infinito" },
 ];
 
-const DEFAULT_COLOR = "#1E38F5";
+const DEFAULT_COLOR = "#111111";
 
 function resolveColors(colores?: string[]): string[] {
   const principal = colores?.[0] || DEFAULT_COLOR;
@@ -234,7 +234,7 @@ export default function SeasonForm({
         <label className="flex flex-col gap-1.5">
           <span className="label-mono text-muted">Frase de bienvenida (opcional)</span>
           <textarea name="introText" defaultValue={season?.introText ?? ""} rows={3} maxLength={160}
-            placeholder={"WELCOME TO\nTHE ORIGIN."}
+            placeholder={"Welcome to\nNombre de la Season"}
             className="resize-y border border-line bg-paper px-3 py-2 leading-relaxed outline-none focus:border-accent-1" />
           <span className="text-xs text-muted">Hasta 160 caracteres y 3 líneas. Se respetan los saltos de línea. Vacío: bienvenida con el nombre de la Season.</span>
         </label>

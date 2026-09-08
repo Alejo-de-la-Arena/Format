@@ -3,9 +3,10 @@ import SectionTitle from "@/components/SectionTitle";
 import { EDGES } from "@/components/TapeBlock";
 import { getShapePath } from "@/components/shapePaths";
 import HomeReveal from "@/components/home/HomeReveal";
+import ActionIcon from "@/components/ActionIcon";
 import type { Forma } from "@/lib/types";
 
-/** The one authorized preview lives here, server-rendered; no future catalogue. */
+/** El adelanto no revela la identidad de la Season siguiente. */
 export default function WhatIsFormat({ activa, className, wrapClassName }: {
   activa: { numero: string; nombre: string; forma: Forma; color: string } | null;
   className?: string; wrapClassName?: string;
@@ -25,7 +26,7 @@ export default function WhatIsFormat({ activa, className, wrapClassName }: {
               Música electrónica, escenografía completa y un cocktail para el opening de cada Season.
             </p>
             <Link href="/about" className="label-mono mt-5 inline-flex w-fit items-center gap-2 bg-ink px-4 py-3 text-paper transition-transform hover:-translate-y-1 hover:rotate-[-1deg] hover:bg-accent-1 hover:text-ink">
-              Conocé FORMAT <span aria-hidden>→</span>
+              Conocé FORMAT <ActionIcon />
             </Link>
           </div>
           {activa && <div className="flex items-center gap-5 justify-self-center py-6 sm:gap-8">
@@ -36,21 +37,22 @@ export default function WhatIsFormat({ activa, className, wrapClassName }: {
                 <path d={getShapePath(activa.forma, activa.numero)} fill={i === 0 ? activa.color : "none"}
                   stroke={activa.color} strokeWidth={i === 0 ? 0 : .6} opacity={i === 0 ? 1 : .45} />
               </svg>)}
-              {activa.nombre.toLowerCase() === "origin" && <svg viewBox="0 0 72 72" className="absolute inset-0 h-full w-full">
+              <svg viewBox="0 0 72 72" className="absolute inset-0 h-full w-full">
                 <path d="M23 36H48M39 27L48 36L39 45" fill="none" stroke="var(--color-paper)" strokeWidth="2" />
-              </svg>}
+              </svg>
             </div>
             <span className="relative mt-3 bg-ink px-3 py-2 text-xl font-black uppercase text-paper"
               style={{ transform: "rotate(-2deg)", clipPath: EDGES[2] }}>{activa.numero} {activa.nombre}</span>
             </div>
-            {activa.nombre.toLowerCase() === "origin" && <div className="flex flex-col items-center gap-2 pt-2" aria-label="Próximamente: Ascent">
-              <span className="text-[9px] font-bold uppercase tracking-[.16em]">Próximamente</span>
-              <svg aria-hidden viewBox="0 0 72 72" className="h-24 w-24 -rotate-3" style={{ color: "#7B3FE4" }}>
-                <path d="M8 12L64 12L36 64Z" fill="currentColor" />
-                <path d="M12 8L68 8L40 60Z" fill="none" stroke="currentColor" strokeWidth=".55" />
+            <div className="relative h-[186px] w-32 shrink-0 self-center" aria-label="Próximamente">
+              <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[9px] font-bold uppercase tracking-[.16em]">Próximamente</span>
+              <svg aria-hidden viewBox="0 0 72 72" className="absolute inset-x-0 top-0 h-32 w-32 -rotate-3">
+                <text x="39" y="58" textAnchor="middle" fill="none" stroke="var(--accent-1)" strokeWidth=".7" opacity=".75"
+                  fontFamily="var(--font-inter), Inter, sans-serif" fontSize="68" fontWeight="900">?</text>
+                <text x="36" y="60" textAnchor="middle" fill="var(--color-ink)"
+                  fontFamily="var(--font-inter), Inter, sans-serif" fontSize="68" fontWeight="900">?</text>
               </svg>
-              <span className="text-base font-extrabold uppercase tracking-tight">Ascent</span>
-            </div>}
+            </div>
           </div>}
         </HomeReveal>
       </div>

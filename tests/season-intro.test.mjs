@@ -6,25 +6,27 @@ import ts from "typescript";
 // No extra runner dependency; transpile the pure production module in memory.
 const source = await readFile(new URL("../lib/season-intro.ts", import.meta.url), "utf8");
 const { outputText } = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } });
-const { buenosAiresDay, getIntroSeasons, introCopy, introStorageKey, isIntroMotion, isIntroText, shouldAutoIntro } =
+const { buenosAiresDay, getIntroSeasons, introCopy, introLead, introStorageKey, isIntroMotion, isIntroText, shouldAutoIntro } =
   await import(`data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`);
 
-const season = (slug, fechaInicio) => ({ slug, fechaInicio, nombre: slug });
+const season = (slug, fechaInicio, fechaFin = fechaInicio) => ({ slug, fechaInicio, fechaFin, nombre: slug });
 test("Buenos Aires midnight, independent of server timezone", () => {
   assert.equal(buenosAiresDay(new Date("2026-09-01T02:59:59Z")), "2026-08-31");
   assert.equal(buenosAiresDay(new Date("2026-09-01T03:00:00Z")), "2026-09-01");
 });
-test("only started real rows; unsorted data, gaps, previous trace, no mutation", () => {
-  const a = season("one", "2026-08-01"), b = season("two", "2026-09-04"), c = season("three", "2026-10-02");
+test("active identity matches theme: current, next in gaps, last after ending", () => {
+  const a = season("one", "2026-08-01", "2026-08-28"), b = season("two", "2026-09-04", "2026-09-25"), c = season("three", "2026-10-02");
   const rows = [c, a, b];
-  assert.deepEqual(getIntroSeasons(rows, "2026-08-31"), { current: a, previous: null });
+  assert.deepEqual(getIntroSeasons(rows, "2026-08-14"), { current: a, previous: null });
+  assert.deepEqual(getIntroSeasons(rows, "2026-08-31"), { current: b, previous: a });
   assert.deepEqual(getIntroSeasons(rows, "2026-09-04"), { current: b, previous: a });
   assert.deepEqual(getIntroSeasons(rows, "2027-01-01"), { current: c, previous: b });
   assert.deepEqual(rows, [c, a, b]);
 });
-test("empty and pre-launch datasets do not show a welcome", () => {
+test("empty is neutral; pre-launch uses the upcoming identity without a previous one", () => {
   assert.deepEqual(getIntroSeasons([], "2026-08-01"), { current: null, previous: null });
-  assert.deepEqual(getIntroSeasons([season("later", "2026-09-01")], "2026-08-01"), { current: null, previous: null });
+  const upcoming = season("later", "2026-09-01");
+  assert.deepEqual(getIntroSeasons([upcoming], "2026-08-01"), { current: upcoming, previous: null });
 });
 test("welcome starts once per visit, except reduced motion or history return", () => {
   const first = { seen: false, reduced: false, returning: false };
@@ -38,9 +40,19 @@ test("remember each Season separately without including editorial content", () =
   assert.equal(introStorageKey(season("one", "2026-08-01")), "format:visit-intro:v2:one:2026-08-01");
 });
 test("copy defaults and editorial line breaks; preset validation", () => {
-  assert.equal(introCopy({ nombre: "Origin" }), "WELCOME TO\nTHE ORIGIN.");
-  assert.equal(introCopy({ nombre: "Test" }), "WELCOME TO\nTEST.");
+  assert.equal(introCopy({ nombre: "Origin" }), "Welcome to\nOrigin");
+  assert.equal(introCopy({ nombre: "Ascent" }), "Welcome to\nAscent");
+  assert.equal(introCopy({ nombre: "Test" }), "Welcome to\nTest");
+  assert.equal(introLead({ nombre: "Ascent" }), "It was time to ascend");
+  assert.equal(introLead({ nombre: "Test" }), "It was time for a new Season");
   assert.equal(introCopy({ nombre: "Test", intro: { text: "First\nSecond" } }), "First\nSecond");
+  // The journey shows the lead on its own; repeating it above the welcome would print it twice.
+  const twoLines = { nombre: "Ascent", intro: { text: "It was time to ascend.\nWelcome to Ascent." } };
+  assert.equal(introCopy(twoLines, true), "Welcome to Ascent.");
+  assert.equal(introCopy({ nombre: "Ascent", intro: { text: "It was time to ascend." } }, true), "It was time to ascend.");
+  // Without the journey nothing renders the lead, so no hand-written line may vanish.
+  assert.equal(introCopy(twoLines), twoLines.intro.text);
+  assert.equal(introCopy(twoLines, false), twoLines.intro.text);
   for (const preset of ["signal", "ascend", "expand"]) assert.equal(isIntroMotion(preset), true);
   assert.equal(isIntroMotion("untrusted"), false);
   assert.equal(isIntroMotion(undefined), false);
