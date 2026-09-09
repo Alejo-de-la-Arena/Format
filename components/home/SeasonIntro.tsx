@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from "re
 import { getShapePath } from "@/components/shapePaths";
 import { introStorageKey, shouldAutoIntro, type IntroMotion } from "@/lib/season-intro";
 import type { Forma } from "@/lib/types";
-import { useMusic } from "@/components/MusicProvider";
 import styles from "./home-motion.module.css";
 
 export interface IntroIdentity {
@@ -58,7 +57,6 @@ export default function SeasonIntro({ current, previous, onState, showReplay = f
   const [open, setOpen] = useState(false);
   const [entered, setEntered] = useState(false);
   const wasReplay = useRef(false);
-  const { startFromGesture } = useMusic();
   const key = introStorageKey(current);
   const journey = previous !== null;
   const close = useCallback(() => {
@@ -81,7 +79,9 @@ export default function SeasonIntro({ current, previous, onState, showReplay = f
       try { seen ||= sessionStorage.getItem(key) === "1"; } catch { /* Memory fallback. */ }
       const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
       if (shouldAutoIntro({ seen, reduced: media.matches, returning: nav?.type === "back_forward" })) {
-        setEntered(false);
+        seenInMemory.add(key);
+        try { sessionStorage.setItem(key, "1"); } catch { /* Storage is optional. */ }
+        setEntered(true);
         setOpen(true);
       } else {
         releasePreflight();
@@ -134,37 +134,21 @@ export default function SeasonIntro({ current, previous, onState, showReplay = f
     };
   }, [close, entered, journey, key, onState, open, run]);
 
-  const enter = () => {
-    void startFromGesture();
-    seenInMemory.add(key);
-    try { sessionStorage.setItem(key, "1"); } catch { /* Storage is optional. */ }
-    setRun((n) => n + 1);
-    setEntered(true);
-  };
-
   // Route changes never carry a modal over the destination page.
   useEffect(() => () => close(), [close, pathname]);
 
   return (
     <>
       {showReplay && <button ref={replay} type="button" className={styles.replay} disabled={reduced}
-        onClick={() => { wasReplay.current = true; void startFromGesture(); setEntered(true); setRun((n) => n + 1); setOpen(true); }}>
+        onClick={() => { wasReplay.current = true; setEntered(true); setRun((n) => n + 1); setOpen(true); }}>
         <span aria-hidden>↻</span> Repetir intro
       </button>}
-      <dialog ref={dialog} className={styles.intro} aria-labelledby={entered ? "season-welcome" : "intro-enter-title"}
+      <dialog ref={dialog} className={styles.intro} aria-labelledby="season-welcome"
         onKeyDown={(e) => { if (e.key === "Escape") { e.preventDefault(); close(); } }}
         onCancel={(e) => { e.preventDefault(); close(); }}
         style={{ "--intro-accent": current.color, ...(previous && { "--intro-prev": previous.color }) } as CSSProperties}>
         {/* El foco arranca en el marco, no en el título: el título vive dos
             pantallas más arriba y enfocarlo movería la tira. */}
-        {open && !entered && <div className={styles.entry}>
-          <div className={styles.entryShape} aria-hidden><span /><span /><span /></div>
-          <button type="button" className={styles.entryButton} onClick={enter} autoFocus>
-            <span className={styles.entryKicker}>FORMAT / {edition(current.numero)}</span>
-            <strong id="intro-enter-title">Tap to enter</strong>
-            <small>Sound ready</small>
-          </button>
-        </div>}
         {open && entered && <div key={run} className={styles.film} tabIndex={-1} autoFocus
           data-motion={current.motion} data-journey={journey ? "on" : "off"}>
           <div className={styles.strip}>

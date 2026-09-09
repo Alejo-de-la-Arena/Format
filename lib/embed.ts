@@ -135,13 +135,31 @@ export function getPlatformThumbnail(embed: VideoEmbed): string | undefined {
     : undefined;
 }
 
+/** Portadas locales de los clips iniciales de FORMAT Lab. Se guardan junto al
+ * sitio para que la grilla no dependa de que YouTube entregue una miniatura
+ * remota ni de sus variantes de resoluciÃ³n. */
+const LAB_COVERS: Record<string, string> = {
+  owFITuKDXbw: "/images/lab-covers/fran-tettamanti.jpg",
+  LGI8dnbRfNc: "/images/lab-covers/momo-luca-001.jpg",
+  "57vqXP_GGNY": "/images/lab-covers/momo-luca-002.jpg",
+  o8xLJ6Rwkgk: "/images/lab-covers/momo-luca-003.jpg",
+};
+
+/** Portada capturada para un clip conocido de FORMAT Lab. Los clips nuevos
+ * siguen usando la miniatura de su plataforma hasta que se les sume asset. */
+export function getLabClipCover(url: string): string | undefined {
+  const embed = parseVideoUrl(url);
+  return embed ? LAB_COVERS[embed.id] : undefined;
+}
+
 /**
  * La misma URL con autoplay: se usa recién cuando el usuario aprieta play
  * sobre el poster, nunca en la carga inicial (el iframe ni existe hasta
  * entonces — ver components/VideoPlayer.tsx).
  */
-export function withAutoplay(embed: VideoEmbed): string {
-  return `${embed.embedUrl}&autoplay=1`;
+export function withAutoplay(embed: VideoEmbed, fullscreen = false): string {
+  const embedUrl = fullscreen ? embed.embedUrl.replace("&fs=0", "&fs=1") : embed.embedUrl;
+  return `${embedUrl}&autoplay=1`;
 }
 
 /** Preview real del aftermovie: autoplay permitido sólo en silencio y loop. */

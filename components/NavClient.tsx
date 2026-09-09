@@ -29,10 +29,12 @@ export default function NavClient({
   accent,
   forma,
   seasonName,
+  showBackButton = true,
 }: {
   accent: string;
   forma: Forma;
   seasonName: string;
+  showBackButton?: boolean;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -108,7 +110,7 @@ export default function NavClient({
 
       {/* Fuera del <nav> fijo: queda en flujo, arriba a la izquierda del
           contenido de la página. En la home no se renderiza. */}
-      <BackButton />
+      {showBackButton && <BackButton />}
     </>
   );
 }

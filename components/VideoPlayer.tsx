@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { motion, useReducedMotion } from "motion/react";
 import { getShapePath } from "@/components/shapePaths";
@@ -41,6 +42,7 @@ export default function VideoPlayer({
   preview = false,
   posterSrc,
   posterStyle = "brand",
+  allowExpand = false,
   className,
 }: {
   url: string;
@@ -56,19 +58,46 @@ export default function VideoPlayer({
   posterSrc?: string;
   /** Para clips de YouTube: su miniatura real, sin placa ni overlay propio. */
   posterStyle?: "brand" | "platform";
+  /** Abre una vista a pantalla completa; el control sólo se muestra en desktop. */
+  allowExpand?: boolean;
   className?: string;
 }) {
   const [playing, setPlaying] = useState(false);
   const [thumbnailFallback, setThumbnailFallback] = useState(false);
+  const [posterUnavailable, setPosterUnavailable] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const expandButton = useRef<HTMLButtonElement>(null);
+  const closeExpand = useRef<HTMLButtonElement>(null);
   const reduced = useReducedMotion();
   const embed = parseVideoUrl(url);
 
   // URL inválida: no dibujamos un marco roto, la sección decide qué mostrar.
+
+  useEffect(() => {
+    if (!expanded) return;
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setExpanded(false);
+    };
+    document.body.style.overflow = "hidden";
+    closeExpand.current?.focus();
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+      expandButton.current?.focus();
+    };
+  }, [expanded]);
+
   if (!embed) return null;
   const platformThumbnail = posterStyle === "platform" ? getPlatformThumbnail(embed) : undefined;
-  const thumbnailSrc = thumbnailFallback
-    ? platformThumbnail?.replace("maxresdefault.jpg", "hqdefault.jpg")
-    : platformThumbnail;
+  const thumbnailSrc = posterStyle === "platform"
+    ? (!posterUnavailable && posterSrc
+      ? posterSrc
+      : thumbnailFallback
+        ? platformThumbnail?.replace("maxresdefault.jpg", "hqdefault.jpg")
+        : platformThumbnail)
+    : undefined;
 
   return (
     <div
@@ -95,8 +124,11 @@ export default function VideoPlayer({
             alt=""
             fill
             sizes="(max-width: 1023px) 100vw, 50vw"
-            className="object-cover"
-            onError={() => setThumbnailFallback(true)}
+            className="object-contain"
+            onError={() => {
+              if (posterSrc && !posterUnavailable) setPosterUnavailable(true);
+              else setThumbnailFallback(true);
+            }}
           />
         </button>
       ) : (
@@ -191,6 +223,45 @@ export default function VideoPlayer({
             Ver con sonido
           </span>
         </button>
+      )}
+      {allowExpand && (
+        <button
+          ref={expandButton}
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="label-mono absolute right-3 top-3 z-10 hidden bg-paper px-3 py-2 text-ink shadow-[3px_3px_0_var(--color-ink)] transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-1 lg:inline-flex"
+          aria-label={`Ampliar ${titulo}`}
+        >
+          Ampliar
+        </button>
+      )}
+      {expanded && createPortal(
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Video ampliado: ${titulo}`}
+          className="fixed inset-0 z-[2147483647] grid place-items-center bg-ink/95 p-6 lg:p-10"
+        >
+          <div className="relative w-full max-w-[min(92vw,1440px)] aspect-video bg-black">
+            <iframe
+              src={withAutoplay(embed, true)}
+              title={titulo}
+              className="absolute inset-0 h-full w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
+            <button
+              ref={closeExpand}
+              type="button"
+              onClick={() => setExpanded(false)}
+              className="label-mono absolute -right-1 -top-12 bg-paper px-3 py-2 text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

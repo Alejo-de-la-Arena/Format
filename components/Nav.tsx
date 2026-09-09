@@ -9,9 +9,9 @@ import type { Season } from "@/lib/types";
  * tratamiento zine: stickers de fondo y color de acento). El resto de la
  * interacción vive en NavClient.
  */
-export default async function Nav({ season: ownSeason }: { season?: Season } = {}) {
+export default async function Nav({ season: ownSeason, showBackButton = true }: { season?: Season; showBackButton?: boolean } = {}) {
   const season = ownSeason ?? await getActiveSeason();
   const accent = season ? getSeasonColors(season)[0] : "#111111";
   const forma = season?.forma ?? "square";
-  return <NavClient accent={accent} forma={forma} seasonName={season?.nombre ?? "FORMAT"} />;
+  return <NavClient accent={accent} forma={forma} seasonName={season?.nombre ?? "FORMAT"} showBackButton={showBackButton} />;
 }
