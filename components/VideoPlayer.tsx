@@ -119,12 +119,13 @@ export default function VideoPlayer({
           aria-label={`Reproducir ${titulo}`}
           className="absolute inset-0 block overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-accent-1"
         >
-          <Image
+          {/* Las portadas de FORMAT Lab viven en /public: un <img> directo
+              evita que el optimizador remoto de Next las reemplace o falle
+              antes de mostrar el primer frame en producciÃ³n. */}
+          <img
             src={thumbnailSrc}
             alt=""
-            fill
-            sizes="(max-width: 1023px) 100vw, 50vw"
-            className="object-contain"
+            className="absolute inset-0 h-full w-full object-contain"
             onError={() => {
               if (posterSrc && !posterUnavailable) setPosterUnavailable(true);
               else setThumbnailFallback(true);
