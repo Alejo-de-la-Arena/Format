@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { MotionConfig } from "motion/react";
 import { getActiveSeason, getSeasons } from "@/lib/data/seasons";
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import HomeMotion from "@/components/home/HomeMotion";
 import { MusicProvider } from "@/components/MusicProvider";
 import { getIntroSeasons, introCopy, introLead, introStorageKey } from "@/lib/season-intro";
@@ -64,6 +66,8 @@ export default async function RootLayout({
             <HomeMotion current={identity(current)} previous={identity(previous)}>{children}</HomeMotion>
           </MotionConfig>
         </MusicProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

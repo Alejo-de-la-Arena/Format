@@ -14,82 +14,92 @@ import {
 type MusicContextValue = {
   isPlaying: boolean;
   volume: number;
+  startFromGesture: () => Promise<boolean>;
   toggle: () => void;
   setVolume: (volume: number) => void;
 };
 
 const MusicContext = createContext<MusicContextValue | null>(null);
 const TRACK = "/music/Silent%20Drums%20VII%20(Original%20Mix).mp3";
+const VOLUME_KEY = "format:music-volume:v1";
 
-/**
- * Único reproductor de la web. Se monta en el layout para que el track no se
- * reinicie al navegar. Los navegadores pueden bloquear audio sin gesto: en
- * ese caso se vuelve a intentar con la primera interacción del visitante.
- */
+/** Un solo reproductor persistente. `play()` sólo se invoca desde un gesto. */
 export function MusicProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const volumeRef = useRef(0.42);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolumeState] = useState(0.42);
 
-  const play = useCallback(async () => {
+  const startFromGesture = useCallback(async () => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio) return false;
+    audio.volume = volumeRef.current;
     try {
+      // Esta llamada ocurre síncronamente dentro del handler que la invoca.
       await audio.play();
       setIsPlaying(true);
+      return true;
     } catch {
-      // La UI queda en "Reanudar música" hasta que el navegador permita play.
       setIsPlaying(false);
+      return false;
     }
   }, []);
 
   useEffect(() => {
-    if (audioRef.current) audioRef.current.volume = volume;
-    void play();
+    try {
+      const stored = Number.parseFloat(localStorage.getItem(VOLUME_KEY) ?? "");
+      if (Number.isFinite(stored) && stored >= 0 && stored <= 1) {
+        volumeRef.current = stored;
+        setVolumeState(stored);
+        if (audioRef.current) audioRef.current.volume = stored;
+      }
+    } catch { /* La preferencia es opcional. */ }
+  }, []);
 
-    const resumeOnFirstIntent = () => void play();
-    window.addEventListener("pointerdown", resumeOnFirstIntent, { once: true });
-    window.addEventListener("keydown", resumeOnFirstIntent, { once: true });
-    return () => {
-      window.removeEventListener("pointerdown", resumeOnFirstIntent);
-      window.removeEventListener("keydown", resumeOnFirstIntent);
+  useEffect(() => {
+    const controller = new AbortController();
+    const resumeOnIntent = () => {
+      void startFromGesture().then((started) => {
+        if (started) controller.abort();
+      });
     };
-  }, [play]);
+    const options = { signal: controller.signal, passive: true };
+    window.addEventListener("pointerdown", resumeOnIntent, options);
+    window.addEventListener("keydown", resumeOnIntent, options);
+    window.addEventListener("wheel", resumeOnIntent, options);
+    window.addEventListener("touchstart", resumeOnIntent, options);
+    window.addEventListener("touchmove", resumeOnIntent, options);
+    return () => controller.abort();
+  }, [startFromGesture]);
 
   const toggle = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
     if (audio.paused) {
-      void play();
+      void startFromGesture();
     } else {
       audio.pause();
       setIsPlaying(false);
     }
-  }, [play]);
+  }, [startFromGesture]);
 
   const setVolume = useCallback((nextVolume: number) => {
     const normalized = Math.min(1, Math.max(0, nextVolume));
-    const audio = audioRef.current;
-    if (audio) audio.volume = normalized;
+    volumeRef.current = normalized;
+    if (audioRef.current) audioRef.current.volume = normalized;
     setVolumeState(normalized);
+    try { localStorage.setItem(VOLUME_KEY, String(normalized)); } catch { /* Preferencia opcional. */ }
   }, []);
 
   const value = useMemo(
-    () => ({ isPlaying, volume, toggle, setVolume }),
-    [isPlaying, volume, toggle, setVolume],
+    () => ({ isPlaying, volume, startFromGesture, toggle, setVolume }),
+    [isPlaying, volume, startFromGesture, toggle, setVolume],
   );
 
   return (
     <MusicContext.Provider value={value}>
-      <audio
-        ref={audioRef}
-        src={TRACK}
-        loop
-        preload="auto"
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-        aria-hidden="true"
-      />
+      <audio ref={audioRef} src={TRACK} loop preload="auto"
+        onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} aria-hidden="true" />
       {children}
     </MusicContext.Provider>
   );

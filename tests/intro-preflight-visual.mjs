@@ -26,12 +26,23 @@ try {
 
   // Primera visita real: el primer contenido visible es el diálogo de intro.
   const first = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await first.addInitScript(() => {
+    let calls = 0;
+    Object.defineProperty(window, "__formatPlayCalls", { get: () => calls });
+    HTMLMediaElement.prototype.play = function () { calls += 1; return Promise.resolve(); };
+  });
   const page = await first.newPage();
   const errors = [];
   page.on("pageerror", error => errors.push(error.message));
   await page.goto(url, { waitUntil: "domcontentloaded" });
   await page.locator("dialog[open]").waitFor();
   assert.equal(await page.locator("html").evaluate(e => e.hasAttribute("data-intro-preflight")), false);
+  const enter = page.getByRole("button", { name: /tap to enter/i });
+  await enter.waitFor();
+  await page.screenshot({ path: "artifacts/ascent/1440-intro-entry.png" });
+  await enter.click();
+  await page.locator("h2#season-welcome").waitFor({ state: "attached" });
+  assert.ok(await page.evaluate(() => window.__formatPlayCalls > 0));
   await page.evaluate(() => {
     document.querySelector("dialog")?.getAnimations({ subtree: true }).forEach(animation => {
       animation.pause();
@@ -50,6 +61,8 @@ try {
   const mobilePage = await mobile.newPage();
   await mobilePage.goto(url, { waitUntil: "domcontentloaded" });
   await mobilePage.locator("dialog[open]").waitFor();
+  await mobilePage.getByRole("button", { name: /tap to enter/i }).click();
+  await mobilePage.locator("h2#season-welcome").waitFor({ state: "attached" });
   await mobilePage.evaluate(() => {
     document.querySelector("dialog")?.getAnimations({ subtree: true }).forEach(animation => {
       animation.pause();
