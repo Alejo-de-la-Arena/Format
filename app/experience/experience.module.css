@@ -14,6 +14,12 @@
   isolation: isolate;
 }
 
+.heroBackButton {
+  position: absolute;
+  z-index: 1;
+  inset: 0 0 auto;
+}
+
 .hero::after {
   content: "";
   position: absolute;
@@ -35,8 +41,8 @@
 
 .heroStickers> :first-child {
   position: absolute;
-  right: -76px;
-  top: -58px;
+  right: 2px;
+  top: -2px;
   width: 180px !important;
   height: 200px !important;
 }
@@ -50,6 +56,7 @@
 .heroCopy {
   align-self: center;
   max-width: 720px;
+  padding-top: clamp(32px, 4vw, 64px);
 }
 
 .kicker {
@@ -132,7 +139,7 @@
 
 .heroPhoto {
   position: relative;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 2 / 3;
   overflow: hidden;
   border: 2px solid var(--color-ink);
   background: var(--color-paper-2);
@@ -174,8 +181,7 @@
 
 .reading,
 .featured,
-.gallery,
-.archive {
+.gallery {
   padding: clamp(62px, 9vw, 132px) clamp(18px, 4vw, 48px);
 }
 
@@ -468,6 +474,7 @@
 .archive {
   max-width: 1400px;
   margin: auto;
+  padding: 0 clamp(18px, 4vw, 48px) clamp(62px, 9vw, 132px);
 }
 
 .archiveGrid {
@@ -515,11 +522,9 @@
 
 .archiveImage {
   position: relative;
-  aspect-ratio: 1 / 1.1;
+  aspect-ratio: 2 / 3;
   overflow: hidden;
   margin-bottom: 9px;
-  border: 1px solid var(--color-ink);
-  background: var(--color-paper-2);
 }
 
 .archiveCard>span {
@@ -564,7 +569,7 @@
   font-size: clamp(42px, 5vw, 76px);
   color: var(--color-ink);
   font-weight: 900;
-  line-height: .78;
+  line-height: .9;
   letter-spacing: -.09em;
   text-transform: uppercase;
 }
@@ -696,6 +701,7 @@
   .closing p {
     max-width: none;
     font-size: clamp(40px, 11vw, 54px);
+    line-height: clamp(38px, 9.4vw, 50px);
   }
 
   .closing {
@@ -759,6 +765,13 @@
 
   .featuredGrid {
     gap: 56px;
+  }
+}
+
+@media (min-width: 801px) {
+  .archiveImage {
+    height: 800px;
+    aspect-ratio: auto;
   }
 }
 

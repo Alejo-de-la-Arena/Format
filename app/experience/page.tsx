@@ -3,6 +3,7 @@ import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import ActionIcon from "@/components/ActionIcon";
+import BackButton from "@/components/BackButton";
 import EventGallery from "@/components/EventGallery";
 import EventImage from "@/components/EventImage";
 import ShapeSticker from "@/components/ShapeSticker";
@@ -47,9 +48,10 @@ export default async function ExperiencePage() {
   const activeColors = activeSeason ? getSeasonColors(activeSeason) : null;
 
   return <div style={seasonAccentVars(activeSeason)}>
-    <Nav />
+    <Nav showBackButton={false} />
     <main className={styles.page}>
       <section className={styles.hero}>
+        <div className={styles.heroBackButton}><BackButton /></div>
         <div className={styles.heroStickers} aria-hidden>
           {activeSeason && activeColors && <>
             <ShapeSticker forma={activeSeason.forma} color={activeColors[0]} size={180} rotate={-17} opacity={0.9} />
@@ -63,7 +65,7 @@ export default async function ExperiencePage() {
           <Link href={featuredHref} className={styles.heroLink}>Ver {featuredSeason.nombre} <ActionIcon kind="forward" /></Link>
         </div>
         <div className={styles.heroVisual}>
-          <div className={styles.heroPhoto}><EventImage src={heroImage} alt={`Experience ${featuredSeason.nombre} · ${fechaLarga(featured.fecha)}`} colors={colors} forma={featuredSeason.forma} label="Experience" sizes="(max-width: 800px) 100vw, 48vw" variant="shot" /></div>
+          <div className={styles.heroPhoto}><EventImage src={heroImage} alt={`Experience ${featuredSeason.nombre} · ${fechaLarga(featured.fecha)}`} colors={colors} forma={featuredSeason.forma} label="Experience" sizes="(max-width: 800px) 88vw, 590px" variant="shot" fit="contain" priority /></div>
           <div className={styles.heroStamp}><strong>{featured.fecha.slice(8)}</strong><span>{fechaLarga(featured.fecha).replace(/^\w+\s+\d+\s/, "")}</span></div>
         </div>
       </section>
@@ -118,7 +120,7 @@ export default async function ExperiencePage() {
           if (!season) return null;
           return <details key={fecha.fecha} className={styles.archiveDetails} style={seasonAccentVars(season)}>
             <summary className={styles.archiveCard}>
-              <div className={styles.archiveImage}><EventImage src={fecha.fotoEscena ?? fecha.flyer} alt={`Experience ${season.nombre}`} colors={getSeasonColors(season)} forma={season.forma} label="Experience" sizes="(max-width: 700px) 90vw, 25vw" variant="shot" /></div>
+              <div className={styles.archiveImage}><EventImage src={fecha.fotoEscena ?? fecha.flyer} alt={`Experience ${season.nombre}`} colors={getSeasonColors(season)} forma={season.forma} label="Experience" sizes="(max-width: 700px) 90vw, 25vw" variant="shot" fit="contain" /></div>
               <span>{fechaLarga(fecha.fecha)}</span><strong>{season.nombre}</strong><ActionIcon kind="forward" />
             </summary>
             <div className={styles.archiveExpanded}>

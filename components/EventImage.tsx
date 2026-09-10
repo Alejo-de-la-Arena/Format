@@ -19,6 +19,7 @@ export default function EventImage({
   sizes,
   variant = "poster",
   fit = "cover",
+  priority = false,
 }: {
   src?: ImageSrc;
   alt: string;
@@ -31,6 +32,7 @@ export default function EventImage({
    * detalle de evento) — se ve completa, con el fondo del contenedor
    * asomando en los bordes si la proporción no calza exacto. */
   fit?: "cover" | "contain";
+  priority?: boolean;
 }) {
   const motionCls =
     "h-full w-full transition-transform duration-500 group-hover:scale-[1.03]";
@@ -41,6 +43,7 @@ export default function EventImage({
         src={src}
         alt={alt}
         fill
+        priority={priority}
         sizes={sizes ?? "(max-width: 768px) 90vw, 33vw"}
         className={`${fit === "contain" ? "object-contain" : "object-cover"} ${motionCls}`}
       />
