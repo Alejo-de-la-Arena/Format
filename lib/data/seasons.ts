@@ -15,6 +15,7 @@ interface SeasonRow {
   fecha_inicio: string;
   fecha_fin: string;
   aftermovie_url: string | null;
+  aftermovie_poster_path?: string | null;
   about_relato: string | null;
   color_descripcion: string | null;
   forma_descripcion: string | null;
@@ -33,6 +34,9 @@ function mapSeason(row: SeasonRow): Season {
     fechaInicio: row.fecha_inicio,
     fechaFin: row.fecha_fin,
     aftermovieUrl: row.aftermovie_url ?? undefined,
+    aftermoviePosterUrl: row.aftermovie_poster_path
+      ? createClient().storage.from("season-previews").getPublicUrl(row.aftermovie_poster_path).data.publicUrl
+      : undefined,
     intro: {
       text: row.intro_text ?? "",
       motion: isIntroMotion(row.intro_motion) ? row.intro_motion : "signal",

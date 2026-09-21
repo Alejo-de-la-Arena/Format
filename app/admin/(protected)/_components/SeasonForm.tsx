@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Forma } from "@/lib/types";
 import type { AdminSeason } from "../data";
 import ColorFieldset from "./ColorFieldset";
+import AftermoviePosterUpload from "./AftermoviePosterUpload";
 import { parseVideoUrl } from "@/lib/embed";
 import { upsertSeason, type SeasonFormState } from "../seasons/actions";
 
@@ -145,6 +146,7 @@ export default function SeasonForm({
 
       <div className="flex flex-col gap-4">
         <ColorFieldset colores={colores} onChange={setColores} />
+        <AftermoviePosterUpload season={season} disabled={pending} />
 
         {/* AFTERMOVIE — sólo la URL. El video vive en YouTube/Vimeo: Supabase
             Storage no hace transcoding ni streaming adaptativo. */}

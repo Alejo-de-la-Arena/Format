@@ -93,3 +93,13 @@ Cierra la primera temporada combinando las 5 Seasons anteriores: en vez de un co
 - `/experience` — página de FORMAT Experience (fechas Experience de cada Season). Toma su acento de la **Season activa**, como el resto del sitio; el único subárbol con acento propio es el bloque destacado, que adopta el de *su* Season porque es historia y no tema global (lo mismo cada `<details>` del archivo). Ese bloque arranca **cerrado**: la página abre con la fecha y el venue a la vista, y el flyer, el line-up, el cocktail y la galería se despliegan con «Ver información».
 - `/admin` — panel de carga (Supabase Auth email/password, sin registro público): Seasons y sus Fechas en acordeón, flyer/lineup/galería, colores con preview, URL del aftermovie y clips de FORMAT Lab en cada Experience.
 - `/special` — comentada, no desarrollar hasta nuevo aviso.
+
+### Portada del aftermovie de la home
+
+La banda Experience usa el video y la portada de la Season activa por fechas.
+`seasons.aftermovie_poster_path` guarda el objeto de `season-previews`; el tipo público expone `aftermoviePosterUrl`.
+Aplicar manualmente `supabase/migrations/0016_aftermovie_poster.sql` y recargar /admin para habilitar «Portada del aftermovie» en una Season guardada.
+La imagen se comprime con `compressToWebp / FLYER_COMPRESSION` y se guarda al elegirla; cada reemplazo tiene una URL nueva y revalida la home.
+Antes de la migración, el sitio y el formulario siguen funcionando: Ascent usa `/images/aftermovie-ascent-portada.jpg` y Origin `/images/aftermovie-portada.png`.
+Otras Seasons sin imagen usan la presentación existente del player con su forma y color; no heredan la portada de Origin.
+Las imágenes anteriores permanecen en Storage; no se borran automáticamente. No se modifican portadas de otras secciones.

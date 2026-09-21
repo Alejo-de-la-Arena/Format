@@ -18,6 +18,8 @@ export interface AdminSeason {
   fechaInicio: string;
   fechaFin: string;
   aftermovieUrl: string | null;
+  aftermoviePosterUrl: string | null;
+  aftermoviePosterAvailable: boolean;
   aboutRelato: string;
   colorDescripcion: string;
   formaDescripcion: string;
@@ -160,6 +162,10 @@ export async function getAdminSeasons(): Promise<AdminSeasonWithFechas[]> {
     fechaInicio: row.fecha_inicio,
     fechaFin: row.fecha_fin,
     aftermovieUrl: row.aftermovie_url,
+    aftermoviePosterUrl: row.aftermovie_poster_path
+      ? supabase.storage.from("season-previews").getPublicUrl(row.aftermovie_poster_path).data.publicUrl
+      : null,
+    aftermoviePosterAvailable: "aftermovie_poster_path" in row,
     aboutRelato: row.about_relato ?? "",
     colorDescripcion: row.color_descripcion ?? "",
     formaDescripcion: row.forma_descripcion ?? "",

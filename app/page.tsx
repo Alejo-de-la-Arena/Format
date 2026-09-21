@@ -17,6 +17,7 @@ import {
 import { getSeasons, getActiveSeason } from "@/lib/data/seasons";
 import { getSeasonColors } from "@/lib/season-colors";
 import { isVideoUrl } from "@/lib/embed";
+import { getAftermoviePoster } from "@/lib/aftermovie-poster";
 
 const wrap = "mx-auto max-w-[1400px] px-[clamp(18px,4vw,48px)]";
 const sectionPad = "py-[clamp(44px,5vw,72px)]";
@@ -72,10 +73,8 @@ export default async function Home() {
     proximaExperience?.lineup?.[0]?.artistas?.[0],
     proximaExperience?.tragoAutor?.nombre,
   );
-  // Season que ilustra la banda Experience: la de la próxima fecha especial
-  // si hay una cargada, si no la Season activa del sitio (mismo fallback
-  // que el copy de arriba).
-  const experienceSeason = proximaExperienceSeason ?? activeSeason;
+  // El aftermovie y su portada pertenecen a la Season activa.
+  const experienceSeason = activeSeason;
   const experienceColors = experienceSeason ? getSeasonColors(experienceSeason) : null;
   // Se filtra por URL parseable y no sólo por "hay algo cargado": una URL
   // que no parsea hace que VideoPlayer devuelva null, y la sección quedaría
@@ -191,7 +190,7 @@ export default async function Home() {
                 kicker="Aftermovie"
                 forma={experienceSeason.forma}
                 accent={experienceColors[0]}
-                posterSrc="/images/aftermovie-portada.png"
+                posterSrc={getAftermoviePoster(experienceSeason)}
                 className="mx-auto w-full md:-mt-[62px] md:max-w-[calc(min(92svh,980px)*9/16)]"
               />
             ) : (

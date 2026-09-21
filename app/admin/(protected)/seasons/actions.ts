@@ -202,3 +202,22 @@ export async function reorderLabClips(
   if (error) throw new Error(error.message);
   revalidateSite(slug);
 }
+
+/** Guarda únicamente la portada; el formulario general no puede pisarla. */
+export async function attachAftermoviePoster(seasonId: string, path: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user?.app_metadata?.role !== "admin") throw new Error("Sin permisos para guardar la portada.");
+  if (!/^[0-9a-f-]{36}$/.test(seasonId) || !new RegExp(`^${seasonId}/aftermovie-[0-9a-f-]{36}\\.webp$`).test(path)) {
+    throw new Error("La portada no corresponde a esta Season.");
+  }
+  const { data: season, error: readError } = await supabase.from("seasons")
+    .select("slug, aftermovie_poster_path").eq("id", seasonId).single();
+  if (readError || !season) throw new Error("No se pudo leer la Season. Verificá que la carga de portadas esté habilitada.");
+  const { data: object, error: objectError } = await supabase.storage.from("season-previews").info(path);
+  if (objectError || (object?.contentType ?? object?.metadata?.mimetype) !== "image/webp") throw new Error("La imagen WebP no se subió correctamente.");
+  const { data, error } = await supabase.from("seasons").update({ aftermovie_poster_path: path })
+    .eq("id", seasonId).select("id").single();
+  if (error || !data) throw new Error("No se pudo guardar la portada.");
+  revalidateSite(season.slug);
+}

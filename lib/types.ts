@@ -79,6 +79,8 @@ export interface Season {
    * la URL y el embed se arma en el cliente — ver lib/embed.ts.
    */
   aftermovieUrl?: string;
+  /** Portada exclusiva del aftermovie de Experience en la home. */
+  aftermoviePosterUrl?: string;
   /**
    * Contenido largo de identidad para /about, editable desde /admin. Todos
    * los campos son texto libre con saltos de línea; `""` cuando todavía no
