@@ -30,34 +30,6 @@ export function getIntroSeasons(seasons: Season[], today = buenosAiresDay()) {
   return { current, previous: ordered[index - 1] ?? null };
 }
 
-/** Compara copy editorial: sin mayúsculas ni puntuación de cierre. */
-const sameLine = (a: string, b: string) =>
-  a.trim().toLowerCase().replace(/[.·!?]+$/, "") === b.trim().toLowerCase().replace(/[.·!?]+$/, "");
-
-/**
- * La bienvenida cargada en admin, o «Welcome to / Nombre» si está vacía.
- *
- * `leadShown` sólo es true cuando la intro hace el viaje y por lo tanto
- * muestra la frase del lead en su propio momento: ahí, si el texto la
- * repite como primera línea, se descarta o iría dos veces en pantalla.
- * Sin viaje no hay nada que duplicar y el texto va entero — descartarla
- * igual haría desaparecer en silencio una línea escrita a mano.
- */
-export function introCopy(season: Pick<Season, "nombre" | "intro">, leadShown = false): string {
-  const text = season.intro?.text.trim();
-  if (!text) return `Welcome to\n${season.nombre}`;
-  if (!leadShown) return text;
-  const [first, ...rest] = text.split(/\r?\n/);
-  return rest.length > 0 && sameLine(first, introLead(season))
-    ? rest.join("\n").trim() || text
-    : text;
-}
-
-export function introLead(season: Pick<Season, "nombre" | "intro">): string {
-  return season.nombre.toLowerCase() === "ascent" || season.intro?.motion === "ascend"
-    ? "It was time to ascend" : "It was time for a new Season";
-}
-
 export function introStorageKey(season: Pick<Season, "slug" | "fechaInicio">): string {
   return `format:visit-intro:v2:${season.slug}:${season.fechaInicio}`;
 }

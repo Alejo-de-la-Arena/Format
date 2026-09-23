@@ -53,16 +53,10 @@ Un viernes individual dentro de una Season.
 
 ## Bienvenida por Season
 
-La intro son tres momentos encadenados, 10,8 segundos en total, con la forma, el color y el nombre de las filas reales de Supabase:
+La intro dura 2,8 segundos y muestra únicamente la Season activa: forma ensamblada en 400 ms, frase y bienvenida como un único bloque desde los 320 ms, salida de 350 ms desde los 2,45 s.
 
-1. **La Season anterior se arma** (0–2,1 s) con su animación de siempre: los cuatro cuartos de la forma convergen, el color inunda el cuadro y queda el contorno en papel. Sin texto.
-2. **El viaje** (2,1–4,8 s): la tira entera —tres pantallas apiladas— se traslada en Y y el marco se queda quieto, así que lo que sube es el punto de vista. En el medio se recorren dos pantallas de tramo con las marcas del trayecto; el contador de edición pasa de una Season a la otra a mitad de camino. Arriba entra la frase del viaje descomprimiéndose: arranca con el tracking cerrado y se abre hasta el final.
-3. **La Season activa** (7,2 s en adelante): se va la frase y entra la bienvenida junto con la forma nueva armándose, en su color.
-
-Ascent usa «It was time to ascend» y después «Welcome to Ascent»; para otras Seasons la frase del viaje es genérica, salvo que tengan `intro_motion=ascend`. Sin Season anterior no hay de dónde subir: queda sólo el tercer momento, con los 2,8 segundos de siempre.
-
-- `seasons.intro_text`: bienvenida opcional (hasta 160 caracteres y 3 líneas). Vacío usa «Welcome to / Nombre». Si su primera línea repite la frase del viaje, se descarta: esa frase ya tiene su propio momento y en pantalla iría dos veces. Se conserva la edición desde admin y la compatibilidad con la migración existente `0010_season_intro.sql`; esta entrega no requiere SQL nuevo.
-- Tema, hero, intro y sección «Qué es FORMAT» comparten selección: Season en curso, próxima durante un intervalo, última si todas terminaron. La fecha se calcula en Buenos Aires. La intro sólo recibe esa identidad y la inmediatamente anterior.
+- `seasons.intro_text`: frase opcional (hasta 160 caracteres y 3 líneas), seguida siempre de «WELCOME TO {nombre}». Sin frase se muestra sólo la bienvenida. Todo el contenido viene de la Season, sin copy por nombre hardcodeado.
+- Tema, hero e intro comparten selección: Season en curso, próxima durante un intervalo, última si todas terminaron. La fecha se calcula en Buenos Aires. La intro sólo recibe esa identidad.
 - Misma persistencia: `format:visit-intro:v2:<slug>:<fechaInicio>` en sessionStorage, con memoria como fallback. No se repite al navegar/recargar en esa sesión. Nueva sesión independiente: nueva intro. Escape cierra; con movimiento reducido entra directo, sin modal. No aparece en admin.
 - «Qué es FORMAT» resuelve en servidor la activa y un único adelanto siguiente. Prioriza los datos reales y usa la secuencia editorial como fallback; no serializa el catálogo completo ni las identidades posteriores. La constante de Pulse permanece sin cambios.
 - Ascent: `triangle`, vértice arriba, paleta `#7B3FE4`, `#2E1065`, `#A06BFF`, `#D9C7FF`, `#FFFFFF`. El triángulo ya está permitido por el CHECK de `0001_init.sql` y por el selector del admin.

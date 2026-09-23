@@ -6,7 +6,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import HomeMotion from "@/components/home/HomeMotion";
 import { MusicProvider } from "@/components/MusicProvider";
-import { getIntroSeasons, introCopy, introLead, introStorageKey } from "@/lib/season-intro";
+import { getIntroSeasons, introStorageKey } from "@/lib/season-intro";
 import { getSeasonColors } from "@/lib/season-colors";
 import type { Season } from "@/lib/types";
 import { seasonAccentVars } from "@/lib/theme";
@@ -36,14 +36,11 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const [activeSeason, seasons] = await Promise.all([getActiveSeason(), getSeasons()]);
-  const { current, previous } = getIntroSeasons(seasons);
-  // Con Season anterior la intro hace el viaje y muestra el lead aparte; sin
-  // ella no, y el texto cargado va entero (ver introCopy).
-  const journey = previous !== null;
+  const { current } = getIntroSeasons(seasons);
   const identity = (season: Season | null) => season ? {
     slug: season.slug, fechaInicio: season.fechaInicio, numero: season.numero,
     nombre: season.nombre, forma: season.forma, color: getSeasonColors(season)[0],
-    text: introCopy(season, journey), lead: introLead(season), motion: season.intro?.motion ?? "signal" as const,
+    text: season.intro?.text.trim() ?? "", motion: season.intro?.motion ?? "signal" as const,
   } : null;
   // Corre antes del primer paint. Sólo tapa una visita que el cliente también
   // va a convertir en intro; las visitas ya recordadas no reciben el flag.
@@ -57,13 +54,14 @@ export default async function RootLayout({
         {preflightScript && <script dangerouslySetInnerHTML={{ __html: preflightScript }} />}
       </head>
       <body
+        suppressHydrationWarning
         className="overflow-x-hidden bg-paper font-body text-ink antialiased"
         style={seasonAccentVars(activeSeason)}
       >
         <div className="grain" aria-hidden />
         <MusicProvider>
           <MotionConfig reducedMotion="user">
-            <HomeMotion current={identity(current)} previous={identity(previous)}>{children}</HomeMotion>
+            <HomeMotion current={identity(current)}>{children}</HomeMotion>
           </MotionConfig>
         </MusicProvider>
         <Analytics />

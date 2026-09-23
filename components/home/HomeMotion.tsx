@@ -8,8 +8,8 @@ import { usePathname } from "next/navigation";
 const HomeMotionContext = createContext({ introOpen: false, ready: true });
 export const useHomeMotion = () => useContext(HomeMotionContext);
 
-export default function HomeMotion({ current, previous, children }: {
-  current: IntroIdentity | null; previous: IntroIdentity | null; children: ReactNode;
+export default function HomeMotion({ current, children }: {
+  current: IntroIdentity | null; children: ReactNode;
 }) {
   const [state, setState] = useState({ introOpen: false, ready: !current });
   const pathname = usePathname();
@@ -18,7 +18,7 @@ export default function HomeMotion({ current, previous, children }: {
     <HomeMotionContext.Provider value={state}>
       <div className={styles.home} data-intro-open={state.introOpen || undefined}>
         {children}
-        {current && publicPage && <SeasonIntro current={current} previous={previous} onState={setState} pathname={pathname} />}
+        {current && publicPage && <SeasonIntro current={current} onState={setState} pathname={pathname} />}
       </div>
     </HomeMotionContext.Provider>
   );

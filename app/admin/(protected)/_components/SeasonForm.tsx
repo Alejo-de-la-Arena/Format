@@ -234,11 +234,11 @@ export default function SeasonForm({
         </p>
         {!season?.introAvailable && <p className="text-sm">Aplicá 0010_season_intro.sql y recargá. Si es nueva, guardá primero la Season.</p>}
         <label className="flex flex-col gap-1.5">
-          <span className="label-mono text-muted">Frase de bienvenida (opcional)</span>
+          <span className="label-mono text-muted">Frase de la Season (opcional)</span>
           <textarea name="introText" defaultValue={season?.introText ?? ""} rows={3} maxLength={160}
-            placeholder={"Welcome to\nNombre de la Season"}
+            placeholder="The energy rises."
             className="resize-y border border-line bg-paper px-3 py-2 leading-relaxed outline-none focus:border-accent-1" />
-          <span className="text-xs text-muted">Hasta 160 caracteres y 3 líneas. Se respetan los saltos de línea. Vacío: bienvenida con el nombre de la Season.</span>
+          <span className="text-xs text-muted">Hasta 160 caracteres y 3 líneas. La bienvenida con el nombre se agrega automáticamente. Vacío: sólo la bienvenida.</span>
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="label-mono text-muted">Movimiento</span>

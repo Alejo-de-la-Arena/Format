@@ -6,7 +6,7 @@ import ts from "typescript";
 // No extra runner dependency; transpile the pure production module in memory.
 const source = await readFile(new URL("../lib/season-intro.ts", import.meta.url), "utf8");
 const { outputText } = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } });
-const { buenosAiresDay, getIntroSeasons, introCopy, introLead, introStorageKey, isIntroMotion, isIntroText, shouldAutoIntro } =
+const { buenosAiresDay, getIntroSeasons, introStorageKey, isIntroMotion, isIntroText, shouldAutoIntro } =
   await import(`data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`);
 
 const season = (slug, fechaInicio, fechaFin = fechaInicio) => ({ slug, fechaInicio, fechaFin, nombre: slug });
@@ -39,20 +39,7 @@ test("remember each Season separately without including editorial content", () =
   assert.notEqual(introStorageKey(season("one", "2026-08-01")), introStorageKey(season("two", "2026-09-01")));
   assert.equal(introStorageKey(season("one", "2026-08-01")), "format:visit-intro:v2:one:2026-08-01");
 });
-test("copy defaults and editorial line breaks; preset validation", () => {
-  assert.equal(introCopy({ nombre: "Origin" }), "Welcome to\nOrigin");
-  assert.equal(introCopy({ nombre: "Ascent" }), "Welcome to\nAscent");
-  assert.equal(introCopy({ nombre: "Test" }), "Welcome to\nTest");
-  assert.equal(introLead({ nombre: "Ascent" }), "It was time to ascend");
-  assert.equal(introLead({ nombre: "Test" }), "It was time for a new Season");
-  assert.equal(introCopy({ nombre: "Test", intro: { text: "First\nSecond" } }), "First\nSecond");
-  // The journey shows the lead on its own; repeating it above the welcome would print it twice.
-  const twoLines = { nombre: "Ascent", intro: { text: "It was time to ascend.\nWelcome to Ascent." } };
-  assert.equal(introCopy(twoLines, true), "Welcome to Ascent.");
-  assert.equal(introCopy({ nombre: "Ascent", intro: { text: "It was time to ascend." } }, true), "It was time to ascend.");
-  // Without the journey nothing renders the lead, so no hand-written line may vanish.
-  assert.equal(introCopy(twoLines), twoLines.intro.text);
-  assert.equal(introCopy(twoLines, false), twoLines.intro.text);
+test("motion preset validation", () => {
   for (const preset of ["signal", "ascend", "expand"]) assert.equal(isIntroMotion(preset), true);
   assert.equal(isIntroMotion("untrusted"), false);
   assert.equal(isIntroMotion(undefined), false);
