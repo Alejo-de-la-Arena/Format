@@ -2,6 +2,8 @@ import { cache } from "react";
 import type { Season } from "@/lib/types";
 import { createClient } from "@/lib/supabase/public";
 import { isIntroMotion, getIntroSeasons } from "@/lib/season-intro";
+import { getDevSeasonOverride } from "@/lib/season-pulse";
+import { normalizeForma } from "@/lib/season-shape";
 
 export { getSeasonColors } from "@/lib/season-colors";
 
@@ -28,7 +30,7 @@ function mapSeason(row: SeasonRow): Season {
     slug: row.slug,
     numero: row.numero,
     nombre: row.nombre,
-    forma: row.forma,
+    forma: normalizeForma(row.forma),
     colores: row.colores,
     concepto: row.concepto,
     fechaInicio: row.fecha_inicio,
@@ -56,6 +58,7 @@ function mapSeason(row: SeasonRow): Season {
  * ver getActiveSeason/seasonAccentVars para el fallback visual.
  */
 export const getSeasons = cache(async (): Promise<Season[]> => {
+  const override = getDevSeasonOverride();
   try {
     const supabase = createClient();
     const { data, error } = await supabase
@@ -63,10 +66,14 @@ export const getSeasons = cache(async (): Promise<Season[]> => {
       .select("*")
       .order("fecha_inicio", { ascending: true });
     if (error) throw error;
-    return (data ?? []).map(mapSeason);
+    const seasons = (data ?? []).map(mapSeason);
+    return override
+      ? [...seasons.filter((s) => s.slug !== override.slug), override]
+          .sort((a, b) => a.fechaInicio.localeCompare(b.fechaInicio))
+      : seasons;
   } catch (err) {
     console.error("getSeasons: no se pudo consultar Supabase", err);
-    return [];
+    return override ? [override] : [];
   }
 });
 
@@ -82,6 +89,8 @@ export async function getSeason(slug: string): Promise<Season | null> {
  * Season cargada (base recién creada).
  */
 export async function getActiveSeason(): Promise<Season | null> {
+  const override = getDevSeasonOverride();
+  if (override) return override;
   const seasons = await getSeasons();
   return getIntroSeasons(seasons).current;
 }

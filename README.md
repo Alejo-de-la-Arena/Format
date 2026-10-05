@@ -19,7 +19,7 @@ Los tipos viven en `lib/types.ts`. La fuente de verdad es Supabase (tablas `seas
 | `slug` | `string` | Para la URL: `/eventos/[slug]`. |
 | `numero` | `string` | Número de edición, p. ej. `"01"`. |
 | `nombre` | `string` | Nombre propio de la Season (no la forma geométrica). |
-| `forma` | `"circle" \| "triangle" \| "square" \| "hexagon" \| "hexagon-organic" \| "infinity"` | Geometría de la Season, para el glifo. |
+| `forma` | `"circle" \| "double-circle" \| "triangle" \| "square" \| "hexagon" \| "hexagon-organic" \| "infinity" \| "cross"` | Geometría de la Season, para el glifo. Las formas desconocidas usan un cuadrado seguro. |
 | `colores` | `string[]` (hex, hasta 5) | Roles fijos por posición — ver `CLAUDE.md` § Colores por Season. Nunca se muestra como paleta ni se nombra en pantalla. |
 | `concepto` | `string` | 1 frase, tono evocativo. Es lo único descriptivo que ve el público. |
 | `fechaInicio` / `fechaFin` | `string` | ISO `yyyy-mm-dd`, primer y último viernes de la Season. |
@@ -51,6 +51,14 @@ Un viernes individual dentro de una Season.
 
 `{ titulo: string; url: string; orden: number }` — un clip de FORMAT Lab de una fecha Experience. `titulo` es el nombre del DJ.
 
+## 003 PULSE · octubre 2026
+
+Identidad local en `lib/season-pulse.ts`: doble anillo, paleta roja y viernes 9, 16, 23 y 30 de octubre (Opening el 9). Para previsualizar sin escribir a Supabase, iniciar `npm run dev` con `NEXT_PUBLIC_SEASON_OVERRIDE=pulse` (o agregarla a `.env.local`). El override fuerza tema, hero e intro y agrega las fechas sólo durante desarrollo; en producción se ignora incluso si la variable está seteada. Las demás Seasons y sus páginas conservan su identidad.
+
+SQL pendientes, sin ejecución automática: aplicar manualmente `supabase/migrations/0018_double_circle.sql` para admitir la forma; **después del deploy**, ejecutar `supabase/seeds/0019_pulse.sql` para cargar la Season y las cuatro fechas. El sitio en producción toma la activa del calendario de Supabase. El seed conserva el contenido existente y no modifica Ascent.
+
+El hero de Pulse combina latido, ondas y órbita con el ciclo de armado/disolución. Ajustes al principio de `components/HeroBackground.tsx`: `BPM`, `amp`, `ringWidth` y `rippleEvery`. Con movimiento reducido los anillos son estáticos. Verificación visual del override: `node tests/pulse-visual.mjs` (admite `FORMAT_PLAYWRIGHT`, `FORMAT_CHROME` y `FORMAT_PREVIEW_URL`).
+
 ## Bienvenida por Season
 
 La intro dura 2,8 segundos y muestra únicamente la Season activa: forma ensamblada en 400 ms, frase y bienvenida como un único bloque desde los 320 ms, salida de 350 ms desde los 2,45 s.
@@ -58,9 +66,9 @@ La intro dura 2,8 segundos y muestra únicamente la Season activa: forma ensambl
 - `seasons.intro_text`: frase opcional (hasta 160 caracteres y 3 líneas), seguida siempre de «WELCOME TO {nombre}». Sin frase se muestra sólo la bienvenida. Todo el contenido viene de la Season, sin copy por nombre hardcodeado.
 - Tema, hero e intro comparten selección: Season en curso, próxima durante un intervalo, última si todas terminaron. La fecha se calcula en Buenos Aires. La intro sólo recibe esa identidad.
 - Misma persistencia: `format:visit-intro:v2:<slug>:<fechaInicio>` en sessionStorage, con memoria como fallback. No se repite al navegar/recargar en esa sesión. Nueva sesión independiente: nueva intro. Escape cierra; con movimiento reducido entra directo, sin modal. No aparece en admin.
-- «Qué es FORMAT» resuelve en servidor la activa y un único adelanto siguiente. Prioriza los datos reales y usa la secuencia editorial como fallback; no serializa el catálogo completo ni las identidades posteriores. La constante de Pulse permanece sin cambios.
+- «Qué es FORMAT» muestra la identidad activa y mantiene anónimo el adelanto siguiente («?»); no serializa el catálogo completo ni las identidades posteriores.
 - Ascent: `triangle`, vértice arriba, paleta `#7B3FE4`, `#2E1065`, `#A06BFF`, `#D9C7FF`, `#FFFFFF`. El triángulo ya está permitido por el CHECK de `0001_init.sql` y por el selector del admin.
-- Hero: ocho variantes de la forma activa, con el mismo tiempo, densidad, opacidad y recorrido. Un plano WebGL; DPR limitado a 1 en mobile y 1,5 en desktop; pausado fuera del viewport, con pestaña oculta o intro abierta. Las repeticiones no reflejan/invierten el triángulo.
+- Hero: ocho variantes de la forma activa salvo Pulse, que usa su doble anillo. Un plano WebGL; DPR limitado a 1 en mobile y 1,5 en desktop; pausado fuera del viewport, con pestaña oculta o intro abierta. Las repeticiones no reflejan/invierten el triángulo.
 - Acentos Tailwind resueltos con `@theme inline`; CSS consume `--accent-1..5` en el elemento. El detalle de cada Season, incluido su header y menú, conserva su identidad; calendario y archivo usan la identidad de cada fecha.
 - Pruebas: `node --test tests/*.test.mjs`, `npx tsc --noEmit`, `npm run build`. Preview aislada: `node tests/ascent-preview.mjs`; capturas con Playwright instalado: `node tests/ascent-visual.mjs` (admite `FORMAT_PLAYWRIGHT` y `FORMAT_CHROME`). Las fixtures no se conectan a Supabase y no cambian datos.
 

@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { MotionConfig } from "motion/react";
-import { getActiveSeason, getSeasons } from "@/lib/data/seasons";
+import { getActiveSeason } from "@/lib/data/seasons";
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import HomeMotion from "@/components/home/HomeMotion";
 import { MusicProvider } from "@/components/MusicProvider";
-import { getIntroSeasons, introStorageKey } from "@/lib/season-intro";
+import { introStorageKey } from "@/lib/season-intro";
 import { getSeasonColors } from "@/lib/season-colors";
 import type { Season } from "@/lib/types";
 import { seasonAccentVars } from "@/lib/theme";
@@ -35,8 +35,8 @@ export const metadata: Metadata = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const [activeSeason, seasons] = await Promise.all([getActiveSeason(), getSeasons()]);
-  const { current } = getIntroSeasons(seasons);
+  const activeSeason = await getActiveSeason();
+  const current = activeSeason;
   const identity = (season: Season | null) => season ? {
     slug: season.slug, fechaInicio: season.fechaInicio, numero: season.numero,
     nombre: season.nombre, forma: season.forma, color: getSeasonColors(season)[0],

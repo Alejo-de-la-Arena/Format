@@ -1,18 +1,17 @@
 import type { Forma } from "@/lib/types";
+import { PULSE } from "@/lib/season-pulse";
 
 /**
  * Secuencia completa de Seasons para la pieza "Qué es FORMAT" — forma,
- * paleta, número y nombre de cada una en orden. Origin es la única Season
- * real (Supabase); las siguientes cuatro son constantes de UI hasta que
- * existan de verdad en /admin.
+ * paleta, número y nombre de cada una en orden. Es un catálogo editorial;
+ * la Season activa y sus fechas se resuelven desde Supabase.
  *
  * La pieza NO muestra la secuencia entera: revela sólo la Season siguiente
  * a la activa (ver `getNextSeason`). Las demás quedan acá como dato del
  * modelo, sin llegar nunca a pantalla mientras no les toque el turno.
  *
  * Ojo: estos colores son LOCALES a esa sección. No tocan --accent-1..5 ni
- * el theming por Season del resto del sitio (ver lib/theme.ts) — la home
- * sigue en el azul de Origin mientras la pieza revela la siguiente.
+ * el theming por Season del resto del sitio (ver lib/theme.ts).
  *
  * `colores` respeta el orden de roles del resto del sitio:
  * [0] principal · [1] secundario · [2] gradiente/glow · [3] detalle ·
@@ -44,10 +43,10 @@ export const SEASON_SEQUENCE: SeasonSequenceItem[] = [
     tilt: 3,
   },
   {
-    numero: "003",
-    nombre: "Pulse",
-    forma: "cross",
-    colores: ["#E5233B", "#8B0F1D", "#FF6B6B", "#FFD1D1", "#FFFFFF"],
+    numero: PULSE.numero,
+    nombre: PULSE.nombre,
+    forma: PULSE.forma,
+    colores: PULSE.colores as SeasonSequenceItem["colores"],
     tilt: -2,
   },
   {
@@ -69,9 +68,8 @@ export const SEASON_SEQUENCE: SeasonSequenceItem[] = [
 /**
  * La Season que sigue a la activa, y cuántas quedan detrás de ella.
  *
- * Es lo único que consume la pieza "Qué es FORMAT": con Origin activa
- * devuelve Ascent y 3 restantes; cuando la activa pase a Ascent devolverá
- * Pulse sola, sin tocar código. El match es por `numero` (Supabase guarda
+ * Con la edición 001 activa devuelve la 002 y 3 restantes.
+ * El match es por `numero` (Supabase guarda
  * "001", igual que acá) y cae a `nombre` por las dudas.
  *
  * `restantes` no identifica nada: es sólo cuántas siluetas anónimas dibujar

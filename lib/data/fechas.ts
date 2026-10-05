@@ -2,6 +2,7 @@ import { cache } from "react";
 import type { Fecha, LabClip, LineupSlot } from "@/lib/types";
 import { createClient } from "@/lib/supabase/public";
 import { esPasado } from "@/lib/dates";
+import { getDevSeasonOverride, PULSE_FECHAS } from "@/lib/season-pulse";
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -112,7 +113,14 @@ const getAllFechas = cache(async (): Promise<Fecha[]> => {
 /** Los viernes en orden cronológico ascendente. */
 export async function getFechasOrdenadas(): Promise<Fecha[]> {
   const fechas = await getAllFechas();
-  return [...fechas].sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const override = getDevSeasonOverride();
+  const previewFechas = override
+    ? [...fechas.filter((f) => f.seasonSlug !== override.slug), ...PULSE_FECHAS.map((f) => ({
+        ...fechas.find((existing) => existing.seasonSlug === f.seasonSlug && existing.fecha === f.fecha),
+        ...f,
+      }))]
+    : fechas;
+  return [...previewFechas].sort((a, b) => a.fecha.localeCompare(b.fecha));
 }
 
 /** Viernes de una Season, en orden cronológico. */
