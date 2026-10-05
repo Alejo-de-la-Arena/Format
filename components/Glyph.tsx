@@ -1,6 +1,8 @@
 import type { CSSProperties } from "react";
 import type { Forma } from "@/lib/types";
 import { SHAPE_PATHS } from "@/components/shapePaths";
+import DoubleCircle from "@/components/DoubleCircle";
+import { normalizeForma } from "@/lib/season-shape";
 
 /** Glifo geométrico de la Season, sólo línea. Hereda el color via currentColor. */
 export default function Glyph({
@@ -14,6 +16,10 @@ export default function Glyph({
   style?: CSSProperties;
   strokeWidth?: number;
 }) {
+  forma = normalizeForma(forma);
+  if (forma === "double-circle") {
+    return <DoubleCircle className={className} style={style} strokeWidth={strokeWidth * 1.5} />;
+  }
   return (
     <svg
       viewBox="0 0 72 72"

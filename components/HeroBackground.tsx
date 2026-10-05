@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Forma } from "@/lib/types";
+import { normalizeForma } from "@/lib/season-shape";
 
 /** Fijo — mismo valor que --color-paper en app/globals.css. */
 const PAPER = "#c8d0d2";
@@ -15,6 +16,7 @@ const SHAPE_INDEX: Record<Forma, number> = {
   "hexagon-organic": 3,
   infinity: 4,
   cross: 5,
+  "double-circle": 6,
 };
 
 function hexToVec3(hex: string): [number, number, number] {
@@ -254,7 +256,7 @@ export default function HeroBackground({
         uResolution: { value: new THREE.Vector2(1, 1) },
         uAccent: { value: new THREE.Vector3(...hexToVec3(accent)) },
         uPaper: { value: new THREE.Vector3(...hexToVec3(PAPER)) },
-        uShape: { value: SHAPE_INDEX[forma] },
+        uShape: { value: SHAPE_INDEX[normalizeForma(forma)] },
         uPointer: { value: new THREE.Vector2(0, 0) },
       };
 

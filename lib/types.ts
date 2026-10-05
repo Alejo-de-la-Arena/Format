@@ -14,6 +14,7 @@ export type ImageSrc = string | StaticImageData;
 /** Geometría que ancla la Season. Sólo para dibujar el glifo. */
 export type Forma =
   | "circle"
+  | "double-circle"
   | "triangle"
   | "square"
   | "hexagon"
