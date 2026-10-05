@@ -4,6 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import type { Forma } from "@/lib/types";
 import { normalizeForma } from "@/lib/season-shape";
 
+/** PULSE tuning: amp/ringWidth in SDF units; rippleEvery in beats. */
+const BPM = 124;
+const amp = 0.055;
+const ringWidth = 0.014;
+const rippleEvery = 4;
+
 /** Fijo — mismo valor que --color-paper en app/globals.css. */
 const PAPER = "#c8d0d2";
 
@@ -42,6 +48,11 @@ const FRAGMENT = /* glsl */ `
   uniform vec3 uPaper;
   uniform float uShape;
   uniform vec2 uPointer;
+  uniform float uReducedMotion;
+  uniform float uBPM;
+  uniform float uAmp;
+  uniform float uRingWidth;
+  uniform float uRippleEvery;
 
   // Ashima simplex noise (2D), dominio público.
   vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
@@ -72,6 +83,32 @@ const FRAGMENT = /* glsl */ `
   }
 
   float sdCircle(vec2 p, float r) { return length(p) - r; }
+  float sdRing(vec2 p, float r, float w) { return abs(length(p) - r) - w; }
+
+  float pulseMask(vec2 p) {
+    float R = .92;
+    float moving = 1.0 - uReducedMotion;
+    float beat = pow(.5 + .5 * sin(uTime * 6.2831 * uBPM / 60.0), 8.0) * moving;
+    float r1 = R + uAmp * beat;
+    float r2 = r1 * .92;
+    vec2 orbit = vec2(cos(uTime * 1.3), sin(uTime * 1.3)) * .006 * moving;
+    float rings = min(sdRing(p, r1, uRingWidth), sdRing(p - orbit, r2, uRingWidth));
+
+    // Assemble from the existing noise field, hold for several beats, dissolve.
+    float cycle = fract(uTime * (uBPM / 60.0) / 16.0);
+    float envelope = mix(1.0,
+      smoothstep(0.0, .14, cycle) * (1.0 - smoothstep(.76, .97, cycle)), moving);
+    float dissolve = (1.0 - envelope) * (.24 + .24 * snoise(p * 3.0 + uTime * .12));
+    float mask = (1.0 - smoothstep(-.012, .012, rings + dissolve)) * envelope;
+
+    // One fading wave every N beats, independent of the short heartbeat peak.
+    float speed = (uBPM / 60.0) / max(uRippleEvery, 1.0);
+    float progress = fract(uTime * speed);
+    float maxR = .85;
+    float ripple = sdRing(p, r1 + progress * maxR, uRingWidth * .45);
+    float alpha = (1.0 - progress) * (1.0 - progress) * envelope * moving;
+    return max(mask, (1.0 - smoothstep(-.008, .008, ripple + dissolve)) * alpha);
+  }
 
   float sdBox(vec2 p, vec2 b) {
     vec2 d = abs(p) - b;
@@ -159,14 +196,25 @@ const FRAGMENT = /* glsl */ `
       : vec2(1.0, uResolution.y / uResolution.x);
     vec2 center = vec2(.5, .52);
     vec2 p = (uv - center) * 2.0 * aspect;
-    p -= vec2(sin(uTime * .25), cos(uTime * .31)) * .09;
-    p += vec2(snoise(p + uTime * .12), snoise(p + vec2(5.2,1.3) + uTime * .12)) * .075;
-    p += uPointer * .045;
-    float id = mod(floor(phase), 8.0);
-    float nextId = mod(id + 1.0, 8.0);
-    float morph = smoothstep(.56, 1.0, fract(phase));
-    float d = mix(sdVariant(p, uShape, id, 1.18), sdVariant(p, uShape, nextId, 1.18), morph);
-    return 1.0 - smoothstep(-.028, .028, d);
+    float mask = 0.0;
+    // Reduced motion renders exact concentric rings with no warp or pointer.
+    if (uShape > 5.5 && uReducedMotion > .5) {
+      mask = pulseMask(p);
+    } else {
+      p -= vec2(sin(uTime * .25), cos(uTime * .31)) * .09;
+      p += vec2(snoise(p + uTime * .12), snoise(p + vec2(5.2,1.3) + uTime * .12)) * .075;
+      p += uPointer * .045;
+      if (uShape > 5.5) {
+        mask = pulseMask(p);
+      } else {
+        float id = mod(floor(phase), 8.0);
+        float nextId = mod(id + 1.0, 8.0);
+        float morph = smoothstep(.56, 1.0, fract(phase));
+        float d = mix(sdVariant(p, uShape, id, 1.18), sdVariant(p, uShape, nextId, 1.18), morph);
+        mask = 1.0 - smoothstep(-.028, .028, d);
+      }
+    }
+    return mask;
   }
 
   void main() {
@@ -258,6 +306,11 @@ export default function HeroBackground({
         uPaper: { value: new THREE.Vector3(...hexToVec3(PAPER)) },
         uShape: { value: SHAPE_INDEX[normalizeForma(forma)] },
         uPointer: { value: new THREE.Vector2(0, 0) },
+        uReducedMotion: { value: motion.matches ? 1 : 0 },
+        uBPM: { value: BPM },
+        uAmp: { value: amp },
+        uRingWidth: { value: ringWidth },
+        uRippleEvery: { value: rippleEvery },
       };
 
       const material = new THREE.ShaderMaterial({
@@ -306,6 +359,11 @@ export default function HeroBackground({
       let previousTime = 0;
 
       function updateRunning() {
+        const reducedMotion = motion.matches ? 1 : 0;
+        if (uniforms.uReducedMotion.value !== reducedMotion) {
+          uniforms.uReducedMotion.value = reducedMotion;
+          renderer.render(scene, camera);
+        }
         const next = inView && !document.hidden && !motion.matches && !pausedRef.current;
         canvas!.dataset.motion = next ? "running" : "paused";
         if (next === running) return;
