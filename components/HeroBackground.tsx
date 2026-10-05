@@ -4,12 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import type { Forma } from "@/lib/types";
 import { normalizeForma } from "@/lib/season-shape";
 
-/** PULSE tuning: amp/ringWidth in SDF units; rippleEvery in beats. */
-const BPM = 124;
-const amp = 0.055;
-const ringWidth = 0.014;
-const rippleEvery = 4;
-
 /** Fijo — mismo valor que --color-paper en app/globals.css. */
 const PAPER = "#c8d0d2";
 
@@ -48,11 +42,6 @@ const FRAGMENT = /* glsl */ `
   uniform vec3 uPaper;
   uniform float uShape;
   uniform vec2 uPointer;
-  uniform float uReducedMotion;
-  uniform float uBPM;
-  uniform float uAmp;
-  uniform float uRingWidth;
-  uniform float uRippleEvery;
 
   // Ashima simplex noise (2D), dominio público.
   vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
@@ -84,31 +73,6 @@ const FRAGMENT = /* glsl */ `
 
   float sdCircle(vec2 p, float r) { return length(p) - r; }
   float sdRing(vec2 p, float r, float w) { return abs(length(p) - r) - w; }
-
-  float pulseMask(vec2 p) {
-    float R = .92;
-    float moving = 1.0 - uReducedMotion;
-    float beat = pow(.5 + .5 * sin(uTime * 6.2831 * uBPM / 60.0), 8.0) * moving;
-    float r1 = R + uAmp * beat;
-    float r2 = r1 * .92;
-    vec2 orbit = vec2(cos(uTime * 1.3), sin(uTime * 1.3)) * .006 * moving;
-    float rings = min(sdRing(p, r1, uRingWidth), sdRing(p - orbit, r2, uRingWidth));
-
-    // Assemble from the existing noise field, hold for several beats, dissolve.
-    float cycle = fract(uTime * (uBPM / 60.0) / 16.0);
-    float envelope = mix(1.0,
-      smoothstep(0.0, .14, cycle) * (1.0 - smoothstep(.76, .97, cycle)), moving);
-    float dissolve = (1.0 - envelope) * (.24 + .24 * snoise(p * 3.0 + uTime * .12));
-    float mask = (1.0 - smoothstep(-.012, .012, rings + dissolve)) * envelope;
-
-    // One fading wave every N beats, independent of the short heartbeat peak.
-    float speed = (uBPM / 60.0) / max(uRippleEvery, 1.0);
-    float progress = fract(uTime * speed);
-    float maxR = .85;
-    float ripple = sdRing(p, r1 + progress * maxR, uRingWidth * .45);
-    float alpha = (1.0 - progress) * (1.0 - progress) * envelope * moving;
-    return max(mask, (1.0 - smoothstep(-.008, .008, ripple + dissolve)) * alpha);
-  }
 
   float sdBox(vec2 p, vec2 b) {
     vec2 d = abs(p) - b;
@@ -153,7 +117,8 @@ const FRAGMENT = /* glsl */ `
     if (shapeId < 2.5) return sdTriangle(p, r * 0.95);
     if (shapeId < 3.5) return sdHexagon(p, r * 0.9);
     if (shapeId < 4.5) return sdInfinity(p, r * 1.05);
-    return sdCross(p, r * 0.8);
+    if (shapeId < 5.5) return sdCross(p, r * 0.8);
+    return min(sdRing(p, r, .018), sdRing(p, r * .92, .018));
   }
 
   vec2 rotatePoint(vec2 p, float angle) {
@@ -161,27 +126,39 @@ const FRAGMENT = /* glsl */ `
     return mat2(c, -s, s, c) * p;
   }
 
+  // Same field, amplitude and time as the original domain warp.
+  vec2 flowAt(vec2 p) {
+    return vec2(snoise(p + uTime * .12), snoise(p + vec2(5.2,1.3) + uTime * .12)) * .075;
+  }
+
+  // Circular SDFs ignore rotation: rotate the field's sampling frame instead.
+  // Subtract the original field before replacing it, never adding a second warp.
+  vec2 printPoint(vec2 p, vec2 noiseP, float angle, float shapeId) {
+    if (shapeId < 5.5) return rotatePoint(p, angle);
+    return p - flowAt(noiseP) + rotatePoint(flowAt(rotatePoint(noiseP, angle)), -angle);
+  }
+
   // Eight print treatments of ONE identity. No future Season shapes.
-  float sdVariant(vec2 p, float shapeId, float variantId, float r) {
+  float sdVariant(vec2 p, vec2 noiseP, float shapeId, float variantId, float r) {
     float d = 1.0;
-    if (variantId < 0.5) d = sdShape(rotatePoint(p, sin(uTime * .4) * .12), shapeId, r);
+    if (variantId < 0.5) d = sdShape(printPoint(p, noiseP, sin(uTime * .4) * .12, shapeId), shapeId, r);
     else if (variantId < 1.5) d = abs(sdShape(p, shapeId, r)) - .07;
     else if (variantId < 2.5) d = min(min(
       abs(sdShape(p, shapeId, r)) - .035,
-      abs(sdShape(rotatePoint(p, .16), shapeId, r * .66)) - .03),
+      abs(sdShape(printPoint(p, noiseP, .16, shapeId), shapeId, r * .66)) - .03),
       sdShape(p, shapeId, r * .28));
     else if (variantId < 3.5) {
       // Repeat without reflecting the top row into upside-down triangles.
       vec2 q = p - sign(p) * vec2(.36 + .07 * sin(uTime * 1.5));
-      d = sdShape(rotatePoint(q, sin(uTime) * .16), shapeId, r * .36);
+      d = sdShape(printPoint(q, noiseP, sin(uTime) * .16, shapeId), shapeId, r * .36);
     }
-    else if (variantId < 4.5) d = abs(sdShape(rotatePoint(p, .7854), shapeId, r * .92)) - .09;
+    else if (variantId < 4.5) d = abs(sdShape(printPoint(p, noiseP, .7854, shapeId), shapeId, r * .92)) - .09;
     else if (variantId < 5.5) d = min(
       abs(sdShape(p - vec2(.13, .10), shapeId, r)) - .035,
       abs(sdShape(p + vec2(.13, .10), shapeId, r)) - .035);
     else if (variantId < 6.5) d = min(
-      abs(sdShape(rotatePoint(p, -.25), shapeId, r)) - .04,
-      abs(sdShape(rotatePoint(p, .35), shapeId, r * .68)) - .04);
+      abs(sdShape(printPoint(p, noiseP, -.25, shapeId), shapeId, r)) - .04,
+      abs(sdShape(printPoint(p, noiseP, .35, shapeId), shapeId, r * .68)) - .04);
     else {
       vec2 tiled = mod(p + .27, .54) - .27;
       d = max(sdShape(tiled, shapeId, .23), sdShape(p, shapeId, r * 1.05));
@@ -196,25 +173,15 @@ const FRAGMENT = /* glsl */ `
       : vec2(1.0, uResolution.y / uResolution.x);
     vec2 center = vec2(.5, .52);
     vec2 p = (uv - center) * 2.0 * aspect;
-    float mask = 0.0;
-    // Reduced motion renders exact concentric rings with no warp or pointer.
-    if (uShape > 5.5 && uReducedMotion > .5) {
-      mask = pulseMask(p);
-    } else {
-      p -= vec2(sin(uTime * .25), cos(uTime * .31)) * .09;
-      p += vec2(snoise(p + uTime * .12), snoise(p + vec2(5.2,1.3) + uTime * .12)) * .075;
-      p += uPointer * .045;
-      if (uShape > 5.5) {
-        mask = pulseMask(p);
-      } else {
-        float id = mod(floor(phase), 8.0);
-        float nextId = mod(id + 1.0, 8.0);
-        float morph = smoothstep(.56, 1.0, fract(phase));
-        float d = mix(sdVariant(p, uShape, id, 1.18), sdVariant(p, uShape, nextId, 1.18), morph);
-        mask = 1.0 - smoothstep(-.028, .028, d);
-      }
-    }
-    return mask;
+    p -= vec2(sin(uTime * .25), cos(uTime * .31)) * .09;
+    vec2 noiseP = p;
+    p += flowAt(noiseP);
+    p += uPointer * .045;
+    float id = mod(floor(phase), 8.0);
+    float nextId = mod(id + 1.0, 8.0);
+    float morph = smoothstep(.56, 1.0, fract(phase));
+    float d = mix(sdVariant(p, noiseP, uShape, id, 1.18), sdVariant(p, noiseP, uShape, nextId, 1.18), morph);
+    return 1.0 - smoothstep(-.028, .028, d);
   }
 
   void main() {
@@ -306,11 +273,6 @@ export default function HeroBackground({
         uPaper: { value: new THREE.Vector3(...hexToVec3(PAPER)) },
         uShape: { value: SHAPE_INDEX[normalizeForma(forma)] },
         uPointer: { value: new THREE.Vector2(0, 0) },
-        uReducedMotion: { value: motion.matches ? 1 : 0 },
-        uBPM: { value: BPM },
-        uAmp: { value: amp },
-        uRingWidth: { value: ringWidth },
-        uRippleEvery: { value: rippleEvery },
       };
 
       const material = new THREE.ShaderMaterial({
@@ -359,11 +321,6 @@ export default function HeroBackground({
       let previousTime = 0;
 
       function updateRunning() {
-        const reducedMotion = motion.matches ? 1 : 0;
-        if (uniforms.uReducedMotion.value !== reducedMotion) {
-          uniforms.uReducedMotion.value = reducedMotion;
-          renderer.render(scene, camera);
-        }
         const next = inView && !document.hidden && !motion.matches && !pausedRef.current;
         canvas!.dataset.motion = next ? "running" : "paused";
         if (next === running) return;

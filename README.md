@@ -57,7 +57,7 @@ Identidad local en `lib/season-pulse.ts`: doble anillo, paleta roja y viernes 9,
 
 SQL pendientes, sin ejecución automática: aplicar manualmente `supabase/migrations/0018_double_circle.sql` para admitir la forma; **después del deploy**, ejecutar `supabase/seeds/0019_pulse.sql` para cargar la Season y las cuatro fechas. El sitio en producción toma la activa del calendario de Supabase. El seed conserva el contenido existente y no modifica Ascent.
 
-El hero de Pulse combina latido, ondas y órbita con el ciclo de armado/disolución. Ajustes al principio de `components/HeroBackground.tsx`: `BPM`, `amp`, `ringWidth` y `rippleEvery`. Con movimiento reducido los anillos son estáticos. Verificación visual del override: `node tests/pulse-visual.mjs` (admite `FORMAT_PLAYWRIGHT`, `FORMAT_CHROME` y `FORMAT_PREVIEW_URL`).
+El hero de Pulse conserva los ocho tratamientos originales, las fases de 2,8 s, su transición y el mismo flow-field. Sólo cambia el SDF por dos anillos concéntricos (interno = externo × 0,92, mismo grosor). En los modos 1, 3, 4, 5 y 7, las rotaciones se aplican al marco de muestreo del ruido para que se vean en un círculo. No hay latido, ondas ni órbita. Con movimiento reducido queda un frame estático. Verificación de todos los modos: `node tests/pulse-hero-modes.mjs`; vistas del override: `node tests/pulse-visual.mjs` (admiten `FORMAT_PLAYWRIGHT`, `FORMAT_CHROME` y `FORMAT_PREVIEW_URL`).
 
 ## Bienvenida por Season
 
