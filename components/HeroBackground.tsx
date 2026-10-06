@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Forma } from "@/lib/types";
 import { normalizeForma } from "@/lib/season-shape";
 
@@ -230,12 +230,23 @@ export default function HeroBackground({
   paused?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  // Initialize behind the entrance; pause only its clock, not its loading.
+  const [initialized, setInitialized] = useState(false);
+  // Wait for both the entrance and an idle period before importing/compiling WebGL.
+  useEffect(() => {
+    if (paused || initialized) return;
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(() => setInitialized(true));
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = window.setTimeout(() => setInitialized(true), 100);
+    return () => window.clearTimeout(id);
+  }, [paused, initialized]);
   const pausedRef = useRef(paused);
   const updateRef = useRef<() => void>(() => {});
   useEffect(() => { pausedRef.current = paused; updateRef.current(); }, [paused]);
 
   useEffect(() => {
+    if (!initialized) return;
     const canvas = canvasRef.current;
     const parent = canvas?.parentElement;
     if (!canvas || !parent) return;
@@ -371,7 +382,7 @@ export default function HeroBackground({
       disposed = true;
       cleanup();
     };
-  }, [forma, accent]);
+  }, [forma, accent, initialized]);
 
   return (
     <canvas

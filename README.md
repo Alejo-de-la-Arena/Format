@@ -109,3 +109,5 @@ La imagen se comprime con `compressToWebp / FLYER_COMPRESSION` y se guarda al el
 Antes de la migración, el sitio y el formulario siguen funcionando: Ascent usa `/images/aftermovie-ascent-portada.jpg` y Origin `/images/aftermovie-portada.png`.
 Otras Seasons sin imagen usan la presentación existente del player con su forma y color; no heredan la portada de Origin.
 Las imágenes anteriores permanecen en Storage; no se borran automáticamente. No se modifican portadas de otras secciones.
+
+La intro Pulse se entrega completa por SSR y espera fuentes, visibilidad y dos frames. Guarda la sesión al completar o saltear. Las capas halftone se pintan una vez; Motion anima transform, opacity y clip-path. El shader espera al cierre y al siguiente idle. QA de producción local con CPU 4×: "node tests/pulse-intro-production.mjs", reporte en artifacts/pulse/intro-production/checks.json.
