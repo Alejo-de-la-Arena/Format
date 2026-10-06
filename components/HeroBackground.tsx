@@ -6,6 +6,13 @@ import { normalizeForma } from "@/lib/season-shape";
 
 /** Fijo — mismo valor que --color-paper en app/globals.css. */
 const PAPER = "#c8d0d2";
+// CSS pixels and cell units: tunable without changing the shader equations.
+const PULSE_RADIUS = .36;
+const CELL_DESKTOP = 6;
+const CELL_MOBILE = 3;
+const RING_STROKE_CELLS = 1.5;
+const RING_GAP_CELLS = 2.5;
+const PULSE_MODE_SECONDS = 2.7; // 45% pure, at most 1.485s away from pure.
 
 /** season.forma → índice de forma para el uniform uShape del shader. */
 const SHAPE_INDEX: Record<Forma, number> = {
@@ -38,6 +45,7 @@ const FRAGMENT = /* glsl */ `
 
   uniform float uTime;
   uniform vec2 uResolution;
+  uniform float uCellPx;
   uniform vec3 uAccent;
   uniform vec3 uPaper;
   uniform float uShape;
@@ -166,6 +174,53 @@ const FRAGMENT = /* glsl */ `
     return d;
   }
 
+  // Pixel-based Pulse contours. The warp is radial and independent of radius:
+  // its radial derivative stays 1, so it never fattens a stroke.
+  float pulsePair(vec2 p, float radius) {
+    float halfWidth = uCellPx * ${RING_STROKE_CELLS} * .5;
+    float gap = uCellPx * ${RING_GAP_CELLS};
+    float inner = max(halfWidth + uCellPx, radius - 2.0 * halfWidth - gap);
+    return min(sdRing(p, radius, halfWidth), sdRing(p, inner, halfWidth));
+  }
+  vec2 pulseWarp(vec2 p, float angle, float strength) {
+    float len = length(p);
+    vec2 direction = p / max(len, .001);
+    vec2 field = flowAt(rotatePoint(direction * 1.7, angle));
+    float displacement = dot(field, direction) * uCellPx * strength;
+    return direction * (len + displacement);
+  }
+  float pulsePrint(vec2 p, float mode, float radius) {
+    vec2 q = pulseWarp(p, sin(uTime * .4) * .12, 22.0);
+    if (mode < .5) return pulsePair(q, radius); // rotated noise
+    if (mode < 1.5) return pulsePair(pulseWarp(p, uTime * .25, 30.0), radius * .95); // contour
+    if (mode < 2.5) return min(pulsePair(q, radius), pulsePair(q, radius * .55)); // nested
+    if (mode < 3.5) { // four registered impressions, wholly inside the hero
+      vec2 center = sign(p) * radius * (.47 + .02 * sin(uTime * 1.5));
+      return pulsePair(pulseWarp(p - center, sin(uTime) * .16, 8.0), radius * .27);
+    }
+    if (mode < 4.5) return pulsePair(pulseWarp(p, .7854 + uTime * .12, 28.0), radius * .92); // diagonal warp
+    if (mode < 5.5) { // two misregistered impressions; clip overlap to the nearest one
+      vec2 center = vec2(radius * .23, radius * .12);
+      return min(pulsePair(p - center, radius * .65), pulsePair(p + center, radius * .65));
+    }
+    if (mode < 6.5) return min(pulsePair(pulseWarp(p, -.25, 18.0), radius),
+      pulsePair(pulseWarp(p, .35, 12.0), radius * .55)); // rotated nested outlines
+    vec2 tile = mod(p + radius * .22, radius * .44) - radius * .22;
+    return max(pulsePair(tile, radius * .17), length(p) - radius); // tiled stencil
+  }
+  float pulseMask(vec2 uv) {
+    vec2 p = (uv - .5) * uResolution;
+    float radius = min(uResolution.x, uResolution.y) * ${PULSE_RADIUS};
+    float phase = uTime / ${PULSE_MODE_SECONDS};
+    float progress = fract(phase);
+    float deformation = smoothstep(.225, .32, progress) * (1.0 - smoothstep(.68, .775, progress));
+    float pure = pulsePair(p, radius);
+    float variant = pulsePrint(p, mod(floor(phase), 8.0), radius);
+    float aa = uCellPx * .15;
+    // Crossfade coverage rather than distances, avoiding inflated intermediate strokes.
+    return mix(1.0 - smoothstep(-aa, aa, pure), 1.0 - smoothstep(-aa, aa, variant), deformation);
+  }
+
   // Máscara de forma [0,1] en un punto uv dado, con warp + envolvente ya aplicados.
   float shapeMaskAt(vec2 uv, float phase) {
     vec2 aspect = uResolution.x > uResolution.y
@@ -190,9 +245,9 @@ const FRAGMENT = /* glsl */ `
     // Fixed registration grid: no breathing density / crawling while scrolling.
     float phase = uTime / 2.8;
     float aspectRatio = uResolution.x / uResolution.y;
-    vec2 density = vec2(48.0 * aspectRatio, 48.0);
+    vec2 density = uShape > 5.5 ? uResolution / uCellPx : vec2(48.0 * aspectRatio, 48.0);
     vec2 cellUv = (floor(uv * density) + 0.5) / density;
-    float mask = shapeMaskAt(cellUv, phase);
+    float mask = uShape > 5.5 ? pulseMask(cellUv) : shapeMaskAt(cellUv, phase);
     float grain = fract(sin(dot(floor(uv * density), vec2(12.9898,78.233))) * 43758.5453);
     float amt = clamp(.045 + grain * .055 + mask * .89, 0.0, 1.0);
 
@@ -275,7 +330,8 @@ export default function HeroBackground({
       const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
       const uniforms = {
-        uTime: { value: 0.7 },
+        uTime: { value: forma === "double-circle" ? 0 : .7 },
+        uCellPx: { value: CELL_DESKTOP },
         uResolution: { value: new THREE.Vector2(1, 1) },
         uAccent: { value: new THREE.Vector3(...hexToVec3(accent)) },
         uPaper: { value: new THREE.Vector3(...hexToVec3(PAPER)) },
@@ -301,6 +357,7 @@ export default function HeroBackground({
           width * renderer.getPixelRatio(),
           height * renderer.getPixelRatio(),
         );
+        uniforms.uCellPx.value = (width < 768 ? CELL_MOBILE : CELL_DESKTOP) * renderer.getPixelRatio();
         lastW = width;
         lastH = height;
         renderer.render(scene, camera);

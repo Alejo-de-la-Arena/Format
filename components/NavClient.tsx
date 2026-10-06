@@ -45,7 +45,7 @@ export default function NavClient({
         className={`inset-x-0 top-0 z-[60] overflow-hidden bg-paper ${styles.header}`}
         style={{ "--header-accent": accent } as CSSProperties}
       >
-      <span className={styles.headerBackdrop} aria-hidden>
+      <span className={styles.headerBackdrop} aria-hidden hidden={forma === "double-circle"}>
         <svg viewBox="0 0 72 72"><path d={getShapePath(forma)} /></svg>
         <svg viewBox="0 0 72 72"><path d={getShapePath(forma, "header-offset")} /></svg>
         <svg viewBox="0 0 72 72"><path d={getShapePath(forma, "header-stamp")} /></svg>
