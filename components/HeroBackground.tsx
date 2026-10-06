@@ -12,7 +12,6 @@ const CELL_DESKTOP = 6;
 const CELL_MOBILE = 3;
 const RING_STROKE_CELLS = 1.5;
 const RING_GAP_CELLS = 2.5;
-const PULSE_MODE_SECONDS = 2.7; // 45% pure, at most 1.485s away from pure.
 
 /** season.forma → índice de forma para el uniform uShape del shader. */
 const SHAPE_INDEX: Record<Forma, number> = {
@@ -50,6 +49,21 @@ const FRAGMENT = /* glsl */ `
   uniform vec3 uPaper;
   uniform float uShape;
   uniform vec2 uPointer;
+
+  // Projection only: preserve the original mode equations and 2.8s timeline.
+  // Conservative support includes drift, warp, pointer, outlines and antialiasing.
+  float pulseFrameScale() {
+    float radius = min(uResolution.x, uResolution.y) * ${PULSE_RADIUS};
+    float units = radius / 1.18;
+    float available = min(uResolution.x, uResolution.y) * .5 - uCellPx;
+    float phase = uTime / 2.8;
+    float id = mod(floor(phase), 8.0);
+    float nextId = mod(id + 1.0, 8.0);
+    float currentBound = abs(id - 5.0) < .1 ? 1.8 : 1.6;
+    float nextBound = abs(nextId - 5.0) < .1 ? 1.8 : 1.6;
+    float bound = mix(currentBound, nextBound, smoothstep(.56, 1.0, fract(phase)));
+    return min(units, available / bound);
+  }
 
   // Ashima simplex noise (2D), dominio público.
   vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
@@ -126,7 +140,9 @@ const FRAGMENT = /* glsl */ `
     if (shapeId < 3.5) return sdHexagon(p, r * 0.9);
     if (shapeId < 4.5) return sdInfinity(p, r * 1.05);
     if (shapeId < 5.5) return sdCross(p, r * 0.8);
-    return min(sdRing(p, r, .018), sdRing(p, r * .92, .018));
+    float halfWidth = uCellPx * ${RING_STROKE_CELLS} * .5 / pulseFrameScale();
+    float gap = uCellPx * ${RING_GAP_CELLS} / pulseFrameScale();
+    return min(sdRing(p, r, halfWidth), sdRing(p, max(halfWidth, r - 2.0 * halfWidth - gap), halfWidth));
   }
 
   vec2 rotatePoint(vec2 p, float angle) {
@@ -174,60 +190,22 @@ const FRAGMENT = /* glsl */ `
     return d;
   }
 
-  // Pixel-based Pulse contours. The warp is radial and independent of radius:
-  // its radial derivative stays 1, so it never fattens a stroke.
+  // Static reduced-motion contours retain the exact pixel-based radius and stroke.
   float pulsePair(vec2 p, float radius) {
     float halfWidth = uCellPx * ${RING_STROKE_CELLS} * .5;
     float gap = uCellPx * ${RING_GAP_CELLS};
     float inner = max(halfWidth + uCellPx, radius - 2.0 * halfWidth - gap);
     return min(sdRing(p, radius, halfWidth), sdRing(p, inner, halfWidth));
   }
-  vec2 pulseWarp(vec2 p, float angle, float strength) {
-    float len = length(p);
-    vec2 direction = p / max(len, .001);
-    vec2 field = flowAt(rotatePoint(direction * 1.7, angle));
-    float displacement = dot(field, direction) * uCellPx * strength;
-    return direction * (len + displacement);
-  }
-  float pulsePrint(vec2 p, float mode, float radius) {
-    vec2 q = pulseWarp(p, sin(uTime * .4) * .12, 22.0);
-    if (mode < .5) return pulsePair(q, radius); // rotated noise
-    if (mode < 1.5) return pulsePair(pulseWarp(p, uTime * .25, 30.0), radius * .95); // contour
-    if (mode < 2.5) return min(pulsePair(q, radius), pulsePair(q, radius * .55)); // nested
-    if (mode < 3.5) { // four registered impressions, wholly inside the hero
-      vec2 center = sign(p) * radius * (.47 + .02 * sin(uTime * 1.5));
-      return pulsePair(pulseWarp(p - center, sin(uTime) * .16, 8.0), radius * .27);
-    }
-    if (mode < 4.5) return pulsePair(pulseWarp(p, .7854 + uTime * .12, 28.0), radius * .92); // diagonal warp
-    if (mode < 5.5) { // two misregistered impressions; clip overlap to the nearest one
-      vec2 center = vec2(radius * .23, radius * .12);
-      return min(pulsePair(p - center, radius * .65), pulsePair(p + center, radius * .65));
-    }
-    if (mode < 6.5) return min(pulsePair(pulseWarp(p, -.25, 18.0), radius),
-      pulsePair(pulseWarp(p, .35, 12.0), radius * .55)); // rotated nested outlines
-    vec2 tile = mod(p + radius * .22, radius * .44) - radius * .22;
-    return max(pulsePair(tile, radius * .17), length(p) - radius); // tiled stencil
-  }
-  float pulseMask(vec2 uv) {
-    vec2 p = (uv - .5) * uResolution;
-    float radius = min(uResolution.x, uResolution.y) * ${PULSE_RADIUS};
-    float phase = uTime / ${PULSE_MODE_SECONDS};
-    float progress = fract(phase);
-    float deformation = smoothstep(.225, .32, progress) * (1.0 - smoothstep(.68, .775, progress));
-    float pure = pulsePair(p, radius);
-    float variant = pulsePrint(p, mod(floor(phase), 8.0), radius);
-    float aa = uCellPx * .15;
-    // Crossfade coverage rather than distances, avoiding inflated intermediate strokes.
-    return mix(1.0 - smoothstep(-aa, aa, pure), 1.0 - smoothstep(-aa, aa, variant), deformation);
-  }
-
   // Máscara de forma [0,1] en un punto uv dado, con warp + envolvente ya aplicados.
   float shapeMaskAt(vec2 uv, float phase) {
     vec2 aspect = uResolution.x > uResolution.y
       ? vec2(uResolution.x / uResolution.y, 1.0)
       : vec2(1.0, uResolution.y / uResolution.x);
     vec2 center = vec2(.5, .52);
-    vec2 p = (uv - center) * 2.0 * aspect;
+    vec2 p = uShape > 5.5
+      ? (uv - .5) * uResolution / pulseFrameScale()
+      : (uv - center) * 2.0 * aspect;
     p -= vec2(sin(uTime * .25), cos(uTime * .31)) * .09;
     vec2 noiseP = p;
     p += flowAt(noiseP);
@@ -247,7 +225,12 @@ const FRAGMENT = /* glsl */ `
     float aspectRatio = uResolution.x / uResolution.y;
     vec2 density = uShape > 5.5 ? uResolution / uCellPx : vec2(48.0 * aspectRatio, 48.0);
     vec2 cellUv = (floor(uv * density) + 0.5) / density;
-    float mask = uShape > 5.5 ? pulseMask(cellUv) : shapeMaskAt(cellUv, phase);
+    float mask = shapeMaskAt(cellUv, phase);
+    if (uShape > 5.5 && uTime == 0.0) {
+      vec2 p = (cellUv - .5) * uResolution;
+      float radius = min(uResolution.x, uResolution.y) * ${PULSE_RADIUS};
+      mask = 1.0 - smoothstep(-uCellPx * .15, uCellPx * .15, pulsePair(p, radius));
+    }
     float grain = fract(sin(dot(floor(uv * density), vec2(12.9898,78.233))) * 43758.5453);
     float amt = clamp(.045 + grain * .055 + mask * .89, 0.0, 1.0);
 
