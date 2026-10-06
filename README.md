@@ -53,7 +53,7 @@ Un viernes individual dentro de una Season.
 
 ## 003 PULSE · octubre 2026
 
-Identidad local en `lib/season-pulse.ts`: doble anillo, paleta roja y viernes 9, 16, 23 y 30 de octubre (Opening el 9). Para previsualizar sin escribir a Supabase, iniciar `npm run dev` con `NEXT_PUBLIC_SEASON_OVERRIDE=pulse` (o agregarla a `.env.local`). El override fuerza tema, hero e intro y agrega las fechas sólo durante desarrollo; en producción se ignora incluso si la variable está seteada. Las demás Seasons y sus páginas conservan su identidad.
+Identidad local en `lib/season-pulse.ts`: doble anillo, paleta roja y viernes 9, 16, 23 y 30 de octubre (Opening el 9). Para previsualizar sin escribir a Supabase, iniciar `npm run dev` o `npm run build` y `npm run start` con `NEXT_PUBLIC_SEASON_OVERRIDE=pulse` (o agregarla a `.env.local`). El override fuerza tema, hero e intro y agrega las fechas en desarrollo y builds locales de producción; se ignora únicamente cuando `VERCEL_ENV=production`, incluso si la variable está seteada. La QA de performance usa build + start. Las demás Seasons y sus páginas conservan su identidad.
 
 SQL pendientes, sin ejecución automática: aplicar manualmente `supabase/migrations/0018_double_circle.sql` para admitir la forma; **después del deploy**, ejecutar `supabase/seeds/0019_pulse.sql` para cargar la Season y las cuatro fechas. El sitio en producción toma la activa del calendario de Supabase. El seed conserva el contenido existente y no modifica Ascent.
 

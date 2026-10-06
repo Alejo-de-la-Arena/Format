@@ -32,20 +32,25 @@ test("Pulse becomes active in the October gap without changing Ascent's identity
   ]);
 });
 
-test("the Pulse override is explicit and development-only, including production with the var set", () => {
-  const original = { nodeEnv: process.env.NODE_ENV, override: process.env.NEXT_PUBLIC_SEASON_OVERRIDE };
+test("the Pulse override supports local production builds but never Vercel production", () => {
+  const original = { nodeEnv: process.env.NODE_ENV, vercelEnv: process.env.VERCEL_ENV, override: process.env.NEXT_PUBLIC_SEASON_OVERRIDE };
   try {
     for (const nodeEnv of ["production", "test", "development"]) {
       process.env.NODE_ENV = nodeEnv;
       process.env.NEXT_PUBLIC_SEASON_OVERRIDE = "pulse";
-      assert.equal(getDevSeasonOverride(), nodeEnv === "development" ? PULSE : null);
+      for (const vercelEnv of [undefined, "development", "preview", "production"]) {
+        if (vercelEnv === undefined) delete process.env.VERCEL_ENV;
+        else process.env.VERCEL_ENV = vercelEnv;
+        assert.equal(getDevSeasonOverride(), vercelEnv === "production" ? null : PULSE);
+      }
     }
+    delete process.env.VERCEL_ENV;
     delete process.env.NEXT_PUBLIC_SEASON_OVERRIDE;
     assert.equal(getDevSeasonOverride(), null);
     process.env.NEXT_PUBLIC_SEASON_OVERRIDE = "unknown";
     assert.equal(getDevSeasonOverride(), null);
   } finally {
-    for (const [key, value] of [["NODE_ENV", original.nodeEnv], ["NEXT_PUBLIC_SEASON_OVERRIDE", original.override]]) {
+    for (const [key, value] of [["NODE_ENV", original.nodeEnv], ["VERCEL_ENV", original.vercelEnv], ["NEXT_PUBLIC_SEASON_OVERRIDE", original.override]]) {
       if (value === undefined) delete process.env[key]; else process.env[key] = value;
     }
   }

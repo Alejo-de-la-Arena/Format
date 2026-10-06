@@ -18,8 +18,8 @@ export const PULSE_FECHAS: Fecha[] = [9, 16, 23, 30].map((day) => ({
   especial: day === 9,
 }));
 
-/** Preview opt-in: never replaces Supabase data in a production build. */
+/** Opt-in preview for local builds and Vercel preview; disabled on production deployments. */
 export function getDevSeasonOverride(): Season | null {
-  return process.env.NODE_ENV === "development"
+  return process.env.VERCEL_ENV !== "production"
     && process.env.NEXT_PUBLIC_SEASON_OVERRIDE === PULSE.slug ? PULSE : null;
 }
