@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';import {mkdir,writeFile} from 'node:fs/promises';import {pathToFileURL} from 'node:url';
+const {chromium}=await import(pathToFileURL(process.env.FORMAT_PLAYWRIGHT).href);const browser=await chromium.launch({headless:true,executablePath:process.env.FORMAT_CHROME});const out='artifacts/pulse/experience';await mkdir(out,{recursive:true});const report={runs:[],errors:[]};
+try{for(const [width,reduced] of [[1440,false],[390,false],[360,false],[390,true]]){
+const ctx=await browser.newContext({viewport:{width,height:900},reducedMotion:reduced?'reduce':'no-preference'});await ctx.addInitScript(()=>sessionStorage.setItem('format:visit-intro:v2:pulse:2026-10-09','1'));const page=await ctx.newPage();page.on('pageerror',e=>report.errors.push(e.message));
+await page.goto('http://127.0.0.1:4315/experience',{waitUntil:'load'});const grid=page.locator('[data-experience-grid]');await grid.scrollIntoViewIfNeeded();await page.waitForTimeout(250);
+const boxes=await grid.locator('button').evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return {width:r.width,height:r.height,x:r.x,y:r.y};}));assert.ok(boxes.every(b=>Math.abs(b.width-b.height)<1));assert.ok(width>700?boxes[0].y===boxes[2].y:boxes[0].y===boxes[1].y && boxes[2].y>boxes[0].y);
+await page.screenshot({path:`${out}/${width}-${reduced?'reduced-':''}closed.png`});
+const tile=grid.getByRole('button',{name:/Ascent/i,includeHidden:true});await tile.focus();await page.keyboard.press('Enter');const panel=page.locator('[data-experience-panel]');await panel.waitFor({state:'visible'});await page.waitForTimeout(1200);
+assert.equal(await tile.getAttribute('aria-expanded'),'true');assert.ok(await panel.locator('img').first().isVisible());const contentOpacity=await panel.locator('div').filter({has:page.locator('img')}).last().evaluate(e=>getComputedStyle(e).opacity);assert.equal(contentOpacity,'1');
+const close=page.getByRole('button',{name:'Cerrar detalle'});await close.focus();await page.keyboard.press('Shift+Tab');assert.ok(await page.evaluate(()=>document.querySelector('[data-experience-panel]').contains(document.activeElement)));
+await close.focus(); await panel.evaluate(e=>{e.style.scrollBehavior='auto';e.scrollTop=0;});
+const imageBox=await panel.locator('img').first().boundingBox(), panelBox=await panel.boundingBox();assert.ok(imageBox.x>=panelBox.x && imageBox.x+imageBox.width<=panelBox.x+panelBox.width);
+await page.screenshot({path:`${out}/${width}-${reduced?'reduced-':''}open.png`});await page.keyboard.press('Escape');await panel.waitFor({state:'detached'});await page.waitForTimeout(100);assert.ok(await tile.evaluate(e=>e===document.activeElement));
+await tile.click();await panel.waitFor();await page.waitForTimeout(800);await page.locator('dialog[open]').click({position:{x:3,y:3}});await panel.waitFor({state:'detached'});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+report.runs.push({width,reduced,tiles:boxes.length,focusTrap:true,escape:true,outsideClick:true});await ctx.close();
+}assert.deepEqual(report.errors,[]);}finally{await writeFile(`${out}/checks.json`,JSON.stringify(report,null,2));await browser.close();}console.log(JSON.stringify(report));
