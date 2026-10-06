@@ -45,7 +45,7 @@ export default async function RootLayout({
   // Corre antes del primer paint. Sólo tapa una visita que el cliente también
   // va a convertir en intro; las visitas ya recordadas no reciben el flag.
   const preflightScript = current
-    ? `(()=>{try{const k=${JSON.stringify(introStorageKey(current)).replace(/</g, "\\u003c")};const n=performance.getEntriesByType("navigation")[0];if(!location.pathname.startsWith("/admin")&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&sessionStorage.getItem(k)!=="1"&&n?.type!=="back_forward")document.documentElement.dataset.introPreflight=""}catch{if(!location.pathname.startsWith("/admin")&&!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.dataset.introPreflight=""}})()`
+    ? `(()=>{const r=${JSON.stringify(current.slug === "pulse")};try{const k=${JSON.stringify(introStorageKey(current)).replace(/</g, "\\u003c")};const n=performance.getEntriesByType("navigation")[0];if(!location.pathname.startsWith("/admin")&&(r||!matchMedia("(prefers-reduced-motion: reduce)").matches)&&sessionStorage.getItem(k)!=="1"&&n?.type!=="back_forward")document.documentElement.dataset.introPreflight=""}catch{if(!location.pathname.startsWith("/admin")&&(r||!matchMedia("(prefers-reduced-motion: reduce)").matches))document.documentElement.dataset.introPreflight=""}})()`
     : "";
 
   return (

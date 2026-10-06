@@ -59,13 +59,17 @@ SQL pendientes, sin ejecución automática: aplicar manualmente `supabase/migrat
 
 El hero de Pulse conserva los ocho tratamientos originales, las fases de 2,8 s, su transición y el mismo flow-field. Sólo cambia el SDF por dos anillos concéntricos (interno = externo × 0,92, mismo grosor). En los modos 1, 3, 4, 5 y 7, las rotaciones se aplican al marco de muestreo del ruido para que se vean en un círculo. No hay latido, ondas ni órbita. Con movimiento reducido queda un frame estático. Verificación de todos los modos: `node tests/pulse-hero-modes.mjs`; vistas del override: `node tests/pulse-visual.mjs` (admiten `FORMAT_PLAYWRIGHT`, `FORMAT_CHROME` y `FORMAT_PREVIEW_URL`).
 
+La entrada de Pulse está en `components/home/PulseIntro.tsx`, con sus tiempos en segundos al principio del archivo: una timeline de Motion de 3 s dibuja ambos anillos en sentidos opuestos, parpadea en escalones, da dos golpes y revela la página con un iris. Los destellos usan patrones SVG de puntos y máscaras radiales, sin WebGL ni blur. Las cintas dicen «WELCOME TO PULSE» y «FEEL THE CONNECTION». Click o cualquier tecla salta al iris; con movimiento reducido hay anillos estáticos, cintas con fade y salida a 1 s. Conserva la persistencia de sesión y la limpieza de foco/scroll. El shader del hero inicializa por detrás de la entrada. Las otras Seasons mantienen su intro anterior.
+
+QA de entrada: `node tests/pulse-intro-visual.mjs`, con capturas de 0,3 / 1,1 / 1,8 / 2,7 s y movimiento reducido en 1440, 390 y 360 px, guardadas en `artifacts/pulse/intro/`. Incluye persistencia, salto por click/teclado, geometría concéntrica y tiempos con el driver nativo de Motion.
+
 ## Bienvenida por Season
 
-La intro dura 2,8 segundos y muestra únicamente la Season activa: forma ensamblada en 400 ms, frase y bienvenida como un único bloque desde los 320 ms, salida de 350 ms desde los 2,45 s.
+La intro de las Seasons anteriores dura 2,8 segundos y muestra únicamente la Season activa: forma ensamblada en 400 ms, frase y bienvenida como un único bloque desde los 320 ms, salida de 350 ms desde los 2,45 s. Pulse usa la entrada descrita arriba.
 
 - `seasons.intro_text`: frase opcional (hasta 160 caracteres y 3 líneas), seguida siempre de «WELCOME TO {nombre}». Sin frase se muestra sólo la bienvenida. Todo el contenido viene de la Season, sin copy por nombre hardcodeado.
 - Tema, hero e intro comparten selección: Season en curso, próxima durante un intervalo, última si todas terminaron. La fecha se calcula en Buenos Aires. La intro sólo recibe esa identidad.
-- Misma persistencia: `format:visit-intro:v2:<slug>:<fechaInicio>` en sessionStorage, con memoria como fallback. No se repite al navegar/recargar en esa sesión. Nueva sesión independiente: nueva intro. Escape cierra; con movimiento reducido entra directo, sin modal. No aparece en admin.
+- Misma persistencia: `format:visit-intro:v2:<slug>:<fechaInicio>` en sessionStorage, con memoria como fallback. No se repite al navegar/recargar en esa sesión. Nueva sesión independiente: nueva intro. En las Seasons anteriores Escape cierra y movimiento reducido entra directo; Pulse usa salto al iris y entrada reducida de 1 s. No aparece en admin.
 - «Qué es FORMAT» muestra la identidad activa y mantiene anónimo el adelanto siguiente («?»); no serializa el catálogo completo ni las identidades posteriores.
 - Ascent: `triangle`, vértice arriba, paleta `#7B3FE4`, `#2E1065`, `#A06BFF`, `#D9C7FF`, `#FFFFFF`. El triángulo ya está permitido por el CHECK de `0001_init.sql` y por el selector del admin.
 - Hero: ocho variantes de la forma activa salvo Pulse, que usa su doble anillo. Un plano WebGL; DPR limitado a 1 en mobile y 1,5 en desktop; pausado fuera del viewport, con pestaña oculta o intro abierta. Las repeticiones no reflejan/invierten el triángulo.

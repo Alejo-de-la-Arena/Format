@@ -36,6 +36,7 @@ async function visit(page, path) {
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
   await page.waitForFunction(() => !document.querySelector("dialog[open]"));
   await page.waitForTimeout(900);
+  await page.waitForFunction(() => !document.querySelector("dialog[open]"));
 }
 async function noOverflow(page) {
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "Horizontal overflow");

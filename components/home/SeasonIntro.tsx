@@ -5,6 +5,7 @@ import { getShapePath } from "@/components/shapePaths";
 import { introStorageKey, shouldAutoIntro, type IntroMotion } from "@/lib/season-intro";
 import type { Forma } from "@/lib/types";
 import styles from "./home-motion.module.css";
+import PulseIntro from "./PulseIntro";
 
 export interface IntroIdentity {
   slug: string; fechaInicio: string; numero: string; nombre: string;
@@ -33,7 +34,16 @@ function Assembly({ forma, numero }: { forma: Forma; numero: string }) {
   );
 }
 
-export default function SeasonIntro({ current, onState, showReplay = false, pathname }: {
+export default function SeasonIntro(props: {
+  current: IntroIdentity;
+  onState: (state: { introOpen: boolean; ready: boolean }) => void;
+  showReplay?: boolean;
+  pathname: string;
+}) {
+  return props.current.slug === "pulse" ? <PulseIntro {...props} /> : <LegacySeasonIntro {...props} />;
+}
+
+function LegacySeasonIntro({ current, onState, showReplay = false, pathname }: {
   current: IntroIdentity;
   onState: (state: { introOpen: boolean; ready: boolean }) => void;
   showReplay?: boolean;

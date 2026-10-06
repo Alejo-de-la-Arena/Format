@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import type { Forma } from "@/lib/types";
 import { normalizeForma } from "@/lib/season-shape";
 
@@ -230,15 +230,12 @@ export default function HeroBackground({
   paused?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [activated, setActivated] = useState(!paused);
-  // Shader compilation must not block the short welcome on first entry.
-  useEffect(() => { if (!paused) setActivated(true); }, [paused]);
+  // Initialize behind the entrance; pause only its clock, not its loading.
   const pausedRef = useRef(paused);
   const updateRef = useRef<() => void>(() => {});
   useEffect(() => { pausedRef.current = paused; updateRef.current(); }, [paused]);
 
   useEffect(() => {
-    if (!activated) return;
     const canvas = canvasRef.current;
     const parent = canvas?.parentElement;
     if (!canvas || !parent) return;
@@ -374,7 +371,7 @@ export default function HeroBackground({
       disposed = true;
       cleanup();
     };
-  }, [forma, accent, activated]);
+  }, [forma, accent]);
 
   return (
     <canvas
