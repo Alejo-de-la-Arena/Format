@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Forma } from "@/lib/types";
 import type { AdminSeason } from "../data";
 import ColorFieldset from "./ColorFieldset";
+import ShapeSticker from "@/components/ShapeSticker";
 import AftermoviePosterUpload from "./AftermoviePosterUpload";
 import { parseVideoUrl } from "@/lib/embed";
 import { upsertSeason, type SeasonFormState } from "../seasons/actions";
@@ -13,6 +14,7 @@ const FORMAS: { value: Forma; label: string }[] = [
   { value: "square", label: "Cuadrado" },
   { value: "triangle", label: "Triángulo" },
   { value: "circle", label: "Círculo" },
+  { value: "double-circle", label: "Doble círculo" },
   { value: "hexagon", label: "Hexágono" },
   { value: "hexagon-organic", label: "Hexágono orgánico" },
   { value: "infinity", label: "Infinito" },
@@ -146,6 +148,10 @@ export default function SeasonForm({
 
       <div className="flex flex-col gap-4">
         <ColorFieldset colores={colores} onChange={setColores} />
+        <div className="flex items-center gap-4 border border-line bg-paper p-4">
+          <ShapeSticker forma={forma} color={colores[0]} size={80} rotate={0} />
+          <span className="label-mono text-muted">Preview de la forma</span>
+        </div>
         <AftermoviePosterUpload season={season} disabled={pending} />
 
         {/* AFTERMOVIE — sólo la URL. El video vive en YouTube/Vimeo: Supabase
@@ -172,7 +178,7 @@ export default function SeasonForm({
             </span>
           ) : (
             <span className="text-xs text-muted">
-              Dejalo vacío si todavía no hay aftermovie.
+              Dejalo vacío si todavía no hay aftermovie. La home mostrará el último video de una Season anterior, si existe.
             </span>
           )}
         </label>
