@@ -18,6 +18,7 @@ import { getSeasons, getActiveSeason } from "@/lib/data/seasons";
 import { getSeasonColors } from "@/lib/season-colors";
 import { isVideoUrl } from "@/lib/embed";
 import { getAftermoviePoster } from "@/lib/aftermovie-poster";
+import { getAftermovieSeason, seasonDisplayName } from "@/lib/aftermovie-season";
 
 const wrap = "mx-auto max-w-[1400px] px-[clamp(18px,4vw,48px)]";
 const sectionPad = "py-[clamp(44px,5vw,72px)]";
@@ -74,7 +75,8 @@ export default async function Home() {
     proximaExperience?.tragoAutor?.nombre,
   );
   // El aftermovie y su portada pertenecen a la Season activa.
-  const experienceSeason = activeSeason;
+  const experienceSeason = getAftermovieSeason(activeSeason, seasons);
+  const aftermovieFallback = experienceSeason && activeSeason && experienceSeason.slug !== activeSeason.slug;
   const experienceColors = experienceSeason ? getSeasonColors(experienceSeason) : null;
   // Se filtra por URL parseable y no sólo por "hay algo cargado": una URL
   // que no parsea hace que VideoPlayer devuelva null, y la sección quedaría
@@ -171,14 +173,21 @@ export default async function Home() {
                 estrella del mes.
               </h3>
               <p className="mt-5 max-w-[38ch] text-[17px] text-paper/70">
-                {experienceParagraph}
+                {aftermovieFallback
+                  ? `Así se vivió ${seasonDisplayName(experienceSeason.nombre)}.`
+                  : experienceParagraph}
               </p>
+              {aftermovieFallback && activeSeason && <div className="mt-4 flex items-center gap-3">
+                <ShapeSticker forma={activeSeason.forma} color={getSeasonColors(activeSeason)[0]} size={48} rotate={-6} />
+                <p className="text-lg font-bold">{seasonDisplayName(activeSeason.nombre)} te espera.</p>
+              </div>}
               <Link
                 href="/experience"
                 className="label-mono mt-6 inline-flex items-center gap-1.5 bg-accent-1 px-[22px] py-3.5 text-paper motion-safe:transition-transform motion-safe:hover:-translate-y-1 motion-safe:hover:-rotate-1 hover:bg-paper hover:text-ink"
               >
                 Ver Experience
               </Link>
+              {aftermovieFallback && <Link href="/proximas-fechas" className="label-mono ml-4 inline-flex min-h-11 items-center underline underline-offset-4">Ver fechas</Link>}
             </HomeReveal>
             {/* AFTERMOVIE — vertical 9:16. Ancho completo de la columna en
                 mobile; en desktop se acota por ALTO (no por ancho) para que
