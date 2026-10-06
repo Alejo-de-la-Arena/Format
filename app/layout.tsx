@@ -5,7 +5,6 @@ import { getActiveSeason } from "@/lib/data/seasons";
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import HomeMotion from "@/components/home/HomeMotion";
-import { MusicProvider } from "@/components/MusicProvider";
 import { introStorageKey } from "@/lib/season-intro";
 import { getSeasonColors } from "@/lib/season-colors";
 import type { Season } from "@/lib/types";
@@ -59,13 +58,11 @@ export default async function RootLayout({
         style={seasonAccentVars(activeSeason)}
       >
         <div className="grain" aria-hidden />
-        <MusicProvider>
-          <MotionConfig reducedMotion="user">
-            <HomeMotion current={identity(current)}>{children}</HomeMotion>
-          </MotionConfig>
-        </MusicProvider>
-        <Analytics />
-        <SpeedInsights />
+        <MotionConfig reducedMotion="user">
+          <HomeMotion current={identity(current)}>{children}</HomeMotion>
+        </MotionConfig>
+        {process.env.VERCEL === "1" && <Analytics />}
+        {process.env.VERCEL === "1" && <SpeedInsights />}
       </body>
     </html>
   );
