@@ -4,14 +4,14 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import ActionIcon from "@/components/ActionIcon";
 import BackButton from "@/components/BackButton";
-import EventGallery from "@/components/EventGallery";
+import ExperienceArchive from "@/components/ExperienceArchive";
 import EventImage from "@/components/EventImage";
 import ShapeSticker from "@/components/ShapeSticker";
 import TapeBlock from "@/components/TapeBlock";
 import HomeReveal from "@/components/home/HomeReveal";
 import { getFechasEspeciales } from "@/lib/data/fechas";
 import { getActiveSeason, getSeasons } from "@/lib/data/seasons";
-import { esPasado, fechaLarga, rangoHorario } from "@/lib/dates";
+import { esPasado, fechaLarga } from "@/lib/dates";
 import { getSeasonColors } from "@/lib/season-colors";
 import { seasonAccentVars } from "@/lib/theme";
 import styles from "./experience.module.css";
@@ -22,7 +22,6 @@ export const metadata: Metadata = {
 };
 
 export const revalidate = 300;
-const venue = "Av. Costanera Rafael Obligado 4801";
 
 export default async function ExperiencePage() {
   const [especiales, seasons, activeSeason] = await Promise.all([getFechasEspeciales(), getSeasons(), getActiveSeason()]);
@@ -79,59 +78,13 @@ export default async function ExperiencePage() {
         </div>
       </section></HomeReveal>
 
-      <HomeReveal><section className={styles.featured} aria-labelledby="edicion-destacada" style={seasonAccentVars(featuredSeason)}>
-        <details className={styles.featuredDetails}>
-          <summary className={styles.featuredHead}>
-            <div className={styles.featuredTitleBlock}>
-              <p className="label-mono">{isUpcoming ? "Próxima Experience" : "Experience más reciente"}</p>
-              <div className={styles.featuredTitleLine}>
-                <h2 id="edicion-destacada">{featuredSeason.nombre}</h2>
-              </div>
-            </div>
-            <span className={styles.toggle}><span>Ver información</span><span className={styles.toggleIcon} aria-hidden><span>+</span><span>×</span></span></span>
-            <div className={styles.featuredSummaryAside}>
-              <p>{fechaLarga(featured.fecha)} · {venue}</p>
-            </div>
-          </summary>
-          <div className={styles.featuredContent}>
-            <div className={styles.featuredContentInner}>
-            <div className={styles.featuredGrid}>
-          <Link href={featuredHref} className={styles.flyer} aria-label={`Ver Experience ${featuredSeason.nombre}`}><EventImage src={featured.flyer} alt={`Flyer de ${featuredSeason.nombre}`} colors={colors} forma={featuredSeason.forma} label="Flyer" sizes="(max-width: 800px) 90vw, 33vw" fit="contain" /></Link>
-          <div className={styles.details}>
-            <div className={styles.detailRow}><span>Formato</span><strong>Opening / Experience</strong></div>
-            {rangoHorario(featured.horaInicio, featured.horaFin) && <div className={styles.detailRow}><span>Horario</span><strong>{rangoHorario(featured.horaInicio, featured.horaFin)}</strong></div>}
-            {featured.tragoAutor && <div className={styles.detailRow}><span>Cocktail</span><strong>{featured.tragoAutor.nombre}</strong></div>}
-            <Link href={featuredHref} className={styles.detailLink}>Ver la fecha <ActionIcon kind="forward" /></Link>
-          </div>
-            </div>
-            <section className={styles.gallery} aria-labelledby="galeria-experience">
-            <div className={styles.galleryHeading}><p className="label-mono">Registro de la noche</p><h2 id="galeria-experience">Esto fue {featuredSeason.nombre}</h2></div>
-            <EventGallery fotos={(featured.galeria ?? []).map((src, index) => ({ src, alt: `${featuredSeason.nombre} · foto ${index + 1} · ${fechaLarga(featured.fecha)}` }))} colors={colors} forma={featuredSeason.forma} />
-            </section>
-            </div>
-          </div>
-        </details>
-      </section></HomeReveal>
-
-      {archive.length > 0 && <HomeReveal><section className={styles.archive} aria-labelledby="archivo-experience">
-        <div className={styles.archiveHeading}><p className="label-mono">Archivo</p><h2 id="archivo-experience">Más Experiences.</h2></div>
-        <div className={styles.archiveGrid}>{archive.map((fecha) => {
+      <section className={styles.archive} aria-labelledby="archivo-experience">
+        <div className={styles.archiveHeading}><p className="label-mono">Archivo</p><h2 id="archivo-experience">Todas las Experiences.</h2></div>
+        <ExperienceArchive entries={[featured, ...archive].flatMap((fecha) => {
           const season = seasonBySlug.get(fecha.seasonSlug);
-          if (!season) return null;
-          return <details key={fecha.fecha} className={styles.archiveDetails} style={seasonAccentVars(season)}>
-            <summary className={styles.archiveCard}>
-              <div className={styles.archiveImage}><EventImage src={fecha.fotoEscena ?? fecha.flyer} alt={`Experience ${season.nombre}`} colors={getSeasonColors(season)} forma={season.forma} label="Experience" sizes="(max-width: 700px) 90vw, 25vw" variant="shot" fit="contain" /></div>
-              <span>{fechaLarga(fecha.fecha)}</span><strong>{season.nombre}</strong><ActionIcon kind="forward" />
-            </summary>
-            <div className={styles.archiveExpanded}>
-              <p>Opening / Experience · {venue}</p>
-              {fecha.tragoAutor && <p><strong>Cocktail:</strong> {fecha.tragoAutor.nombre}</p>}
-              <Link href={`/eventos/${season.slug}?fecha=${fecha.fecha}`} className={styles.detailLink}>Ver la fecha <ActionIcon kind="forward" /></Link>
-              <EventGallery fotos={(fecha.galeria ?? []).map((src, index) => ({ src, alt: `${season.nombre} · foto ${index + 1} · ${fechaLarga(fecha.fecha)}` }))} colors={getSeasonColors(season)} forma={season.forma} />
-            </div>
-          </details>;
-        })}</div>
-      </section></HomeReveal>}
+          return season ? [{ fecha, season }] : [];
+        })} />
+      </section>
 
       <section className={styles.closing}><p><span className={styles.closingLead}>La próxima <span className={styles.closingContinuation}>está por venir,</span></span> <span className={styles.closingHighlight}>Te esperamos.</span></p><Link href="/proximas-fechas">Ver próximas fechas <ActionIcon kind="forward" /></Link></section>
     </main>

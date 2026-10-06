@@ -17,7 +17,7 @@ export default function HomeMotion({ current, children }: {
   return (
     <HomeMotionContext.Provider value={state}>
       <div className={styles.home} data-intro-open={state.introOpen || undefined}>
-        {children}
+        <div data-home-content>{children}</div>
         {current && publicPage && <SeasonIntro current={current} onState={setState} pathname={pathname} />}
       </div>
     </HomeMotionContext.Provider>

@@ -1,4 +1,5 @@
 import type { Forma } from "@/lib/types";
+import { normalizeForma } from "@/lib/season-shape";
 import { hashSeed, mulberry32 } from "@/lib/rng";
 
 /**
@@ -7,6 +8,12 @@ import { hashSeed, mulberry32 } from "@/lib/rng";
  * getShapePath. Se mantiene exportada para no romper consumidores directos.
  */
 export const SHAPE_PATHS: Record<Forma, string> = {
+  // Filled stroke silhouettes at 72% scale: opposite winding keeps the holes
+  // open even in consumers that render paths with fill rather than stroke.
+  "double-circle": [34.2, 32.04, 31.32, 29.16].map((r, i) => {
+    const sweep = i % 2 === 0 ? 1 : 0;
+    return `M36 ${36 - r} A${r} ${r} 0 1 ${sweep} 36 ${36 + r} A${r} ${r} 0 1 ${sweep} 36 ${36 - r} Z`;
+  }).join(" "),
   circle: "M36 8 A28 28 0 1 1 35.99 8 Z",
   triangle: "M36 8 L64 62 L8 62 Z",
   square: "M10 10 H62 V62 H10 Z",
@@ -57,6 +64,7 @@ const CIRCLE = { cx: 36, cy: 36, r: 28, points: 14 };
 /** Jitter máximo por forma (unidades de viewBox), chico a propósito —
  * silueta reconocible, no una forma nueva. */
 const JITTER_AMOUNT: Record<Forma, number> = {
+  "double-circle": 0,
   square: 2.4,
   triangle: 2,
   hexagon: 2,
@@ -123,6 +131,7 @@ function circlePoints(rng: () => number, amount: number): Point[] {
  * deformar sin arriesgar la silueta, así que queda sin jitter.
  */
 export function getShapePath(forma: Forma, seed: string | number = forma): string {
+  forma = normalizeForma(forma);
   const amount = JITTER_AMOUNT[forma];
   if (amount === 0) return SHAPE_PATHS[forma];
 

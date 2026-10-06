@@ -1,0 +1,26 @@
+.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.tile { position: relative; isolation: isolate; display: flex; flex-direction: column; justify-content: end; align-items: start; gap: 12px; aspect-ratio: 1; min-width: 0; padding: clamp(16px, 2vw, 28px); border: 2px solid var(--color-ink); background: var(--color-paper-2); color: var(--color-ink); text-align: left; cursor: pointer; }
+.tile::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .1; background: radial-gradient(var(--color-ink) .8px, transparent 1px) 0 0 / 5px 5px; }
+.tile > span { font-size: 12px; font-weight: 650; }
+.tile > strong { padding: 4px 8px; margin-left: -4px; background: var(--color-ink); color: var(--color-paper); font-size: clamp(22px, 2vw, 34px); line-height: 1; text-transform: uppercase; rotate: -1.5deg; }
+.tile .openLabel { font-size: 10px; text-transform: uppercase; font-weight: 800; letter-spacing: .08em; }
+.pattern { position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; pointer-events: none; }
+.tile .pattern { opacity: .9; }
+.overlay { position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 24px; border: 0; overflow-y: auto; background: transparent; color: var(--color-ink); }
+.overlay[open] { display: grid; align-items: center; justify-items: center; }
+.overlay::backdrop { background: rgb(17 17 17 / .65); }
+.panel { width: min(100%, 940px); max-height: calc(100dvh - 48px); overflow-y: auto; position: relative; padding: clamp(20px, 3vw, 40px); border: 2px solid var(--color-ink); background: var(--color-paper); }
+.heading { position: relative; padding: 0 50px 20px 0; border-bottom: 2px solid var(--accent-1); }
+.heading p { margin: 0 0 12px; font-size: 13px; font-weight: 650; }
+.heading h2 { display: inline-block; margin: 0; padding: 4px 10px; font-size: 34px; font-weight: 800; background: var(--color-ink); color: var(--color-paper); rotate: -1.5deg; text-transform: uppercase; }
+.heading .pattern { top: auto; bottom: 16px; right: 8px; }
+.close { position: absolute; right: -10px; top: -10px; width: 44px; height: 44px; font-size: 32px; line-height: 1; background: var(--color-ink); color: var(--color-paper); }
+.content { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 24px; margin-top: 24px; }
+.flyer { position: relative; width: 100%; min-width: 0; aspect-ratio: 2 / 3; background: var(--color-paper-2); }
+.flyer > p { padding: 24px; }
+.image { object-fit: contain; }
+.details { min-width: 0; font-size: 14px; }
+.details > a { display: inline-block; min-height: 44px; margin: 8px 0 24px; font-weight: 800; text-decoration: underline; text-underline-offset: 4px; }
+.tile:focus-visible, .close:focus-visible, .details a:focus-visible { outline: 3px solid var(--color-ink); outline-offset: 5px; }
+@media (min-width: 1500px) { .grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (max-width: 700px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } .tile { gap: 8px; padding: 12px; } .tile > span { font-size: 11px; } .tile .pattern { gap: 3px; top: 8px; right: 8px; } .tile .pattern > div { width: 26px !important; height: 26px !important; } .overlay { padding: 12px; } .content { grid-template-columns: 1fr; } .heading .pattern { display: flex; right: 0; bottom: 16px; } .heading .pattern > div:not(:first-child) { display: none; } .heading .pattern > div { width: 28px !important; height: 28px !important; } }

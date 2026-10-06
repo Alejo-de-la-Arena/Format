@@ -7,8 +7,6 @@ import { motion } from "motion/react";
 import BackButton from "@/components/BackButton";
 import MobileMenu from "@/components/MobileMenu";
 import HoverUnderline from "@/components/HoverUnderline";
-import MusicControls from "@/components/MusicControls";
-import { getShapePath } from "@/components/shapePaths";
 import styles from "./navigation.module.css";
 import type { Forma } from "@/lib/types";
 
@@ -45,11 +43,6 @@ export default function NavClient({
         className={`inset-x-0 top-0 z-[60] overflow-hidden bg-paper ${styles.header}`}
         style={{ "--header-accent": accent } as CSSProperties}
       >
-      <span className={styles.headerBackdrop} aria-hidden>
-        <svg viewBox="0 0 72 72"><path d={getShapePath(forma)} /></svg>
-        <svg viewBox="0 0 72 72"><path d={getShapePath(forma, "header-offset")} /></svg>
-        <svg viewBox="0 0 72 72"><path d={getShapePath(forma, "header-stamp")} /></svg>
-      </span>
       <div className={`relative z-10 mx-auto flex h-[78px] max-w-[1400px] items-center px-[clamp(18px,4vw,48px)] ${styles.bar}`}>
         <Link href="/" className="flex items-center" aria-label="FORMAT — inicio">
           {/* Logo apilado FOR/MAT. Alto fijado al del wordmark tipográfico
@@ -85,8 +78,6 @@ export default function NavClient({
           <strong>{seasonName}</strong>
           <span className={styles.seasonTickerMeta}>BA · Viernes</span>
         </div>
-
-        <MusicControls />
 
         <button
           type="button"

@@ -19,7 +19,7 @@ Los tipos viven en `lib/types.ts`. La fuente de verdad es Supabase (tablas `seas
 | `slug` | `string` | Para la URL: `/eventos/[slug]`. |
 | `numero` | `string` | Número de edición, p. ej. `"01"`. |
 | `nombre` | `string` | Nombre propio de la Season (no la forma geométrica). |
-| `forma` | `"circle" \| "triangle" \| "square" \| "hexagon" \| "hexagon-organic" \| "infinity"` | Geometría de la Season, para el glifo. |
+| `forma` | `"circle" \| "double-circle" \| "triangle" \| "square" \| "hexagon" \| "hexagon-organic" \| "infinity" \| "cross"` | Geometría de la Season, para el glifo. Las formas desconocidas usan un cuadrado seguro. |
 | `colores` | `string[]` (hex, hasta 5) | Roles fijos por posición — ver `CLAUDE.md` § Colores por Season. Nunca se muestra como paleta ni se nombra en pantalla. |
 | `concepto` | `string` | 1 frase, tono evocativo. Es lo único descriptivo que ve el público. |
 | `fechaInicio` / `fechaFin` | `string` | ISO `yyyy-mm-dd`, primer y último viernes de la Season. |
@@ -51,16 +51,28 @@ Un viernes individual dentro de una Season.
 
 `{ titulo: string; url: string; orden: number }` — un clip de FORMAT Lab de una fecha Experience. `titulo` es el nombre del DJ.
 
+## 003 PULSE · octubre 2026
+
+Identidad local en `lib/season-pulse.ts`: doble anillo, paleta roja y viernes 9, 16, 23 y 30 de octubre (Opening el 9). Para previsualizar sin escribir a Supabase, iniciar `npm run dev` o `npm run build` y `npm run start` con `NEXT_PUBLIC_SEASON_OVERRIDE=pulse` (o agregarla a `.env.local`). El override fuerza tema, hero e intro y agrega las fechas en desarrollo y builds locales de producción; se ignora únicamente cuando `VERCEL_ENV=production`, incluso si la variable está seteada. La QA de performance usa build + start. Las demás Seasons y sus páginas conservan su identidad.
+
+SQL pendientes, sin ejecución automática: aplicar manualmente `supabase/migrations/0018_double_circle.sql` para admitir la forma; **después del deploy**, ejecutar `supabase/seeds/0019_pulse.sql` para cargar la Season y las cuatro fechas. El sitio en producción toma la activa del calendario de Supabase. El seed conserva el contenido existente y no modifica Ascent.
+
+El hero de Pulse mantiene ocho tratamientos con radio base 0,36 × lado menor del hero. Trama de 6px en desktop y 3px en mobile; el grosor base mide 1,5 celdas y deja 2,5 celdas vacías entre anillos. Los ocho modos originales se suceden cada 2,8s y mezclan sus SDF desde el 56% del tramo. Se escala únicamente para mantener cada tratamiento dentro del hero; los modos pueden engrosar y transformar la forma. Reduced-motion muestra el doble anillo estático. QA: node tests/pulse-hero-cycle.mjs, cinco tamaños y ciclo completo en artifacts/pulse/hero/.
+
+La entrada de Pulse está en `components/home/PulseIntro.tsx`, con sus tiempos en segundos al principio del archivo: una timeline de Motion de 3 s dibuja ambos anillos en sentidos opuestos, parpadea en escalones, da dos golpes y revela la página con un iris. Los destellos usan patrones SVG de puntos y máscaras radiales, sin WebGL ni blur. Las cintas dicen «WELCOME TO PULSE» y «FEEL THE CONNECTION». Click o cualquier tecla salta al iris; con movimiento reducido hay anillos estáticos, cintas con fade y salida a 1 s. Conserva la persistencia de sesión y la limpieza de foco/scroll. El shader del hero espera a que termine la entrada y al siguiente período idle. Las otras Seasons mantienen su intro anterior.
+
+QA de entrada: `node tests/pulse-intro-production.mjs` (también accesible desde `tests/pulse-intro-visual.mjs`) contra build + start, CPU 4×, capturas de las fases en 1440/390/360 y reduced-motion en 390. Reporte de long tasks y orden intro/WebGL en `artifacts/pulse/intro-production/checks.json`. Las capturas de la versión previa permanecen en `artifacts/pulse/intro/`.
+
 ## Bienvenida por Season
 
-La intro dura 2,8 segundos y muestra únicamente la Season activa: forma ensamblada en 400 ms, frase y bienvenida como un único bloque desde los 320 ms, salida de 350 ms desde los 2,45 s.
+La intro de las Seasons anteriores dura 2,8 segundos y muestra únicamente la Season activa: forma ensamblada en 400 ms, frase y bienvenida como un único bloque desde los 320 ms, salida de 350 ms desde los 2,45 s. Pulse usa la entrada descrita arriba.
 
 - `seasons.intro_text`: frase opcional (hasta 160 caracteres y 3 líneas), seguida siempre de «WELCOME TO {nombre}». Sin frase se muestra sólo la bienvenida. Todo el contenido viene de la Season, sin copy por nombre hardcodeado.
 - Tema, hero e intro comparten selección: Season en curso, próxima durante un intervalo, última si todas terminaron. La fecha se calcula en Buenos Aires. La intro sólo recibe esa identidad.
-- Misma persistencia: `format:visit-intro:v2:<slug>:<fechaInicio>` en sessionStorage, con memoria como fallback. No se repite al navegar/recargar en esa sesión. Nueva sesión independiente: nueva intro. Escape cierra; con movimiento reducido entra directo, sin modal. No aparece en admin.
-- «Qué es FORMAT» resuelve en servidor la activa y un único adelanto siguiente. Prioriza los datos reales y usa la secuencia editorial como fallback; no serializa el catálogo completo ni las identidades posteriores. La constante de Pulse permanece sin cambios.
+- Misma persistencia: `format:visit-intro:v2:<slug>:<fechaInicio>` en sessionStorage, con memoria como fallback. No se repite al navegar/recargar en esa sesión. Nueva sesión independiente: nueva intro. En las Seasons anteriores Escape cierra y movimiento reducido entra directo; Pulse usa salto al iris y entrada reducida de 1 s. No aparece en admin.
+- «Qué es FORMAT» muestra la identidad activa y mantiene anónimo el adelanto siguiente («?»); no serializa el catálogo completo ni las identidades posteriores.
 - Ascent: `triangle`, vértice arriba, paleta `#7B3FE4`, `#2E1065`, `#A06BFF`, `#D9C7FF`, `#FFFFFF`. El triángulo ya está permitido por el CHECK de `0001_init.sql` y por el selector del admin.
-- Hero: ocho variantes de la forma activa, con el mismo tiempo, densidad, opacidad y recorrido. Un plano WebGL; DPR limitado a 1 en mobile y 1,5 en desktop; pausado fuera del viewport, con pestaña oculta o intro abierta. Las repeticiones no reflejan/invierten el triángulo.
+- Hero: ocho variantes de la forma activa salvo Pulse, que usa su doble anillo. Un plano WebGL; DPR limitado a 1 en mobile y 1,5 en desktop; pausado fuera del viewport, con pestaña oculta o intro abierta. Las repeticiones no reflejan/invierten el triángulo.
 - Acentos Tailwind resueltos con `@theme inline`; CSS consume `--accent-1..5` en el elemento. El detalle de cada Season, incluido su header y menú, conserva su identidad; calendario y archivo usan la identidad de cada fecha.
 - Pruebas: `node --test tests/*.test.mjs`, `npx tsc --noEmit`, `npm run build`. Preview aislada: `node tests/ascent-preview.mjs`; capturas con Playwright instalado: `node tests/ascent-visual.mjs` (admite `FORMAT_PLAYWRIGHT` y `FORMAT_CHROME`). Las fixtures no se conectan a Supabase y no cambian datos.
 
@@ -84,16 +96,24 @@ Cierra la primera temporada combinando las 5 Seasons anteriores: en vez de un co
 - `/` — home: próximos viernes, ediciones anteriores, Experience, Lab.
 - `/fechas` — los viernes en orden cronológico (destacado + lista completa); la repetición del nombre de cada Season con fecha distinta comunica la cadencia semanal.
 - `/eventos/[slug]?fecha=YYYY-MM-DD` — detalle de **un** viernes de la Season (el que se clickeó): flyer, lineup y fotos de esa noche, con los colores de su Season. Sin `?fecha=` (o con una fecha que no es de esa Season) muestra el próximo viernes de la Season, y si ya pasaron todos, el último. Los links entran siempre con `?fecha=` desde `ArchiveCard` y `/fechas`.
-- `/experience` — página de FORMAT Experience (fechas Experience de cada Season). Toma su acento de la **Season activa**, como el resto del sitio; el único subárbol con acento propio es el bloque destacado, que adopta el de *su* Season porque es historia y no tema global (lo mismo cada `<details>` del archivo). Ese bloque arranca **cerrado**: la página abre con la fecha y el venue a la vista, y el flyer, el line-up, el cocktail y la galería se despliegan con «Ver información».
+- `/experience` — página de FORMAT Experience (fechas Experience de cada Season). Toma su acento de la **Season activa**, como el resto del sitio; cada tile y su panel conservan la identidad de su propia Season. El flyer y los datos se abren dentro de un diálogo accesible al seleccionar un tile.
 - `/admin` — panel de carga (Supabase Auth email/password, sin registro público): Seasons y sus Fechas en acordeón, flyer/lineup/galería, colores con preview, URL del aftermovie y clips de FORMAT Lab en cada Experience.
 - `/special` — comentada, no desarrollar hasta nuevo aviso.
 
 ### Portada del aftermovie de la home
 
-La banda Experience usa el video y la portada de la Season activa por fechas.
+La banda Experience usa el video y la portada de la Season activa por fechas. Sin video válido, muestra el de la Season anterior más reciente con video: su poster y forma conservan esa identidad. El copy y el enlace a fechas invitan a la Season activa.
 `seasons.aftermovie_poster_path` guarda el objeto de `season-previews`; el tipo público expone `aftermoviePosterUrl`.
 Aplicar manualmente `supabase/migrations/0016_aftermovie_poster.sql` y recargar /admin para habilitar «Portada del aftermovie» en una Season guardada.
 La imagen se comprime con `compressToWebp / FLYER_COMPRESSION` y se guarda al elegirla; cada reemplazo tiene una URL nueva y revalida la home.
 Antes de la migración, el sitio y el formulario siguen funcionando: Ascent usa `/images/aftermovie-ascent-portada.jpg` y Origin `/images/aftermovie-portada.png`.
 Otras Seasons sin imagen usan la presentación existente del player con su forma y color; no heredan la portada de Origin.
 Las imágenes anteriores permanecen en Storage; no se borran automáticamente. No se modifican portadas de otras secciones.
+
+La intro Pulse se entrega completa por SSR y espera fuentes, visibilidad y dos frames. Guarda la sesión al completar o saltear. Las capas halftone se pintan una vez; Motion anima transform, opacity y clip-path. El shader espera al cierre y al siguiente idle. QA de producción local con CPU 4×: "node tests/pulse-intro-production.mjs", reporte en artifacts/pulse/intro-production/checks.json.
+
+Experience: grilla de tiles cuadrados (2 columnas mobile, 4–5 desktop) con identidad de cada Season. El panel usa transición compartida de Motion, flyer interior precargado al hover/foco, diálogo modal con foco atrapado y retorno al tile. Reduced-motion usa crossfade. QA: node tests/pulse-experience.mjs; capturas en artifacts/pulse/experience/.
+
+El formulario de Seasons ofrece «Doble círculo» (`double-circle`) y previsualiza la forma con el primer color. Los cinco valores de Pulse, en orden, están en `supabase/seeds/0019_pulse.sql`; todos los inputs hex se envían con `name="colores"`.
+
+QA de las seis rutas públicas en 1440/390/360: `node tests/pulse-release.mjs`, con Chromium limpio y build + start. Para el build separado sin override usar `FORMAT_PREVIEW_URL` y `FORMAT_QA_SEASON=ascent`. Los reportes están en `artifacts/pulse/release/`. Analytics y Speed Insights sólo se montan en Vercel para no pedir endpoints que no existen en el servidor local.

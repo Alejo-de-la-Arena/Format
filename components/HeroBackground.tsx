@@ -2,9 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Forma } from "@/lib/types";
+import { normalizeForma } from "@/lib/season-shape";
 
 /** Fijo — mismo valor que --color-paper en app/globals.css. */
 const PAPER = "#c8d0d2";
+// CSS pixels and cell units: tunable without changing the shader equations.
+const PULSE_RADIUS = .36;
+const CELL_DESKTOP = 6;
+const CELL_MOBILE = 3;
+const RING_STROKE_CELLS = 1.5;
+const RING_GAP_CELLS = 2.5;
 
 /** season.forma → índice de forma para el uniform uShape del shader. */
 const SHAPE_INDEX: Record<Forma, number> = {
@@ -15,6 +22,7 @@ const SHAPE_INDEX: Record<Forma, number> = {
   "hexagon-organic": 3,
   infinity: 4,
   cross: 5,
+  "double-circle": 6,
 };
 
 function hexToVec3(hex: string): [number, number, number] {
@@ -36,10 +44,26 @@ const FRAGMENT = /* glsl */ `
 
   uniform float uTime;
   uniform vec2 uResolution;
+  uniform float uCellPx;
   uniform vec3 uAccent;
   uniform vec3 uPaper;
   uniform float uShape;
   uniform vec2 uPointer;
+
+  // Projection only: preserve the original mode equations and 2.8s timeline.
+  // Conservative support includes drift, warp, pointer, outlines and antialiasing.
+  float pulseFrameScale() {
+    float radius = min(uResolution.x, uResolution.y) * ${PULSE_RADIUS};
+    float units = radius / 1.18;
+    float available = min(uResolution.x, uResolution.y) * .5 - uCellPx;
+    float phase = uTime / 2.8;
+    float id = mod(floor(phase), 8.0);
+    float nextId = mod(id + 1.0, 8.0);
+    float currentBound = abs(id - 5.0) < .1 ? 1.8 : 1.6;
+    float nextBound = abs(nextId - 5.0) < .1 ? 1.8 : 1.6;
+    float bound = mix(currentBound, nextBound, smoothstep(.56, 1.0, fract(phase)));
+    return min(units, available / bound);
+  }
 
   // Ashima simplex noise (2D), dominio público.
   vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
@@ -70,6 +94,7 @@ const FRAGMENT = /* glsl */ `
   }
 
   float sdCircle(vec2 p, float r) { return length(p) - r; }
+  float sdRing(vec2 p, float r, float w) { return abs(length(p) - r) - w; }
 
   float sdBox(vec2 p, vec2 b) {
     vec2 d = abs(p) - b;
@@ -114,7 +139,10 @@ const FRAGMENT = /* glsl */ `
     if (shapeId < 2.5) return sdTriangle(p, r * 0.95);
     if (shapeId < 3.5) return sdHexagon(p, r * 0.9);
     if (shapeId < 4.5) return sdInfinity(p, r * 1.05);
-    return sdCross(p, r * 0.8);
+    if (shapeId < 5.5) return sdCross(p, r * 0.8);
+    float halfWidth = uCellPx * ${RING_STROKE_CELLS} * .5 / pulseFrameScale();
+    float gap = uCellPx * ${RING_GAP_CELLS} / pulseFrameScale();
+    return min(sdRing(p, r, halfWidth), sdRing(p, max(halfWidth, r - 2.0 * halfWidth - gap), halfWidth));
   }
 
   vec2 rotatePoint(vec2 p, float angle) {
@@ -122,27 +150,39 @@ const FRAGMENT = /* glsl */ `
     return mat2(c, -s, s, c) * p;
   }
 
+  // Same field, amplitude and time as the original domain warp.
+  vec2 flowAt(vec2 p) {
+    return vec2(snoise(p + uTime * .12), snoise(p + vec2(5.2,1.3) + uTime * .12)) * .075;
+  }
+
+  // Circular SDFs ignore rotation: rotate the field's sampling frame instead.
+  // Subtract the original field before replacing it, never adding a second warp.
+  vec2 printPoint(vec2 p, vec2 noiseP, float angle, float shapeId) {
+    if (shapeId < 5.5) return rotatePoint(p, angle);
+    return p - flowAt(noiseP) + rotatePoint(flowAt(rotatePoint(noiseP, angle)), -angle);
+  }
+
   // Eight print treatments of ONE identity. No future Season shapes.
-  float sdVariant(vec2 p, float shapeId, float variantId, float r) {
+  float sdVariant(vec2 p, vec2 noiseP, float shapeId, float variantId, float r) {
     float d = 1.0;
-    if (variantId < 0.5) d = sdShape(rotatePoint(p, sin(uTime * .4) * .12), shapeId, r);
+    if (variantId < 0.5) d = sdShape(printPoint(p, noiseP, sin(uTime * .4) * .12, shapeId), shapeId, r);
     else if (variantId < 1.5) d = abs(sdShape(p, shapeId, r)) - .07;
     else if (variantId < 2.5) d = min(min(
       abs(sdShape(p, shapeId, r)) - .035,
-      abs(sdShape(rotatePoint(p, .16), shapeId, r * .66)) - .03),
+      abs(sdShape(printPoint(p, noiseP, .16, shapeId), shapeId, r * .66)) - .03),
       sdShape(p, shapeId, r * .28));
     else if (variantId < 3.5) {
       // Repeat without reflecting the top row into upside-down triangles.
       vec2 q = p - sign(p) * vec2(.36 + .07 * sin(uTime * 1.5));
-      d = sdShape(rotatePoint(q, sin(uTime) * .16), shapeId, r * .36);
+      d = sdShape(printPoint(q, noiseP, sin(uTime) * .16, shapeId), shapeId, r * .36);
     }
-    else if (variantId < 4.5) d = abs(sdShape(rotatePoint(p, .7854), shapeId, r * .92)) - .09;
+    else if (variantId < 4.5) d = abs(sdShape(printPoint(p, noiseP, .7854, shapeId), shapeId, r * .92)) - .09;
     else if (variantId < 5.5) d = min(
       abs(sdShape(p - vec2(.13, .10), shapeId, r)) - .035,
       abs(sdShape(p + vec2(.13, .10), shapeId, r)) - .035);
     else if (variantId < 6.5) d = min(
-      abs(sdShape(rotatePoint(p, -.25), shapeId, r)) - .04,
-      abs(sdShape(rotatePoint(p, .35), shapeId, r * .68)) - .04);
+      abs(sdShape(printPoint(p, noiseP, -.25, shapeId), shapeId, r)) - .04,
+      abs(sdShape(printPoint(p, noiseP, .35, shapeId), shapeId, r * .68)) - .04);
     else {
       vec2 tiled = mod(p + .27, .54) - .27;
       d = max(sdShape(tiled, shapeId, .23), sdShape(p, shapeId, r * 1.05));
@@ -150,20 +190,30 @@ const FRAGMENT = /* glsl */ `
     return d;
   }
 
+  // Static reduced-motion contours retain the exact pixel-based radius and stroke.
+  float pulsePair(vec2 p, float radius) {
+    float halfWidth = uCellPx * ${RING_STROKE_CELLS} * .5;
+    float gap = uCellPx * ${RING_GAP_CELLS};
+    float inner = max(halfWidth + uCellPx, radius - 2.0 * halfWidth - gap);
+    return min(sdRing(p, radius, halfWidth), sdRing(p, inner, halfWidth));
+  }
   // Máscara de forma [0,1] en un punto uv dado, con warp + envolvente ya aplicados.
   float shapeMaskAt(vec2 uv, float phase) {
     vec2 aspect = uResolution.x > uResolution.y
       ? vec2(uResolution.x / uResolution.y, 1.0)
       : vec2(1.0, uResolution.y / uResolution.x);
     vec2 center = vec2(.5, .52);
-    vec2 p = (uv - center) * 2.0 * aspect;
+    vec2 p = uShape > 5.5
+      ? (uv - .5) * uResolution / pulseFrameScale()
+      : (uv - center) * 2.0 * aspect;
     p -= vec2(sin(uTime * .25), cos(uTime * .31)) * .09;
-    p += vec2(snoise(p + uTime * .12), snoise(p + vec2(5.2,1.3) + uTime * .12)) * .075;
+    vec2 noiseP = p;
+    p += flowAt(noiseP);
     p += uPointer * .045;
     float id = mod(floor(phase), 8.0);
     float nextId = mod(id + 1.0, 8.0);
     float morph = smoothstep(.56, 1.0, fract(phase));
-    float d = mix(sdVariant(p, uShape, id, 1.18), sdVariant(p, uShape, nextId, 1.18), morph);
+    float d = mix(sdVariant(p, noiseP, uShape, id, 1.18), sdVariant(p, noiseP, uShape, nextId, 1.18), morph);
     return 1.0 - smoothstep(-.028, .028, d);
   }
 
@@ -173,9 +223,14 @@ const FRAGMENT = /* glsl */ `
     // Fixed registration grid: no breathing density / crawling while scrolling.
     float phase = uTime / 2.8;
     float aspectRatio = uResolution.x / uResolution.y;
-    vec2 density = vec2(48.0 * aspectRatio, 48.0);
+    vec2 density = uShape > 5.5 ? uResolution / uCellPx : vec2(48.0 * aspectRatio, 48.0);
     vec2 cellUv = (floor(uv * density) + 0.5) / density;
     float mask = shapeMaskAt(cellUv, phase);
+    if (uShape > 5.5 && uTime == 0.0) {
+      vec2 p = (cellUv - .5) * uResolution;
+      float radius = min(uResolution.x, uResolution.y) * ${PULSE_RADIUS};
+      mask = 1.0 - smoothstep(-uCellPx * .15, uCellPx * .15, pulsePair(p, radius));
+    }
     float grain = fract(sin(dot(floor(uv * density), vec2(12.9898,78.233))) * 43758.5453);
     float amt = clamp(.045 + grain * .055 + mask * .89, 0.0, 1.0);
 
@@ -213,15 +268,23 @@ export default function HeroBackground({
   paused?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [activated, setActivated] = useState(!paused);
-  // Shader compilation must not block the short welcome on first entry.
-  useEffect(() => { if (!paused) setActivated(true); }, [paused]);
+  const [initialized, setInitialized] = useState(false);
+  // Wait for both the entrance and an idle period before importing/compiling WebGL.
+  useEffect(() => {
+    if (paused || initialized) return;
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(() => setInitialized(true));
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = window.setTimeout(() => setInitialized(true), 100);
+    return () => window.clearTimeout(id);
+  }, [paused, initialized]);
   const pausedRef = useRef(paused);
   const updateRef = useRef<() => void>(() => {});
   useEffect(() => { pausedRef.current = paused; updateRef.current(); }, [paused]);
 
   useEffect(() => {
-    if (!activated) return;
+    if (!initialized) return;
     const canvas = canvasRef.current;
     const parent = canvas?.parentElement;
     if (!canvas || !parent) return;
@@ -250,11 +313,12 @@ export default function HeroBackground({
       const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
       const uniforms = {
-        uTime: { value: 0.7 },
+        uTime: { value: forma === "double-circle" ? 0 : .7 },
+        uCellPx: { value: CELL_DESKTOP },
         uResolution: { value: new THREE.Vector2(1, 1) },
         uAccent: { value: new THREE.Vector3(...hexToVec3(accent)) },
         uPaper: { value: new THREE.Vector3(...hexToVec3(PAPER)) },
-        uShape: { value: SHAPE_INDEX[forma] },
+        uShape: { value: SHAPE_INDEX[normalizeForma(forma)] },
         uPointer: { value: new THREE.Vector2(0, 0) },
       };
 
@@ -276,6 +340,7 @@ export default function HeroBackground({
           width * renderer.getPixelRatio(),
           height * renderer.getPixelRatio(),
         );
+        uniforms.uCellPx.value = (width < 768 ? CELL_MOBILE : CELL_DESKTOP) * renderer.getPixelRatio();
         lastW = width;
         lastH = height;
         renderer.render(scene, camera);
@@ -357,7 +422,7 @@ export default function HeroBackground({
       disposed = true;
       cleanup();
     };
-  }, [forma, accent, activated]);
+  }, [forma, accent, initialized]);
 
   return (
     <canvas
