@@ -27,8 +27,8 @@ export function canShareFiles(): boolean {
   );
 }
 
-export async function fetchPhotoFile(src: string, name: string): Promise<File> {
-  const res = await fetch(src, { mode: "cors" });
+export async function fetchPhotoFile(src: string, name: string, signal?: AbortSignal): Promise<File> {
+  const res = await fetch(src, { mode: "cors", signal });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const blob = await res.blob();
   return new File([blob], name, { type: blob.type || "image/webp" });

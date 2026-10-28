@@ -84,17 +84,16 @@ export default function EventGallery({
   useEffect(() => {
     if (!currentSrc || !canShareFiles()) return;
     if (prefetched.current?.src === currentSrc) return;
-    let cancelled = false;
-    fetchPhotoFile(currentSrc, fileName)
+    // Sólo la foto actual: al pasar a otra (o cerrar) se aborta esta descarga.
+    const controller = new AbortController();
+    fetchPhotoFile(currentSrc, fileName, controller.signal)
       .then((file) => {
-        if (!cancelled) prefetched.current = { src: currentSrc, file };
+        if (!controller.signal.aborted) prefetched.current = { src: currentSrc, file };
       })
       .catch(() => {
-        // Sin precarga: savePhoto vuelve a intentar al tocar el botón.
+        // Abortada o fallida: savePhoto vuelve a intentar al tocar el botón.
       });
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, [currentSrc, fileName]);
 
   const save = async () => {
