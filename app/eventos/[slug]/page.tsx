@@ -295,6 +295,7 @@ function FechaRow({
               }))}
               colors={colors}
               forma={season.forma}
+              saveAs={{ season: season.slug, fecha: fecha.fecha }}
             />
           </div>
         )}
