@@ -1,11 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type TouchEvent } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { Forma, ImageSrc } from "@/lib/types";
 import ShapeSticker from "@/components/ShapeSticker";
+import { EDGES } from "@/components/TapeBlock";
+import { canShareFiles, fetchPhotoFile, galleryFileName, savePhoto } from "@/lib/gallery-save";
+
+const HINT_MS = 4500;
+const SWIPE_PX = 50;
 
 export interface GalleryPhoto {
   /** URL real (Supabase Storage) o id de placeholder mientras no haya foto. */
@@ -22,15 +27,26 @@ export default function EventGallery({
   fotos,
   colors,
   forma,
+  saveAs,
 }: {
   fotos: GalleryPhoto[];
   colors: [string, string, string, string, string];
   forma: Forma;
+  /** Datos para nombrar el archivo al guardar (`format-{season}-{fecha}-{n}.webp`). */
+  saveAs: { season: string; fecha: string };
 }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [hint, setHint] = useState(false);
+  const reduced = useReducedMotion();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  // Archivo precargado de la foto abierta: compartir sin esperar la red
+  // mantiene vigente el gesto del usuario que exige navigator.share().
+  const prefetched = useRef<{ src: string; file: File } | null>(null);
+  const isOpen = openIndex !== null;
 
   const close = () => {
     setOpenIndex(null);
@@ -53,6 +69,63 @@ export default function EventGallery({
   }, [openIndex, fotos.length]);
 
   useEffect(() => setMounted(true), []);
+
+  // Hint de long-press: aparece al abrir el visor y se va solo.
+  useEffect(() => {
+    if (!isOpen) return;
+    setHint(true);
+    const t = window.setTimeout(() => setHint(false), HINT_MS);
+    return () => window.clearTimeout(t);
+  }, [isOpen]);
+
+  const currentSrc = openIndex === null ? null : srcString(fotos[openIndex]?.src);
+  const fileName = openIndex === null ? "" : galleryFileName(saveAs.season, saveAs.fecha, openIndex + 1);
+
+  useEffect(() => {
+    if (!currentSrc || !canShareFiles()) return;
+    if (prefetched.current?.src === currentSrc) return;
+    let cancelled = false;
+    fetchPhotoFile(currentSrc, fileName)
+      .then((file) => {
+        if (!cancelled) prefetched.current = { src: currentSrc, file };
+      })
+      .catch(() => {
+        // Sin precarga: savePhoto vuelve a intentar al tocar el botón.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentSrc, fileName]);
+
+  const save = async () => {
+    if (!currentSrc || saving) return;
+    setSaving(true);
+    try {
+      const file = prefetched.current?.src === currentSrc ? prefetched.current.file : null;
+      await savePhoto(currentSrc, fileName, file);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Swipe horizontal para navegar. Sin preventDefault: el long-press nativo
+  // sobre la foto ("Guardar imagen") sigue funcionando.
+  const onTouchStart = (e: TouchEvent) => {
+    const t = e.touches[0];
+    touchStart.current = e.touches.length === 1 ? { x: t.clientX, y: t.clientY } : null;
+  };
+  const onTouchEnd = (e: TouchEvent) => {
+    const start = touchStart.current;
+    touchStart.current = null;
+    if (!start || fotos.length < 2) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    if (Math.abs(dx) < SWIPE_PX || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    setHint(false);
+    if (dx < 0) next();
+    else prev();
+  };
 
   useEffect(() => {
     if (openIndex === null) return;
@@ -82,8 +155,6 @@ export default function EventGallery({
       </p>
     );
   }
-
-  const isReal = (src: ImageSrc) => typeof src !== "string" || src.startsWith("http") || src.startsWith("/");
 
   return (
     <>
@@ -144,6 +215,8 @@ export default function EventGallery({
             onClick={(event) => {
               if (event.target === event.currentTarget) close();
             }}
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
           >
             <button
               type="button"
@@ -187,7 +260,7 @@ export default function EventGallery({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.2 }}
-              className="relative aspect-square w-full max-w-[560px]"
+              className="relative aspect-square w-full max-w-[min(560px,calc(100dvh-240px))]"
               onClick={(e) => e.stopPropagation()}
             >
               {isReal(fotos[openIndex].src) ? (
@@ -216,14 +289,64 @@ export default function EventGallery({
               )}
             </motion.div>
 
-            {fotos.length > 1 && (
-              <span className="absolute bottom-6 label-mono text-white/50">
-                {openIndex + 1} / {fotos.length}
-              </span>
-            )}
+            <div className="absolute inset-x-4 bottom-4 flex flex-col items-center gap-2 sm:bottom-6">
+              {currentSrc && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void save();
+                  }}
+                  disabled={saving}
+                  aria-label="Guardar foto"
+                  aria-busy={saving}
+                  className="group inline-flex min-h-11 min-w-11 items-center justify-center disabled:cursor-wait"
+                >
+                  <span
+                    className="label-mono inline-block bg-paper px-4 py-3 text-[12px] text-ink transition-colors group-hover:bg-accent-1 group-disabled:opacity-70 motion-reduce:transition-none"
+                    style={{ transform: "rotate(-1.5deg)", clipPath: EDGES[2] }}
+                  >
+                    {saving ? "Guardando…" : "Guardar ↓"}
+                  </span>
+                </button>
+              )}
+
+              {/* Sólo táctil: el long-press nativo también guarda la foto. */}
+              <AnimatePresence>
+                {hint && currentSrc && (
+                  <motion.p
+                    key="hint"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: reduced ? 0 : 0.2 }}
+                    data-touch-hint
+                    className="hidden text-center text-[12px] text-white/70 [@media(hover:none)_and_(pointer:coarse)]:block"
+                  >
+                    Mantené presionada la foto para guardarla
+                  </motion.p>
+                )}
+              </AnimatePresence>
+
+              {fotos.length > 1 && (
+                <span className="label-mono text-white/50">
+                  {openIndex + 1} / {fotos.length}
+                </span>
+              )}
+            </div>
           </motion.dialog>,
           document.body,
         )}
     </>
   );
+}
+
+function isReal(src: ImageSrc): boolean {
+  return typeof src !== "string" || src.startsWith("http") || src.startsWith("/");
+}
+
+/** URL de la foto en resolución completa, o null si es un placeholder. */
+function srcString(src: ImageSrc | undefined): string | null {
+  if (!src || !isReal(src)) return null;
+  return typeof src === "string" ? src : src.src;
 }

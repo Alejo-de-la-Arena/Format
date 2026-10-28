@@ -103,7 +103,8 @@ export default function ExperienceArchive({ entries }: { entries: Entry[] }) {
               {active.fecha.tragoAutor && <p><strong>Cocktail:</strong> {active.fecha.tragoAutor.nombre}</p>}
               <Link href={`/eventos/${active.season.slug}?fecha=${active.fecha.fecha}`}>Ver la fecha ↗</Link>
               <EventGallery fotos={(active.fecha.galeria ?? []).map((src, index) => ({ src, alt: `${active.season.nombre} · foto ${index + 1}` }))}
-                colors={getSeasonColors(active.season)} forma={active.season.forma} />
+                colors={getSeasonColors(active.season)} forma={active.season.forma}
+                saveAs={{ season: active.season.slug, fecha: active.fecha.fecha }} />
             </motion.div>
           </motion.div>
         </motion.div>}
