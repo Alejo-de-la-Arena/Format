@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import Script from "next/script";
 import { signIn, type SignInState } from "./actions";
 
-export default function LoginForm() {
+export default function LoginForm({ notice }: { notice?: string }) {
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const [state, formAction, pending] = useActionState<SignInState, FormData>(
     signIn,
@@ -40,7 +40,11 @@ export default function LoginForm() {
           className="border border-line bg-paper px-3 py-2.5 text-ink outline-none focus:border-accent-1"
         />
       </div>
-      {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {(state?.error ?? notice) && (
+        <p role="alert" className="text-sm text-red-600">
+          {state?.error ?? notice}
+        </p>
+      )}
       {turnstileSiteKey && <div className="cf-turnstile" data-sitekey={turnstileSiteKey} />}
       <button
         type="submit"

@@ -1,24 +1,18 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/auth/require-admin";
 import AdminNav from "./_components/AdminNav";
 
 /**
  * Guard server-side de /admin (salvo /admin/login, fuera de este route
- * group). El middleware ya redirige sin sesión — este chequeo es defensa en
- * profundidad para Server Components/Actions que puedan ejecutarse fuera
- * del flujo de middleware.
+ * group). El middleware ya redirige sin rol admin; este chequeo es defensa
+ * en profundidad. Las Server Actions llaman a requireAdmin por su cuenta:
+ * un layout no protege las acciones.
  */
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/admin/login");
+  const { user } = await requireAdmin();
 
   return (
     <div className="min-h-screen bg-paper">
