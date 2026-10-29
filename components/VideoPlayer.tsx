@@ -75,6 +75,7 @@ export default function VideoPlayer({
 
   useEffect(() => {
     if (!expanded) return;
+    const trigger = expandButton.current;
     const previousOverflow = document.body.style.overflow;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setExpanded(false);
@@ -85,7 +86,7 @@ export default function VideoPlayer({
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
-      expandButton.current?.focus();
+      trigger?.focus();
     };
   }, [expanded]);
 
@@ -122,6 +123,8 @@ export default function VideoPlayer({
           {/* Las portadas de FORMAT Lab viven en /public: un <img> directo
               evita que el optimizador remoto de Next las reemplace o falle
               antes de mostrar el primer frame en producciÃ³n. */}
+          {/* Portadas de Supabase/YouTube fuera del optimizador a propósito. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={thumbnailSrc}
             alt=""

@@ -31,6 +31,8 @@ export default function FlyerImage({
 
   if (url) {
     return (
+      // Imágenes de Supabase servidas fuera del optimizador a propósito: misma URL que el resto del sitio, mismo caché.
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={url}
         alt={alt}
