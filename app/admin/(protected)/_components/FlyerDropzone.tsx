@@ -94,6 +94,8 @@ export default function FlyerDropzone({
                         setError(result.error);
                         return;
                       }
+                      // Se quitó de la web pero el archivo quedó en Storage.
+                      if (result.warning) setError(result.warning);
                       router.refresh();
                     } catch {
                       setError("No se pudo quitar el flyer. Probá de nuevo.");

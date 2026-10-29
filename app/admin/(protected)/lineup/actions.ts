@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/auth/require-admin";
+import { adminAction } from "@/lib/auth/admin-action";
 import {
   actionError,
   affectedNone,
@@ -15,7 +15,8 @@ function revalidateSeason(seasonSlug: string) {
   revalidatePath("/admin");
 }
 
-export async function upsertLineupSlot(
+export const upsertLineupSlot = adminAction(async (
+  { supabase },
   fechaId: string,
   seasonSlug: string,
   slot: {
@@ -25,8 +26,7 @@ export async function upsertLineupSlot(
     horaFin: string;
     artistas: string[];
   },
-): Promise<ActionResult<{ id: string }>> {
-  const { supabase } = await requireAdmin();
+): Promise<ActionResult<{ id: string }>> => {
   const payload = {
     fecha_id: fechaId,
     orden: slot.orden,
@@ -55,16 +55,15 @@ export async function upsertLineupSlot(
   if (error) return actionError(error.message);
   revalidateSeason(seasonSlug);
   return { ok: true, id: data.id };
-}
+});
 
-export async function deleteLineupSlot(id: string, seasonSlug: string): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
+export const deleteLineupSlot = adminAction(async ({ supabase }, id: string, seasonSlug: string): Promise<ActionResult> => {
   const { data, error } = await supabase.from("lineup_slots").delete().eq("id", id).select("id");
   if (error) return actionError(error.message);
   if (affectedNone(data)) return actionError(NO_ROWS);
   revalidateSeason(seasonSlug);
   return { ok: true };
-}
+});
 
 /**
  * Reordena en 2 fases para no chocar con el unique (fecha_id, orden):
@@ -72,11 +71,11 @@ export async function deleteLineupSlot(id: string, seasonSlug: string): Promise<
  * valores finales. La segunda fase corre aunque la primera falle en alguna
  * fila, para no dejar slots varados en el rango temporal.
  */
-export async function reorderLineupSlots(
+export const reorderLineupSlots = adminAction(async (
+  { supabase },
   slots: { id: string; orden: number }[],
   seasonSlug: string,
-): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
+): Promise<ActionResult> => {
   const update = (id: string, orden: number) =>
     supabase.from("lineup_slots").update({ orden }).eq("id", id).select("id");
 
@@ -87,4 +86,4 @@ export async function reorderLineupSlots(
 
   revalidateSeason(seasonSlug);
   return { ok: true };
-}
+});

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { requireAdmin } from "@/lib/auth/require-admin";
+import { adminAction } from "@/lib/auth/admin-action";
 import {
   actionError,
   affectedNone,
@@ -43,11 +43,11 @@ async function experienceFechaError(supabase: SupabaseClient, fechaId: string) {
   return null;
 }
 
-export async function upsertSeason(
+export const upsertSeason = adminAction(async (
+  { supabase },
   _prevState: SeasonFormState,
   formData: FormData,
-): Promise<SeasonFormState> {
-  const { supabase } = await requireAdmin();
+): Promise<SeasonFormState> => {
   const id = String(formData.get("id") ?? "").trim() || null;
   const slug = String(formData.get("slug") ?? "").trim();
   const numero = String(formData.get("numero") ?? "").trim();
@@ -120,27 +120,26 @@ export async function upsertSeason(
 
   revalidateSite(slug);
   return { ok: true, slug };
-}
+});
 
-export async function deleteSeason(id: string, slug: string): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
+export const deleteSeason = adminAction(async ({ supabase }, id: string, slug: string): Promise<ActionResult> => {
   const { data, error } = await supabase.from("seasons").delete().eq("id", id).select("id");
   if (error) return actionError(error.message);
   if (affectedNone(data)) return actionError(NO_ROWS);
   revalidateSite(slug);
   return { ok: true };
-}
+});
 
 /**
  * FORMAT LAB — clips por URL de una fecha Experience. No hay objetos en
  * Storage: borrar un clip es borrar la fila y nada más.
  */
-export async function upsertLabClip(
+export const upsertLabClip = adminAction(async (
+  { supabase },
   fechaId: string,
   slug: string,
   clip: { id?: string; titulo: string; url: string; orden: number },
-): Promise<ActionResult<{ id: string }>> {
-  const { supabase } = await requireAdmin();
+): Promise<ActionResult<{ id: string }>> => {
   const titulo = clip.titulo.trim();
   const url = clip.url.trim();
   if (!url) return actionError("Falta la URL del clip.");
@@ -180,14 +179,14 @@ export async function upsertLabClip(
   if (error) return actionError(error.message);
   revalidateSite(slug);
   return { ok: true, id: data.id };
-}
+});
 
-export async function deleteLabClip(
+export const deleteLabClip = adminAction(async (
+  { supabase },
   id: string,
   fechaId: string,
   slug: string,
-): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
+): Promise<ActionResult> => {
   const fechaError = await experienceFechaError(supabase, fechaId);
   if (fechaError) return actionError(fechaError);
   const { data, error } = await supabase
@@ -202,15 +201,15 @@ export async function deleteLabClip(
   }
   revalidateSite(slug);
   return { ok: true };
-}
+});
 
 /** `orden` no tiene unique, así que alcanza con un update por fila. */
-export async function reorderLabClips(
+export const reorderLabClips = adminAction(async (
+  { supabase },
   clips: { id: string; orden: number }[],
   fechaId: string,
   slug: string,
-): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
+): Promise<ActionResult> => {
   const fechaError = await experienceFechaError(supabase, fechaId);
   if (fechaError) return actionError(fechaError);
   const error = await runUpdates(
@@ -226,11 +225,10 @@ export async function reorderLabClips(
   if (error) return actionError(error);
   revalidateSite(slug);
   return { ok: true };
-}
+});
 
 /** Guarda únicamente la portada; el formulario general no puede pisarla. */
-export async function attachAftermoviePoster(seasonId: string, path: string): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
+export const attachAftermoviePoster = adminAction(async ({ supabase }, seasonId: string, path: string): Promise<ActionResult> => {
   if (!/^[0-9a-f-]{36}$/.test(seasonId) || !new RegExp(`^${seasonId}/aftermovie-[0-9a-f-]{36}\\.webp$`).test(path)) {
     return actionError("La portada no corresponde a esta Season.");
   }
@@ -245,4 +243,4 @@ export async function attachAftermoviePoster(seasonId: string, path: string): Pr
   if (affectedNone(data)) return actionError(NO_ROWS);
   revalidateSite(season.slug);
   return { ok: true };
-}
+});

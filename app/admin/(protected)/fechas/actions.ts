@@ -1,11 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/auth/require-admin";
+import { adminAction } from "@/lib/auth/admin-action";
 import {
   actionError,
   affectedNone,
   NO_ROWS,
+  orphanWarning,
   removeStorageObject,
   type ActionResult,
 } from "@/lib/admin/action-result";
@@ -26,11 +27,11 @@ function revalidateSite(slug: string) {
   revalidatePath("/admin");
 }
 
-export async function upsertFecha(
+export const upsertFecha = adminAction(async (
+  { supabase },
   _prevState: FechaFormState,
   formData: FormData,
-): Promise<FechaFormState> {
-  const { supabase } = await requireAdmin();
+): Promise<FechaFormState> => {
   const id = String(formData.get("id") ?? "").trim() || null;
   const seasonId = String(formData.get("seasonId") ?? "").trim();
   const seasonSlug = String(formData.get("seasonSlug") ?? "").trim();
@@ -82,23 +83,22 @@ export async function upsertFecha(
 
   revalidateSite(seasonSlug);
   return { ok: true, id: data[0].id };
-}
+});
 
-export async function deleteFecha(id: string, seasonSlug: string): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
+export const deleteFecha = adminAction(async ({ supabase }, id: string, seasonSlug: string): Promise<ActionResult> => {
   const { data, error } = await supabase.from("fechas").delete().eq("id", id).select("id");
   if (error) return actionError(error.message);
   if (affectedNone(data)) return actionError(NO_ROWS);
   revalidateSite(seasonSlug);
   return { ok: true };
-}
+});
 
-export async function attachFlyer(
+export const attachFlyer = adminAction(async (
+  { supabase },
   fechaId: string,
   seasonSlug: string,
   path: string,
-): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
+): Promise<ActionResult> => {
   const { data, error } = await supabase
     .from("fechas")
     .update({ flyer_path: path })
@@ -108,29 +108,33 @@ export async function attachFlyer(
   if (affectedNone(data)) return actionError(NO_ROWS);
   revalidateSite(seasonSlug);
   return { ok: true };
-}
+});
 
 /**
- * Primero el archivo, después la referencia: si Storage no lo borra, la
- * fecha sigue apuntando al flyer y se avisa, en vez de dejar un archivo
- * huérfano que nadie ve.
+ * Primero la referencia, después el archivo: si Storage falla, el flyer ya
+ * no se ve en la web y queda un archivo huérfano invisible (se avisa y se
+ * loguea), en vez de una fecha apuntando a un flyer roto.
+ *
+ * El update exige que la fecha todavía apunte a `path`, así nunca se borra
+ * un archivo que la base ya no referencia.
  */
-export async function removeFlyer(
+export const removeFlyer = adminAction(async (
+  { supabase },
   fechaId: string,
   seasonSlug: string,
   path: string,
-): Promise<ActionResult> {
-  const { supabase } = await requireAdmin();
-  const storageError = await removeStorageObject(supabase, "flyers", path);
-  if (storageError) return actionError(storageError);
-
+): Promise<ActionResult> => {
   const { data, error } = await supabase
     .from("fechas")
     .update({ flyer_path: null })
     .eq("id", fechaId)
+    .eq("flyer_path", path)
     .select("id");
   if (error) return actionError(error.message);
   if (affectedNone(data)) return actionError(NO_ROWS);
   revalidateSite(seasonSlug);
+
+  const storageError = await removeStorageObject(supabase, "flyers", path);
+  if (storageError) return { ok: true, warning: orphanWarning("flyers", path, storageError) };
   return { ok: true };
-}
+});

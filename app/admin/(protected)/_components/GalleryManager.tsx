@@ -65,10 +65,12 @@ function FotoTile({
           confirmLabel="¿Borrar?"
           action={async () => {
             const result = await deleteFoto(foto.id, foto.storagePath, seasonSlug);
-            // El error se muestra debajo de la grilla: dentro de la
-            // miniatura no entra. La confirmación se cierra y la foto queda.
-            if (result.ok) onDeleted(foto.id);
-            else onError(result.error);
+            // Errores y avisos van debajo de la grilla: dentro de la
+            // miniatura no entran. La confirmación se cierra.
+            if (!result.ok) return onError(result.error);
+            onDeleted(foto.id);
+            // Se quitó de la web pero el archivo quedó en Storage.
+            if (result.warning) onError(result.warning);
           }}
           className="bg-ink/70 px-2 py-0.5 text-xs text-paper transition-colors hover:bg-red-600"
         />

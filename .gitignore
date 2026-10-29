@@ -1,6 +1,7 @@
 node_modules/
 .next/
 .next-polish-qa-*/
+.next-qa-*/
 out/
 build/
 .vercel/

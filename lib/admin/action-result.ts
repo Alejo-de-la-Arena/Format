@@ -9,8 +9,17 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * archivo "use server" queda expuesto como endpoint.
  */
 export type ActionResult<T extends object = object> =
-  | ({ ok: true } & T)
+  | ({ ok: true; warning?: string } & T)
   | { ok: false; error: string };
+
+/**
+ * La referencia ya se quitó de la base pero el archivo quedó en Storage.
+ * Huérfano invisible: se loguea el path para limpiarlo a mano y se avisa.
+ */
+export function orphanWarning(bucket: string, path: string, reason: string): string {
+  console.error(`[admin] Archivo huérfano en Storage: ${bucket}/${path} — ${reason}`);
+  return "Se quitó de la web, pero el archivo quedó en Storage.";
+}
 
 export function actionError(error: string): { ok: false; error: string } {
   return { ok: false, error };

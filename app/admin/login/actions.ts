@@ -22,6 +22,11 @@ export async function signIn(
   });
 
   if (error) {
+    // Con CAPTCHA activo en Supabase, un token vencido, usado o ausente no es
+    // un problema de credenciales: decirlo para no confundir.
+    if (error.code === "captcha_failed") {
+      return { error: "No se pudo verificar el captcha. Esperá a que se complete y probá de nuevo." };
+    }
     return { error: "Email o contraseña incorrectos." };
   }
 
