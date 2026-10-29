@@ -29,7 +29,8 @@ export default function AftermoviePosterUpload({ season, disabled }: { season?: 
       const { error: uploadError } = await supabase.storage.from("season-previews")
         .upload(path, blob, { contentType: "image/webp" });
       if (uploadError) throw uploadError;
-      await attachAftermoviePoster(season.id, path);
+      const result = await attachAftermoviePoster(season.id, path);
+      if (!result.ok) throw new Error(result.error);
       setSavedUrl(supabase.storage.from("season-previews").getPublicUrl(path).data.publicUrl);
       router.refresh();
     } catch (e) {

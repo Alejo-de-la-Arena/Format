@@ -1,7 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/auth/require-admin";
+import {
+  actionError,
+  affectedNone,
+  NO_ROWS,
+  removeStorageObject,
+  type ActionResult,
+} from "@/lib/admin/action-result";
 
 export type FechaFormState =
   | { error?: string; ok?: boolean; id?: string }
@@ -23,6 +30,7 @@ export async function upsertFecha(
   _prevState: FechaFormState,
   formData: FormData,
 ): Promise<FechaFormState> {
+  const { supabase } = await requireAdmin();
   const id = String(formData.get("id") ?? "").trim() || null;
   const seasonId = String(formData.get("seasonId") ?? "").trim();
   const seasonSlug = String(formData.get("seasonSlug") ?? "").trim();
@@ -42,7 +50,6 @@ export async function upsertFecha(
     return { error: "Elegí una Season y una fecha." };
   }
 
-  const supabase = await createClient();
   if (id && !especial) {
     const { count, error: clipsError } = await supabase
       .from("season_lab_clips")
@@ -65,41 +72,65 @@ export async function upsertFecha(
   };
 
   const { data, error } = id
-    ? await supabase.from("fechas").update(payload).eq("id", id).select("id").single()
-    : await supabase.from("fechas").insert(payload).select("id").single();
+    ? await supabase.from("fechas").update(payload).eq("id", id).select("id")
+    : await supabase.from("fechas").insert(payload).select("id");
 
   if (error) {
     return { error: error.message };
   }
+  if (affectedNone(data)) return { error: NO_ROWS };
 
   revalidateSite(seasonSlug);
-  return { ok: true, id: data.id };
+  return { ok: true, id: data[0].id };
 }
 
-export async function deleteFecha(id: string, seasonSlug: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.from("fechas").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+export async function deleteFecha(id: string, seasonSlug: string): Promise<ActionResult> {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase.from("fechas").delete().eq("id", id).select("id");
+  if (error) return actionError(error.message);
+  if (affectedNone(data)) return actionError(NO_ROWS);
   revalidateSite(seasonSlug);
+  return { ok: true };
 }
 
-export async function attachFlyer(fechaId: string, seasonSlug: string, path: string) {
-  const supabase = await createClient();
-  const { error } = await supabase
+export async function attachFlyer(
+  fechaId: string,
+  seasonSlug: string,
+  path: string,
+): Promise<ActionResult> {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
     .from("fechas")
     .update({ flyer_path: path })
-    .eq("id", fechaId);
-  if (error) throw new Error(error.message);
+    .eq("id", fechaId)
+    .select("id");
+  if (error) return actionError(error.message);
+  if (affectedNone(data)) return actionError(NO_ROWS);
   revalidateSite(seasonSlug);
+  return { ok: true };
 }
 
-export async function removeFlyer(fechaId: string, seasonSlug: string, path: string) {
-  const supabase = await createClient();
-  await supabase.storage.from("flyers").remove([path]);
-  const { error } = await supabase
+/**
+ * Primero el archivo, después la referencia: si Storage no lo borra, la
+ * fecha sigue apuntando al flyer y se avisa, en vez de dejar un archivo
+ * huérfano que nadie ve.
+ */
+export async function removeFlyer(
+  fechaId: string,
+  seasonSlug: string,
+  path: string,
+): Promise<ActionResult> {
+  const { supabase } = await requireAdmin();
+  const storageError = await removeStorageObject(supabase, "flyers", path);
+  if (storageError) return actionError(storageError);
+
+  const { data, error } = await supabase
     .from("fechas")
     .update({ flyer_path: null })
-    .eq("id", fechaId);
-  if (error) throw new Error(error.message);
+    .eq("id", fechaId)
+    .select("id");
+  if (error) return actionError(error.message);
+  if (affectedNone(data)) return actionError(NO_ROWS);
   revalidateSite(seasonSlug);
+  return { ok: true };
 }

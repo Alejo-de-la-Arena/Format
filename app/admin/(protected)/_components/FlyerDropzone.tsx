@@ -33,7 +33,8 @@ export default function FlyerDropzone({
         .from("flyers")
         .upload(path, blob, { contentType: "image/webp", upsert: true });
       if (uploadError) throw uploadError;
-      await attachFlyer(fecha.id, seasonSlug, path);
+      const result = await attachFlyer(fecha.id, seasonSlug, path);
+      if (!result.ok) throw new Error(result.error);
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo subir el flyer.");
@@ -86,8 +87,17 @@ export default function FlyerDropzone({
                 disabled={removing}
                 onClick={() =>
                   startRemoving(async () => {
-                    await removeFlyer(fecha.id, seasonSlug, fecha.flyerPath!);
-                    router.refresh();
+                    setError(null);
+                    try {
+                      const result = await removeFlyer(fecha.id, seasonSlug, fecha.flyerPath!);
+                      if (!result.ok) {
+                        setError(result.error);
+                        return;
+                      }
+                      router.refresh();
+                    } catch {
+                      setError("No se pudo quitar el flyer. Probá de nuevo.");
+                    }
                   })
                 }
                 className="label-mono border border-line px-3 py-1.5 text-muted transition-colors hover:border-red-600 hover:text-red-600 disabled:opacity-60"
@@ -97,7 +107,11 @@ export default function FlyerDropzone({
             )}
           </div>
           <p className="text-xs text-muted">o arrastrá una imagen acá</p>
-          {error && <p className="text-xs text-red-600">{error}</p>}
+          {error && (
+            <p role="alert" className="text-xs text-red-600">
+              {error}
+            </p>
+          )}
         </div>
         <input
           ref={inputRef}

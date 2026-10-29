@@ -20,6 +20,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { createClient } from "@/lib/supabase/client";
 import { compressToWebp, GALERIA_COMPRESSION } from "@/lib/image/compress";
 import { attachFoto, deleteFoto, reorderFotos } from "../galeria/actions";
+import { REORDER_FAILED } from "@/lib/admin/action-result";
 import ConfirmButton from "./ConfirmButton";
 import type { AdminFoto } from "../data";
 
@@ -27,10 +28,12 @@ function FotoTile({
   foto,
   seasonSlug,
   onDeleted,
+  onError,
 }: {
   foto: AdminFoto;
   seasonSlug: string;
   onDeleted: (id: string) => void;
+  onError: (message: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: foto.id,
@@ -39,9 +42,13 @@ function FotoTile({
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className="relative aspect-square overflow-hidden border border-line bg-paper"
+      className="relative aspect-square border border-line bg-paper"
     >
-      <Image src={foto.url} alt="" fill sizes="120px" className="object-cover" />
+      {/* El recorte va en la imagen y no en la tarjeta: la confirmación de
+          borrado es más ancha que la miniatura y quedaba tapada. */}
+      <div className="absolute inset-0 overflow-hidden">
+        <Image src={foto.url} alt="" fill sizes="120px" className="object-cover" />
+      </div>
       <button
         type="button"
         {...attributes}
@@ -51,13 +58,17 @@ function FotoTile({
       >
         ⠿
       </button>
-      <div className="absolute bottom-1 right-1">
+      {/* En confirmación, apilado para que entre en la miniatura (también en mobile). */}
+      <div className="absolute inset-x-1 bottom-1 z-20 flex justify-end [&>span]:w-full [&>span]:flex-col [&>span]:items-stretch [&>span]:gap-1 [&>span]:border [&>span]:border-line [&>span]:bg-paper [&>span]:p-1 [&>span>button]:px-1 [&>span>button]:text-center">
         <ConfirmButton
           label="×"
           confirmLabel="¿Borrar?"
           action={async () => {
-            await deleteFoto(foto.id, foto.storagePath, seasonSlug);
-            onDeleted(foto.id);
+            const result = await deleteFoto(foto.id, foto.storagePath, seasonSlug);
+            // El error se muestra debajo de la grilla: dentro de la
+            // miniatura no entra. La confirmación se cierra y la foto queda.
+            if (result.ok) onDeleted(foto.id);
+            else onError(result.error);
           }}
           className="bg-ink/70 px-2 py-0.5 text-xs text-paper transition-colors hover:bg-red-600"
         />
@@ -98,9 +109,10 @@ export default function GalleryManager({
           .upload(path, blob, { contentType: "image/webp" });
         if (uploadError) throw uploadError;
         const ord = orden++;
-        const { id } = await attachFoto(fechaId, seasonSlug, path, ord);
+        const result = await attachFoto(fechaId, seasonSlug, path, ord);
+        if (!result.ok) throw new Error(result.error);
         const foto: AdminFoto = {
-          id,
+          id: result.id,
           orden: ord,
           storagePath: path,
           url: supabase.storage.from("galerias").getPublicUrl(path).data.publicUrl,
@@ -113,8 +125,11 @@ export default function GalleryManager({
       .filter((r): r is PromiseFulfilledResult<AdminFoto> => r.status === "fulfilled")
       .map((r) => r.value);
     if (nuevas.length > 0) setFotos((f) => [...f, ...nuevas]);
-    if (results.some((r) => r.status === "rejected")) {
-      setError("Algunas fotos no se pudieron subir.");
+    const failed = results.filter((r): r is PromiseRejectedResult => r.status === "rejected");
+    if (failed.length > 0) {
+      const reason: unknown = failed[0].reason;
+      const detail = reason instanceof Error ? ` ${reason.message}` : "";
+      setError(`No se pudieron subir ${failed.length} de ${results.length} fotos.${detail}`);
     }
     setUploading(false);
   }
@@ -126,10 +141,17 @@ export default function GalleryManager({
     const newIndex = fotos.findIndex((f) => f.id === over.id);
     const reordered = arrayMove(fotos, oldIndex, newIndex).map((f, i) => ({ ...f, orden: i }));
     setFotos(reordered);
+    setError(null);
+    // Si falla puede haber quedado guardado a medias: no se revierte en
+    // pantalla (mostraría un orden que tampoco es el de la base); se avisa.
     reorderFotos(
       reordered.map((f) => ({ id: f.id, orden: f.orden })),
       seasonSlug,
-    );
+    )
+      .then((result) => {
+        if (!result.ok) setError(`${REORDER_FAILED} ${result.error}`);
+      })
+      .catch(() => setError(REORDER_FAILED));
   }
 
   return (
@@ -143,7 +165,11 @@ export default function GalleryManager({
                 key={foto.id}
                 foto={foto}
                 seasonSlug={seasonSlug}
-                onDeleted={(id) => setFotos((f) => f.filter((x) => x.id !== id))}
+                onDeleted={(id) => {
+                  setFotos((f) => f.filter((x) => x.id !== id));
+                  setError(null);
+                }}
+                onError={setError}
               />
             ))}
           </ul>
@@ -159,7 +185,11 @@ export default function GalleryManager({
         >
           {uploading ? "Subiendo…" : "+ Agregar fotos"}
         </button>
-        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+        {error && (
+          <p role="alert" className="mt-1 text-xs text-red-600">
+            {error}
+          </p>
+        )}
         <input
           ref={inputRef}
           type="file"

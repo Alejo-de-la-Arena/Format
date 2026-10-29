@@ -68,7 +68,7 @@ export default function SeasonForm({
             name="slug"
             defaultValue={season?.slug}
             required
-            pattern="[a-z0-9-]+"
+            pattern="[a-z0-9\-]+"
             title="Sólo minúsculas, números y guiones"
             className="border border-line bg-paper px-3 py-2 outline-none focus:border-accent-1"
           />
@@ -265,7 +265,11 @@ export default function SeasonForm({
         >
           {pending ? "Guardando…" : "Guardar Season"}
         </button>
-        {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
+        {state?.error && (
+          <p role="alert" className="text-sm text-red-600">
+            {state.error}
+          </p>
+        )}
         {state?.ok && <p className="text-sm text-muted">Guardado ✓</p>}
       </div>
     </form>

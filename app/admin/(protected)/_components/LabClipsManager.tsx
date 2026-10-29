@@ -20,6 +20,7 @@ import { parseVideoUrl } from "@/lib/embed";
 import type { AdminLabClip } from "../data";
 import { upsertLabClip, deleteLabClip, reorderLabClips } from "../seasons/actions";
 import ConfirmButton from "./ConfirmButton";
+import { REORDER_FAILED } from "@/lib/admin/action-result";
 
 interface DraftClip extends AdminLabClip {
   isNew?: boolean;
@@ -55,13 +56,17 @@ function ClipRow({
     setError(null);
     startTransition(async () => {
       try {
-        const { id } = await upsertLabClip(fechaId, seasonSlug, {
+        const result = await upsertLabClip(fechaId, seasonSlug, {
           id: clip.isNew ? undefined : clip.id,
           titulo,
           url,
           orden: clip.orden,
         });
-        onSaved({ ...clip, id, titulo, url, isNew: false });
+        if (!result.ok) {
+          setError(result.error);
+          return;
+        }
+        onSaved({ ...clip, id: result.id, titulo, url, isNew: false });
       } catch (e) {
         setError(e instanceof Error ? e.message : "No se pudo guardar el clip.");
       }
@@ -113,7 +118,10 @@ function ClipRow({
             label="Borrar"
             confirmLabel="¿Borrar el clip?"
             action={async () => {
-              if (!clip.isNew) await deleteLabClip(clip.id, fechaId, seasonSlug);
+              if (!clip.isNew) {
+                const result = await deleteLabClip(clip.id, fechaId, seasonSlug);
+                if (!result.ok) return result;
+              }
               onDeleted(clip.id);
             }}
           />
@@ -141,7 +149,11 @@ function ClipRow({
           {embed.platform === "youtube" ? "YouTube" : "Vimeo"} · {embed.id}
         </p>
       )}
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && (
+        <p role="alert" className="text-xs text-red-600">
+          {error}
+        </p>
+      )}
     </li>
   );
 }
@@ -187,9 +199,11 @@ export default function LabClipsManager({
       reordered.filter((c) => !c.isNew).map((c) => ({ id: c.id, orden: c.orden })),
       fechaId,
       seasonSlug,
-    ).catch(() =>
-      setOrdenError("No se pudo guardar el orden. Recargá y probá de nuevo."),
-    );
+    )
+      .then((result) => {
+        if (!result.ok) setOrdenError(`${REORDER_FAILED} ${result.error}`);
+      })
+      .catch(() => setOrdenError(REORDER_FAILED));
   }
 
   function addClip() {
@@ -231,7 +245,11 @@ export default function LabClipsManager({
         </SortableContext>
       </DndContext>
 
-      {ordenError && <p className="text-xs text-red-600">{ordenError}</p>}
+      {ordenError && (
+        <p role="alert" className="text-xs text-red-600">
+          {ordenError}
+        </p>
+      )}
 
       {clips.length === 0 && (
         <p className="text-xs text-muted">

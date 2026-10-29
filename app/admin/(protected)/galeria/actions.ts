@@ -1,7 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/auth/require-admin";
+import {
+  actionError,
+  affectedNone,
+  removeStorageObject,
+  runUpdates,
+  type ActionResult,
+} from "@/lib/admin/action-result";
 
 function revalidateSeason(seasonSlug: string) {
   revalidatePath(`/eventos/${seasonSlug}`);
@@ -13,42 +20,51 @@ export async function attachFoto(
   seasonSlug: string,
   storagePath: string,
   orden: number,
-): Promise<{ id: string }> {
-  const supabase = await createClient();
+): Promise<ActionResult<{ id: string }>> {
+  const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from("fotos_galeria")
     .insert({ fecha_id: fechaId, storage_path: storagePath, orden })
     .select("id")
     .single();
-  if (error) throw new Error(error.message);
+  if (error) return actionError(error.message);
   revalidateSeason(seasonSlug);
-  return { id: data.id };
+  return { ok: true, id: data.id };
 }
 
-export async function deleteFoto(id: string, storagePath: string, seasonSlug: string) {
-  const supabase = await createClient();
-  const { error: storageError } = await supabase.storage.from("galerias").remove([storagePath]);
-  if (storageError) throw new Error(storageError.message);
+export async function deleteFoto(
+  id: string,
+  storagePath: string,
+  seasonSlug: string,
+): Promise<ActionResult> {
+  const { supabase } = await requireAdmin();
+  const storageError = await removeStorageObject(supabase, "galerias", storagePath);
+  if (storageError) return actionError(storageError);
 
   const { data, error } = await supabase
     .from("fotos_galeria")
     .delete()
     .eq("id", id)
     .select("id");
-  if (error) throw new Error(error.message);
-  if (!data || data.length === 0) {
-    throw new Error("No se pudo borrar la foto: sin permisos o ya no existe.");
+  if (error) return actionError(error.message);
+  if (affectedNone(data)) {
+    return actionError("No se pudo borrar la foto: sin permisos o ya no existe.");
   }
   revalidateSeason(seasonSlug);
+  return { ok: true };
 }
 
 export async function reorderFotos(
   fotos: { id: string; orden: number }[],
   seasonSlug: string,
-) {
-  const supabase = await createClient();
-  await Promise.all(
-    fotos.map((f) => supabase.from("fotos_galeria").update({ orden: f.orden }).eq("id", f.id)),
+): Promise<ActionResult> {
+  const { supabase } = await requireAdmin();
+  const error = await runUpdates(
+    fotos.map((f) =>
+      supabase.from("fotos_galeria").update({ orden: f.orden }).eq("id", f.id).select("id"),
+    ),
   );
+  if (error) return actionError(error);
   revalidateSeason(seasonSlug);
+  return { ok: true };
 }
