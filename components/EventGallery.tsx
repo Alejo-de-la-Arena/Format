@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type TouchEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
@@ -48,17 +48,24 @@ export default function EventGallery({
   const prefetched = useRef<{ src: string; file: File } | null>(null);
   const isOpen = openIndex !== null;
 
-  const close = () => {
+  // Estables entre renders: el índice se lee del estado previo (setState
+  // funcional), así el listener de teclado nunca queda con un valor viejo.
+  const total = fotos.length;
+  const close = useCallback(() => {
     setOpenIndex(null);
     window.requestAnimationFrame(() => triggerRef.current?.focus());
-  };
-  const prev = () =>
-    setOpenIndex((i) => (i === null ? i : (i - 1 + fotos.length) % fotos.length));
-  const next = () =>
-    setOpenIndex((i) => (i === null ? i : (i + 1) % fotos.length));
+  }, []);
+  const prev = useCallback(
+    () => setOpenIndex((i) => (i === null ? i : (i - 1 + total) % total)),
+    [total],
+  );
+  const next = useCallback(
+    () => setOpenIndex((i) => (i === null ? i : (i + 1) % total)),
+    [total],
+  );
 
   useEffect(() => {
-    if (openIndex === null) return;
+    if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
       if (e.key === "ArrowLeft") prev();
@@ -66,7 +73,7 @@ export default function EventGallery({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [openIndex, fotos.length]);
+  }, [isOpen, close, prev, next]);
 
   useEffect(() => setMounted(true), []);
 
@@ -203,7 +210,9 @@ export default function EventGallery({
           <motion.dialog
             ref={dialogRef}
             aria-label="Foto ampliada"
-            className="fixed inset-0 z-[2147483647] m-0 flex h-screen max-h-none w-screen max-w-none items-center justify-center border-0 bg-black/92 p-4 text-inherit sm:p-6"
+            // touch-action: el swipe horizontal es nuestro; sin esto Chrome lo
+            // toma como gesto de "Atrás" y saca al usuario de la página.
+            className="fixed inset-0 z-[2147483647] m-0 flex h-screen max-h-none w-screen max-w-none items-center justify-center overscroll-contain border-0 bg-black/92 p-4 text-inherit [touch-action:pan-y_pinch-zoom] sm:p-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2 }}
