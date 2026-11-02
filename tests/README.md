@@ -31,6 +31,10 @@ El config levanta `next start` en el puerto 3100 (o reutiliza uno que ya esté c
 
 **Avisos conocidos.** `tests/e2e/helpers.ts` tiene una lista `KNOWN` con avisos de consola que ya están en `main`: no fallan el test pero quedan anotados en el reporte ("aviso conocido"). Hoy es uno solo: Chrome avisa cuando el CSS que precarga el prefetch de un `<Link>` del nav no se usa en unos segundos.
 
+### Pendiente
+
+- [ ] **"preloaded but not used" (CSS de `/about` y `/experience`).** Viene de `main` (reproducido en `/eventos/ascent` con un build de `main`), no bloquea. Resolverlo en una branch aparte y, cuando esté, sacar el patrón de `KNOWN` en `tests/e2e/helpers.ts` para que vuelva a fallar si reaparece.
+
 ## Suite de admin
 
 17 casos en serie: login y roles, escrituras con verificación de filas, orden DB→Storage al borrar flyer y foto (con Storage bloqueado a propósito), la migración 0019 de Storage y el JWT degradado. **Nunca toca producción**: todo corre contra un stack Supabase local en Docker.
