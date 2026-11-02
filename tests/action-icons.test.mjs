@@ -14,7 +14,7 @@ const exports = {};
 new Function("require", "exports", outputText)(createRequire(import.meta.url), exports);
 
 test("action icons render as decorative, themeable vectors, not font glyphs", () => {
-  for (const kind of ["forward", "chevron", "external", "share", "check"]) {
+  for (const kind of ["forward", "chevron", "external", "share", "check", "download"]) {
     const markup = renderToStaticMarkup(createElement(exports.default, { kind }));
     assert.match(markup, /^<svg /);
     assert.match(markup, /aria-hidden="true"/);

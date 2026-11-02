@@ -2,11 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import type { ActionResult } from "@/lib/admin/action-result";
 
 /**
  * Botón que pide confirmación inline antes de ejecutar una acción
  * destructiva (borrar Season/Fecha/foto/slot). `action` es una Server
- * Action ya bindeada con sus argumentos.
+ * Action ya bindeada con sus argumentos; si devuelve un error, se muestra
+ * y la confirmación queda abierta.
  */
 export default function ConfirmButton({
   action,
@@ -14,7 +16,7 @@ export default function ConfirmButton({
   confirmLabel = "¿Confirmar?",
   className,
 }: {
-  action: () => Promise<void>;
+  action: () => Promise<ActionResult | void>;
   label: string;
   confirmLabel?: string;
   className?: string;
@@ -35,7 +37,11 @@ export default function ConfirmButton({
             startTransition(async () => {
               setError(null);
               try {
-                await action();
+                const result = await action();
+                if (result && !result.ok) {
+                  setError(result.error);
+                  return;
+                }
                 setConfirming(false);
                 router.refresh();
               } catch (err) {
@@ -57,7 +63,11 @@ export default function ConfirmButton({
         >
           Cancelar
         </button>
-        {error && <span className="text-xs text-red-600">{error}</span>}
+        {error && (
+          <span role="alert" className="text-xs text-red-600">
+            {error}
+          </span>
+        )}
       </span>
     );
   }

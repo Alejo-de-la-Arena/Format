@@ -1,14 +1,22 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { adminAction } from "@/lib/auth/admin-action";
+import {
+  actionError,
+  affectedNone,
+  NO_ROWS,
+  runUpdates,
+  type ActionResult,
+} from "@/lib/admin/action-result";
 
 function revalidateSeason(seasonSlug: string) {
   revalidatePath(`/eventos/${seasonSlug}`);
   revalidatePath("/admin");
 }
 
-export async function upsertLineupSlot(
+export const upsertLineupSlot = adminAction(async (
+  { supabase },
   fechaId: string,
   seasonSlug: string,
   slot: {
@@ -18,8 +26,7 @@ export async function upsertLineupSlot(
     horaFin: string;
     artistas: string[];
   },
-): Promise<{ id: string }> {
-  const supabase = await createClient();
+): Promise<ActionResult<{ id: string }>> => {
   const payload = {
     fecha_id: fechaId,
     orden: slot.orden,
@@ -29,10 +36,15 @@ export async function upsertLineupSlot(
   };
 
   if (slot.id) {
-    const { error } = await supabase.from("lineup_slots").update(payload).eq("id", slot.id);
-    if (error) throw new Error(error.message);
+    const { data, error } = await supabase
+      .from("lineup_slots")
+      .update(payload)
+      .eq("id", slot.id)
+      .select("id");
+    if (error) return actionError(error.message);
+    if (affectedNone(data)) return actionError(NO_ROWS);
     revalidateSeason(seasonSlug);
-    return { id: slot.id };
+    return { ok: true, id: slot.id };
   }
 
   const { data, error } = await supabase
@@ -40,35 +52,38 @@ export async function upsertLineupSlot(
     .insert(payload)
     .select("id")
     .single();
-  if (error) throw new Error(error.message);
+  if (error) return actionError(error.message);
   revalidateSeason(seasonSlug);
-  return { id: data.id };
-}
+  return { ok: true, id: data.id };
+});
 
-export async function deleteLineupSlot(id: string, seasonSlug: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.from("lineup_slots").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+export const deleteLineupSlot = adminAction(async ({ supabase }, id: string, seasonSlug: string): Promise<ActionResult> => {
+  const { data, error } = await supabase.from("lineup_slots").delete().eq("id", id).select("id");
+  if (error) return actionError(error.message);
+  if (affectedNone(data)) return actionError(NO_ROWS);
   revalidateSeason(seasonSlug);
-}
+  return { ok: true };
+});
 
 /**
  * Reordena en 2 fases para no chocar con el unique (fecha_id, orden):
  * primero corre todo a un rango temporal fuera de uso, después fija los
- * valores finales.
+ * valores finales. La segunda fase corre aunque la primera falle en alguna
+ * fila, para no dejar slots varados en el rango temporal.
  */
-export async function reorderLineupSlots(
+export const reorderLineupSlots = adminAction(async (
+  { supabase },
   slots: { id: string; orden: number }[],
   seasonSlug: string,
-) {
-  const supabase = await createClient();
-  await Promise.all(
-    slots.map((s, i) =>
-      supabase.from("lineup_slots").update({ orden: 1000 + i }).eq("id", s.id),
-    ),
-  );
-  await Promise.all(
-    slots.map((s) => supabase.from("lineup_slots").update({ orden: s.orden }).eq("id", s.id)),
-  );
+): Promise<ActionResult> => {
+  const update = (id: string, orden: number) =>
+    supabase.from("lineup_slots").update({ orden }).eq("id", id).select("id");
+
+  const tempError = await runUpdates(slots.map((s, i) => update(s.id, 1000 + i)));
+  const finalError = await runUpdates(slots.map((s) => update(s.id, s.orden)));
+  const error = finalError ?? tempError;
+  if (error) return actionError(error);
+
   revalidateSeason(seasonSlug);
-}
+  return { ok: true };
+});

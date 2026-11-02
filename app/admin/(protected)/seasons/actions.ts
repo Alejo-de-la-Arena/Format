@@ -1,7 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { adminAction } from "@/lib/auth/admin-action";
+import {
+  actionError,
+  affectedNone,
+  NO_ROWS,
+  runUpdates,
+  type ActionResult,
+} from "@/lib/admin/action-result";
 import { parseVideoUrl } from "@/lib/embed";
 import type { Forma } from "@/lib/types";
 import { isIntroMotion, isIntroText } from "@/lib/season-intro";
@@ -22,23 +30,24 @@ function revalidateSite(slug?: string) {
   revalidatePath("/admin");
 }
 
-async function assertExperienceFecha(fechaId: string) {
-  const supabase = await createClient();
+/** Devuelve un mensaje de error si la fecha no es Experience, o null. */
+async function experienceFechaError(supabase: SupabaseClient, fechaId: string) {
   const { data: fecha, error } = await supabase
     .from("fechas")
     .select("especial")
     .eq("id", fechaId)
     .single();
   if (error || !fecha?.especial) {
-    throw new Error("Los clips sólo se pueden cargar en una fecha Experience.");
+    return "Los clips sólo se pueden cargar en una fecha Experience.";
   }
-  return supabase;
+  return null;
 }
 
-export async function upsertSeason(
+export const upsertSeason = adminAction(async (
+  { supabase },
   _prevState: SeasonFormState,
   formData: FormData,
-): Promise<SeasonFormState> {
+): Promise<SeasonFormState> => {
   const id = String(formData.get("id") ?? "").trim() || null;
   const slug = String(formData.get("slug") ?? "").trim();
   const numero = String(formData.get("numero") ?? "").trim();
@@ -80,7 +89,6 @@ export async function upsertSeason(
     };
   }
 
-  const supabase = await createClient();
   const payload = {
     slug,
     numero,
@@ -98,9 +106,9 @@ export async function upsertSeason(
     ...(formData.has("introMotion") ? { intro_text: introText, intro_motion: introMotion } : {}),
   };
 
-  const { error } = id
-    ? await supabase.from("seasons").update(payload).eq("id", id)
-    : await supabase.from("seasons").insert(payload);
+  const { data, error } = id
+    ? await supabase.from("seasons").update(payload).eq("id", id).select("id")
+    : await supabase.from("seasons").insert(payload).select("id");
 
   if (error) {
     if (/intro_(text|motion)/.test(error.message)) {
@@ -108,36 +116,40 @@ export async function upsertSeason(
     }
     return { error: error.message };
   }
+  if (affectedNone(data)) return { error: NO_ROWS };
 
   revalidateSite(slug);
   return { ok: true, slug };
-}
+});
 
-export async function deleteSeason(id: string, slug: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.from("seasons").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+export const deleteSeason = adminAction(async ({ supabase }, id: string, slug: string): Promise<ActionResult> => {
+  const { data, error } = await supabase.from("seasons").delete().eq("id", id).select("id");
+  if (error) return actionError(error.message);
+  if (affectedNone(data)) return actionError(NO_ROWS);
   revalidateSite(slug);
-}
+  return { ok: true };
+});
 
 /**
  * FORMAT LAB — clips por URL de una fecha Experience. No hay objetos en
  * Storage: borrar un clip es borrar la fila y nada más.
  */
-export async function upsertLabClip(
+export const upsertLabClip = adminAction(async (
+  { supabase },
   fechaId: string,
   slug: string,
   clip: { id?: string; titulo: string; url: string; orden: number },
-): Promise<{ id: string }> {
+): Promise<ActionResult<{ id: string }>> => {
   const titulo = clip.titulo.trim();
   const url = clip.url.trim();
-  if (!url) throw new Error("Falta la URL del clip.");
+  if (!url) return actionError("Falta la URL del clip.");
   const embed = parseVideoUrl(url);
   if (!embed) {
-    throw new Error("Pegá una URL o iframe válido de YouTube o Vimeo.");
+    return actionError("Pegá una URL o iframe válido de YouTube o Vimeo.");
   }
 
-  const supabase = await assertExperienceFecha(fechaId);
+  const fechaError = await experienceFechaError(supabase, fechaId);
+  if (fechaError) return actionError(fechaError);
 
   const payload = {
     fecha_id: fechaId,
@@ -147,14 +159,16 @@ export async function upsertLabClip(
   };
 
   if (clip.id) {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("season_lab_clips")
       .update(payload)
       .eq("id", clip.id)
-      .eq("fecha_id", fechaId);
-    if (error) throw new Error(error.message);
+      .eq("fecha_id", fechaId)
+      .select("id");
+    if (error) return actionError(error.message);
+    if (affectedNone(data)) return actionError(NO_ROWS);
     revalidateSite(slug);
-    return { id: clip.id };
+    return { ok: true, id: clip.id };
   }
 
   const { data, error } = await supabase
@@ -162,62 +176,71 @@ export async function upsertLabClip(
     .insert(payload)
     .select("id")
     .single();
-  if (error) throw new Error(error.message);
+  if (error) return actionError(error.message);
   revalidateSite(slug);
-  return { id: data.id };
-}
+  return { ok: true, id: data.id };
+});
 
-export async function deleteLabClip(id: string, fechaId: string, slug: string) {
-  const supabase = await assertExperienceFecha(fechaId);
+export const deleteLabClip = adminAction(async (
+  { supabase },
+  id: string,
+  fechaId: string,
+  slug: string,
+): Promise<ActionResult> => {
+  const fechaError = await experienceFechaError(supabase, fechaId);
+  if (fechaError) return actionError(fechaError);
   const { data, error } = await supabase
     .from("season_lab_clips")
     .delete()
     .eq("id", id)
     .eq("fecha_id", fechaId)
     .select("id");
-  if (error) throw new Error(error.message);
-  if (!data || data.length === 0) {
-    throw new Error("No se pudo borrar el clip: sin permisos o ya no existe.");
+  if (error) return actionError(error.message);
+  if (affectedNone(data)) {
+    return actionError("No se pudo borrar el clip: sin permisos o ya no existe.");
   }
   revalidateSite(slug);
-}
+  return { ok: true };
+});
 
 /** `orden` no tiene unique, así que alcanza con un update por fila. */
-export async function reorderLabClips(
+export const reorderLabClips = adminAction(async (
+  { supabase },
   clips: { id: string; orden: number }[],
   fechaId: string,
   slug: string,
-) {
-  const supabase = await assertExperienceFecha(fechaId);
-  const results = await Promise.all(
+): Promise<ActionResult> => {
+  const fechaError = await experienceFechaError(supabase, fechaId);
+  if (fechaError) return actionError(fechaError);
+  const error = await runUpdates(
     clips.map((c) =>
       supabase
         .from("season_lab_clips")
         .update({ orden: c.orden })
         .eq("id", c.id)
-        .eq("fecha_id", fechaId),
+        .eq("fecha_id", fechaId)
+        .select("id"),
     ),
   );
-  const error = results.find((result) => result.error)?.error;
-  if (error) throw new Error(error.message);
+  if (error) return actionError(error);
   revalidateSite(slug);
-}
+  return { ok: true };
+});
 
 /** Guarda únicamente la portada; el formulario general no puede pisarla. */
-export async function attachAftermoviePoster(seasonId: string, path: string) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user?.app_metadata?.role !== "admin") throw new Error("Sin permisos para guardar la portada.");
+export const attachAftermoviePoster = adminAction(async ({ supabase }, seasonId: string, path: string): Promise<ActionResult> => {
   if (!/^[0-9a-f-]{36}$/.test(seasonId) || !new RegExp(`^${seasonId}/aftermovie-[0-9a-f-]{36}\\.webp$`).test(path)) {
-    throw new Error("La portada no corresponde a esta Season.");
+    return actionError("La portada no corresponde a esta Season.");
   }
   const { data: season, error: readError } = await supabase.from("seasons")
     .select("slug, aftermovie_poster_path").eq("id", seasonId).single();
-  if (readError || !season) throw new Error("No se pudo leer la Season. Verificá que la carga de portadas esté habilitada.");
+  if (readError || !season) return actionError("No se pudo leer la Season. Verificá que la carga de portadas esté habilitada.");
   const { data: object, error: objectError } = await supabase.storage.from("season-previews").info(path);
-  if (objectError || (object?.contentType ?? object?.metadata?.mimetype) !== "image/webp") throw new Error("La imagen WebP no se subió correctamente.");
+  if (objectError || (object?.contentType ?? object?.metadata?.mimetype) !== "image/webp") return actionError("La imagen WebP no se subió correctamente.");
   const { data, error } = await supabase.from("seasons").update({ aftermovie_poster_path: path })
-    .eq("id", seasonId).select("id").single();
-  if (error || !data) throw new Error("No se pudo guardar la portada.");
+    .eq("id", seasonId).select("id");
+  if (error) return actionError(`No se pudo guardar la portada: ${error.message}`);
+  if (affectedNone(data)) return actionError(NO_ROWS);
   revalidateSite(season.slug);
-}
+  return { ok: true };
+});

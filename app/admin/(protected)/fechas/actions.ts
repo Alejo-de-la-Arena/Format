@@ -1,7 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { adminAction } from "@/lib/auth/admin-action";
+import {
+  actionError,
+  affectedNone,
+  NO_ROWS,
+  orphanWarning,
+  removeStorageObject,
+  type ActionResult,
+} from "@/lib/admin/action-result";
 
 export type FechaFormState =
   | { error?: string; ok?: boolean; id?: string }
@@ -19,10 +27,11 @@ function revalidateSite(slug: string) {
   revalidatePath("/admin");
 }
 
-export async function upsertFecha(
+export const upsertFecha = adminAction(async (
+  { supabase },
   _prevState: FechaFormState,
   formData: FormData,
-): Promise<FechaFormState> {
+): Promise<FechaFormState> => {
   const id = String(formData.get("id") ?? "").trim() || null;
   const seasonId = String(formData.get("seasonId") ?? "").trim();
   const seasonSlug = String(formData.get("seasonSlug") ?? "").trim();
@@ -42,7 +51,6 @@ export async function upsertFecha(
     return { error: "Elegí una Season y una fecha." };
   }
 
-  const supabase = await createClient();
   if (id && !especial) {
     const { count, error: clipsError } = await supabase
       .from("season_lab_clips")
@@ -65,41 +73,68 @@ export async function upsertFecha(
   };
 
   const { data, error } = id
-    ? await supabase.from("fechas").update(payload).eq("id", id).select("id").single()
-    : await supabase.from("fechas").insert(payload).select("id").single();
+    ? await supabase.from("fechas").update(payload).eq("id", id).select("id")
+    : await supabase.from("fechas").insert(payload).select("id");
 
   if (error) {
     return { error: error.message };
   }
+  if (affectedNone(data)) return { error: NO_ROWS };
 
   revalidateSite(seasonSlug);
-  return { ok: true, id: data.id };
-}
+  return { ok: true, id: data[0].id };
+});
 
-export async function deleteFecha(id: string, seasonSlug: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.from("fechas").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+export const deleteFecha = adminAction(async ({ supabase }, id: string, seasonSlug: string): Promise<ActionResult> => {
+  const { data, error } = await supabase.from("fechas").delete().eq("id", id).select("id");
+  if (error) return actionError(error.message);
+  if (affectedNone(data)) return actionError(NO_ROWS);
   revalidateSite(seasonSlug);
-}
+  return { ok: true };
+});
 
-export async function attachFlyer(fechaId: string, seasonSlug: string, path: string) {
-  const supabase = await createClient();
-  const { error } = await supabase
+export const attachFlyer = adminAction(async (
+  { supabase },
+  fechaId: string,
+  seasonSlug: string,
+  path: string,
+): Promise<ActionResult> => {
+  const { data, error } = await supabase
     .from("fechas")
     .update({ flyer_path: path })
-    .eq("id", fechaId);
-  if (error) throw new Error(error.message);
+    .eq("id", fechaId)
+    .select("id");
+  if (error) return actionError(error.message);
+  if (affectedNone(data)) return actionError(NO_ROWS);
   revalidateSite(seasonSlug);
-}
+  return { ok: true };
+});
 
-export async function removeFlyer(fechaId: string, seasonSlug: string, path: string) {
-  const supabase = await createClient();
-  await supabase.storage.from("flyers").remove([path]);
-  const { error } = await supabase
+/**
+ * Primero la referencia, después el archivo: si Storage falla, el flyer ya
+ * no se ve en la web y queda un archivo huérfano invisible (se avisa y se
+ * loguea), en vez de una fecha apuntando a un flyer roto.
+ *
+ * El update exige que la fecha todavía apunte a `path`, así nunca se borra
+ * un archivo que la base ya no referencia.
+ */
+export const removeFlyer = adminAction(async (
+  { supabase },
+  fechaId: string,
+  seasonSlug: string,
+  path: string,
+): Promise<ActionResult> => {
+  const { data, error } = await supabase
     .from("fechas")
     .update({ flyer_path: null })
-    .eq("id", fechaId);
-  if (error) throw new Error(error.message);
+    .eq("id", fechaId)
+    .eq("flyer_path", path)
+    .select("id");
+  if (error) return actionError(error.message);
+  if (affectedNone(data)) return actionError(NO_ROWS);
   revalidateSite(seasonSlug);
-}
+
+  const storageError = await removeStorageObject(supabase, "flyers", path);
+  if (storageError) return { ok: true, warning: orphanWarning("flyers", path, storageError) };
+  return { ok: true };
+});

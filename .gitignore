@@ -1,6 +1,7 @@
 node_modules/
 .next/
 .next-polish-qa-*/
+.next-qa-*/
 out/
 build/
 .vercel/
@@ -16,3 +17,5 @@ CLAUDE.md
 AGENTS.md
 PRODUCTION.md
 supabase\migrations
+test-results/
+playwright-report/

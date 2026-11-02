@@ -19,6 +19,7 @@ import { CSS } from "@dnd-kit/utilities";
 import type { AdminLineupSlot } from "../data";
 import { upsertLineupSlot, deleteLineupSlot, reorderLineupSlots } from "../lineup/actions";
 import ConfirmButton from "./ConfirmButton";
+import { REORDER_FAILED } from "@/lib/admin/action-result";
 
 interface DraftSlot extends AdminLineupSlot {
   isNew?: boolean;
@@ -58,14 +59,18 @@ function SlotRow({
     setError(null);
     startTransition(async () => {
       try {
-        const { id } = await upsertLineupSlot(fechaId, seasonSlug, {
+        const result = await upsertLineupSlot(fechaId, seasonSlug, {
           id: slot.isNew ? undefined : slot.id,
           orden: slot.orden,
           horaInicio,
           horaFin,
           artistas,
         });
-        onSaved({ ...slot, id, horaInicio, horaFin, artistas, isNew: false });
+        if (!result.ok) {
+          setError(result.error);
+          return;
+        }
+        onSaved({ ...slot, id: result.id, horaInicio, horaFin, artistas, isNew: false });
       } catch (e) {
         setError(e instanceof Error ? e.message : "No se pudo guardar el slot.");
       }
@@ -113,7 +118,10 @@ function SlotRow({
           <ConfirmButton
             label="Borrar"
             action={async () => {
-              if (!slot.isNew) await deleteLineupSlot(slot.id, seasonSlug);
+              if (!slot.isNew) {
+                const result = await deleteLineupSlot(slot.id, seasonSlug);
+                if (!result.ok) return result;
+              }
               onDeleted(slot.id);
             }}
           />
@@ -149,7 +157,11 @@ function SlotRow({
           className="border border-line px-2 py-1 text-xs outline-none focus:border-accent-1"
         />
       </div>
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && (
+        <p role="alert" className="text-xs text-red-600">
+          {error}
+        </p>
+      )}
     </li>
   );
 }
@@ -164,6 +176,7 @@ export default function LineupEditor({
   seasonSlug: string;
 }) {
   const [slots, setSlots] = useState<DraftSlot[]>(lineup);
+  const [ordenError, setOrdenError] = useState<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor));
 
   function addSlot() {
@@ -191,13 +204,19 @@ export default function LineupEditor({
     const newIndex = slots.findIndex((i) => i.id === over.id);
     const reordered = arrayMove(slots, oldIndex, newIndex).map((s, i) => ({ ...s, orden: i }));
     setSlots(reordered);
+    setOrdenError(null);
 
     const persisted = reordered.filter((s) => !s.isNew);
     if (persisted.length > 0) {
+      // Si falla, avisar sin revertir: puede haber quedado guardado a medias.
       reorderLineupSlots(
         persisted.map((s) => ({ id: s.id, orden: s.orden })),
         seasonSlug,
-      );
+      )
+        .then((result) => {
+          if (!result.ok) setOrdenError(`${REORDER_FAILED} ${result.error}`);
+        })
+        .catch(() => setOrdenError(REORDER_FAILED));
     }
   }
 
@@ -220,6 +239,11 @@ export default function LineupEditor({
           </ul>
         </SortableContext>
       </DndContext>
+      {ordenError && (
+        <p role="alert" className="text-xs text-red-600">
+          {ordenError}
+        </p>
+      )}
       {slots.length === 0 && <p className="text-xs text-muted">Sin slots todavía.</p>}
       <button
         type="button"
