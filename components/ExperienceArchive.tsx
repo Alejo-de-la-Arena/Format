@@ -6,6 +6,7 @@ import { preload } from "react-dom";
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
+import ActionIcon from "@/components/ActionIcon";
 import ShapeSticker from "@/components/ShapeSticker";
 import EventGallery from "@/components/EventGallery";
 import { fechaLarga, rangoHorario } from "@/lib/dates";
@@ -66,7 +67,7 @@ export default function ExperienceArchive({ entries }: { entries: Entry[] }) {
         onClick={(event) => { trigger.current = event.currentTarget; setRevealed(false); setActive(entry); }}>
         <Pattern season={entry.season} />
         <span>{fechaLarga(entry.fecha.fecha)}</span><strong>{entry.season.nombre}</strong>
-        <span className={styles.openLabel}>Ver noche ↗</span>
+        <span className={styles.openLabel}>Ver noche <ActionIcon /></span>
       </motion.button>)}
     </div>
     {mounted && createPortal(<dialog ref={dialog} role="dialog" className={styles.overlay} aria-modal="true" aria-labelledby={`${id}-title`}
@@ -101,7 +102,7 @@ export default function ExperienceArchive({ entries }: { entries: Entry[] }) {
               <p>Av. Costanera Rafael Obligado 4801</p>
               {rangoHorario(active.fecha.horaInicio, active.fecha.horaFin) && <p>{rangoHorario(active.fecha.horaInicio, active.fecha.horaFin)}</p>}
               {active.fecha.tragoAutor && <p><strong>Cocktail:</strong> {active.fecha.tragoAutor.nombre}</p>}
-              <Link href={`/eventos/${active.season.slug}?fecha=${active.fecha.fecha}`}>Ver la fecha ↗</Link>
+              <Link href={`/eventos/${active.season.slug}?fecha=${active.fecha.fecha}`}>Ver la fecha <ActionIcon /></Link>
               <EventGallery fotos={(active.fecha.galeria ?? []).map((src, index) => ({ src, alt: `${active.season.nombre} · foto ${index + 1}` }))}
                 colors={getSeasonColors(active.season)} forma={active.season.forma}
                 saveAs={{ season: active.season.slug, fecha: active.fecha.fecha }} />

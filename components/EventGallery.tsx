@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { Forma, ImageSrc } from "@/lib/types";
+import ActionIcon from "@/components/ActionIcon";
 import ShapeSticker from "@/components/ShapeSticker";
 import { EDGES } from "@/components/TapeBlock";
 import { canShareFiles, fetchPhotoFile, galleryFileName, savePhoto } from "@/lib/gallery-save";
@@ -314,7 +315,7 @@ export default function EventGallery({
                     className="label-mono inline-block bg-paper px-4 py-3 text-[12px] text-ink transition-colors group-hover:bg-accent-1 group-disabled:opacity-70 motion-reduce:transition-none"
                     style={{ transform: "rotate(-1.5deg)", clipPath: EDGES[2] }}
                   >
-                    {saving ? "Guardando…" : "Guardar ↓"}
+                    {saving ? "Guardando…" : <>Guardar <ActionIcon kind="download" /></>}
                   </span>
                 </button>
               )}
