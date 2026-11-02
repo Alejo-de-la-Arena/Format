@@ -17,3 +17,5 @@ CLAUDE.md
 AGENTS.md
 PRODUCTION.md
 supabase\migrations
+test-results/
+playwright-report/
