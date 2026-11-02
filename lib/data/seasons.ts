@@ -2,7 +2,7 @@ import { cache } from "react";
 import type { Season } from "@/lib/types";
 import { createClient } from "@/lib/supabase/public";
 import { isIntroMotion, getIntroSeasons } from "@/lib/season-intro";
-import { getDevSeasonOverride } from "@/lib/season-pulse";
+import { getDevSeasonOverride } from "@/lib/season-previews";
 import { normalizeForma } from "@/lib/season-shape";
 
 export { getSeasonColors } from "@/lib/season-colors";

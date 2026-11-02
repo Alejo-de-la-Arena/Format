@@ -19,7 +19,7 @@ Los tipos viven en `lib/types.ts`. La fuente de verdad es Supabase (tablas `seas
 | `slug` | `string` | Para la URL: `/eventos/[slug]`. |
 | `numero` | `string` | Número de edición, p. ej. `"01"`. |
 | `nombre` | `string` | Nombre propio de la Season (no la forma geométrica). |
-| `forma` | `"circle" \| "double-circle" \| "triangle" \| "square" \| "hexagon" \| "hexagon-organic" \| "infinity" \| "cross"` | Geometría de la Season, para el glifo. Las formas desconocidas usan un cuadrado seguro. |
+| `forma` | `"circle" \| "double-circle" \| "double-diamond" \| "triangle" \| "square" \| "hexagon" \| "hexagon-organic" \| "infinity" \| "cross"` | Geometría de la Season, para el glifo. Las formas desconocidas usan un cuadrado seguro. |
 | `colores` | `string[]` (hex, hasta 5) | Roles fijos por posición — ver `CLAUDE.md` § Colores por Season. Nunca se muestra como paleta ni se nombra en pantalla. |
 | `concepto` | `string` | 1 frase, tono evocativo. Es lo único descriptivo que ve el público. |
 | `fechaInicio` / `fechaFin` | `string` | ISO `yyyy-mm-dd`, primer y último viernes de la Season. |
@@ -52,6 +52,8 @@ Un viernes individual dentro de una Season.
 `{ titulo: string; url: string; orden: number }` — un clip de FORMAT Lab de una fecha Experience. `titulo` es el nombre del DJ.
 
 ## 003 PULSE · octubre 2026
+
+**Jungle (004).** Identidad local en `lib/season-jungle.ts`: rombo con doble línea (`double-diamond`, línea interior a 0,88 de la exterior), paleta verde y viernes 6, 13, 20 y 27 de noviembre (Opening el 6). Previsualizar con `NEXT_PUBLIC_SEASON_OVERRIDE=jungle`; las Seasons que admite el override están en `lib/season-previews.ts`. SQL pendientes, sin ejecución automática: `supabase/migrations/0020_double_diamond.sql` (admitir la forma; correrla **antes** de elegir «Rombo doble» en el admin) y, **después del deploy**, `supabase/seeds/0021_jungle.sql` (Season, textos de /about, intro y las cuatro fechas). El rol 3 de Jungle (`#3DFF5C`, 1,17:1 sobre papel) va sólo en glows y sobre negro: para texto o líneas sobre papel se resuelve con `readableOn` de `lib/color-contrast.ts`, que cae al principal si no contrasta 3:1.
 
 Identidad local en `lib/season-pulse.ts`: doble anillo, paleta roja y viernes 9, 16, 23 y 30 de octubre (Opening el 9). Para previsualizar sin escribir a Supabase, iniciar `npm run dev` o `npm run build` y `npm run start` con `NEXT_PUBLIC_SEASON_OVERRIDE=pulse` (o agregarla a `.env.local`). El override fuerza tema, hero e intro y agrega las fechas en desarrollo y builds locales de producción; se ignora únicamente cuando `VERCEL_ENV=production`, incluso si la variable está seteada. La QA de performance usa build + start. Las demás Seasons y sus páginas conservan su identidad.
 
@@ -114,6 +116,6 @@ La intro Pulse se entrega completa por SSR y espera fuentes, visibilidad y dos f
 
 Experience: grilla de tiles cuadrados (2 columnas mobile, 4–5 desktop) con identidad de cada Season. El panel usa transición compartida de Motion, flyer interior precargado al hover/foco, diálogo modal con foco atrapado y retorno al tile. Reduced-motion usa crossfade. QA: node tests/pulse-experience.mjs; capturas en artifacts/pulse/experience/.
 
-El formulario de Seasons ofrece «Doble círculo» (`double-circle`) y previsualiza la forma con el primer color. Los cinco valores de Pulse, en orden, están en `supabase/seeds/0019_pulse.sql`; todos los inputs hex se envían con `name="colores"`.
+El formulario de Seasons ofrece «Doble círculo» (`double-circle`) y «Rombo doble» (`double-diamond`, validado en el servidor contra la lista de formas) y previsualiza la forma con el primer color. Los cinco valores de Pulse, en orden, están en `supabase/seeds/0019_pulse.sql`; todos los inputs hex se envían con `name="colores"`.
 
 QA de las seis rutas públicas en 1440/390/360: `node tests/pulse-release.mjs`, con Chromium limpio y build + start. Para el build separado sin override usar `FORMAT_PREVIEW_URL` y `FORMAT_QA_SEASON=ascent`. Los reportes están en `artifacts/pulse/release/`. Analytics y Speed Insights sólo se montan en Vercel para no pedir endpoints que no existen en el servidor local.

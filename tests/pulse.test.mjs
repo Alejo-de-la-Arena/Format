@@ -15,7 +15,9 @@ async function moduleUrl(file) {
   return `data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`;
 }
 
-const { PULSE, PULSE_FECHAS, getDevSeasonOverride } = await import(await moduleUrl("lib/season-pulse.ts"));
+const { PULSE, PULSE_FECHAS } = await import(await moduleUrl("lib/season-pulse.ts"));
+const { JUNGLE, JUNGLE_FECHAS } = await import(await moduleUrl("lib/season-jungle.ts"));
+const { getDevSeasonOverride, getDevPreview } = await import(await moduleUrl("lib/season-previews.ts"));
 const { normalizeForma } = await import(await moduleUrl("lib/season-shape.ts"));
 const { SHAPE_PATHS, getShapePath } = await import(await moduleUrl("components/shapePaths.ts"));
 const { getIntroSeasons } = await import(await moduleUrl("lib/season-intro.ts"));
@@ -49,6 +51,15 @@ test("the Pulse override supports local production builds but never Vercel produ
     assert.equal(getDevSeasonOverride(), null);
     process.env.NEXT_PUBLIC_SEASON_OVERRIDE = "unknown";
     assert.equal(getDevSeasonOverride(), null);
+    process.env.NEXT_PUBLIC_SEASON_OVERRIDE = "__proto__";
+    assert.equal(getDevSeasonOverride(), null);
+    process.env.NEXT_PUBLIC_SEASON_OVERRIDE = "jungle";
+    assert.equal(getDevSeasonOverride(), JUNGLE);
+    assert.equal(getDevPreview().fechas, JUNGLE_FECHAS);
+    process.env.VERCEL_ENV = "production";
+    assert.equal(getDevSeasonOverride(), null);
+    assert.equal(getDevPreview(), null);
+    delete process.env.VERCEL_ENV;
   } finally {
     for (const [key, value] of [["NODE_ENV", original.nodeEnv], ["VERCEL_ENV", original.vercelEnv], ["NEXT_PUBLIC_SEASON_OVERRIDE", original.override]]) {
       if (value === undefined) delete process.env[key]; else process.env[key] = value;
@@ -65,4 +76,16 @@ test("unrecognized shapes, missing values and prototype keys fall back safely", 
   assert.equal(normalizeForma("triangle"), "triangle");
   assert.equal(getShapePath("double-circle", "one"), SHAPE_PATHS["double-circle"]);
   assert.equal(getShapePath("double-circle", "two"), SHAPE_PATHS["double-circle"]);
+});
+
+test("Jungle: double-diamond shape and November Fridays with the opening on 06.11", () => {
+  assert.equal(normalizeForma("double-diamond"), "double-diamond");
+  assert.equal(getShapePath("double-diamond", "one"), SHAPE_PATHS["double-diamond"]);
+  assert.equal(JUNGLE.forma, "double-diamond");
+  assert.deepEqual(JUNGLE_FECHAS.map((f) => [f.fecha, f.especial]), [
+    ["2026-11-06", true], ["2026-11-13", false], ["2026-11-20", false], ["2026-11-27", false],
+  ]);
+  // Entre Pulse y Jungle, la activa es la próxima: Jungle.
+  assert.equal(getIntroSeasons([PULSE, JUNGLE], "2026-11-02").current, JUNGLE);
+  assert.equal(getIntroSeasons([PULSE, JUNGLE], "2026-11-02").previous, PULSE);
 });

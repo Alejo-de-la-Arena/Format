@@ -17,9 +17,3 @@ export const PULSE_FECHAS: Fecha[] = [9, 16, 23, 30].map((day) => ({
   fecha: `2026-10-${String(day).padStart(2, "0")}`,
   especial: day === 9,
 }));
-
-/** Opt-in preview for local builds and Vercel preview; disabled on production deployments. */
-export function getDevSeasonOverride(): Season | null {
-  return process.env.VERCEL_ENV !== "production"
-    && process.env.NEXT_PUBLIC_SEASON_OVERRIDE === PULSE.slug ? PULSE : null;
-}

@@ -1,5 +1,6 @@
 import type { Forma } from "@/lib/types";
 import { PULSE } from "@/lib/season-pulse";
+import { JUNGLE } from "@/lib/season-jungle";
 
 /**
  * Secuencia completa de Seasons para la pieza "Qué es FORMAT" — forma,
@@ -50,10 +51,10 @@ export const SEASON_SEQUENCE: SeasonSequenceItem[] = [
     tilt: -2,
   },
   {
-    numero: "004",
-    nombre: "Jungle",
-    forma: "hexagon",
-    colores: ["#16A34A", "#14532D", "#4ADE80", "#BBF7D0", "#FFFFFF"],
+    numero: JUNGLE.numero,
+    nombre: JUNGLE.nombre,
+    forma: JUNGLE.forma,
+    colores: JUNGLE.colores as SeasonSequenceItem["colores"],
     tilt: 5,
   },
   {
