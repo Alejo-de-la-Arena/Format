@@ -1,7 +1,8 @@
 import type { CSSProperties } from "react";
 import type { Forma } from "@/lib/types";
 import { getShapePath } from "@/components/shapePaths";
-import DoubleCircle from "@/components/DoubleCircle";
+import DoubleLine from "@/components/DoubleLine";
+import { isDoubleLine } from "@/lib/season-shape";
 
 /**
  * La forma de la Season como sticker sólido (relleno, no sólo línea) en el
@@ -43,8 +44,8 @@ export default function ShapeSticker({
         ...style,
       }}
     >
-      {forma === "double-circle" ? (
-        <DoubleCircle className="h-full w-full" style={{ color }} />
+      {isDoubleLine(forma) ? (
+        <DoubleLine forma={forma} className="h-full w-full" style={{ color }} />
       ) : <svg viewBox="0 0 72 72" className="h-full w-full">
         <path d={getShapePath(forma, seed)} fill={color} />
       </svg>}
@@ -53,7 +54,7 @@ export default function ShapeSticker({
           className="absolute inset-0 flex items-center justify-center text-center font-body text-[9px] font-extrabold uppercase leading-none tracking-[0.08em] text-paper"
           style={{ transform: `rotate(${-rotate}deg)` }}
         >
-          {forma === "double-circle" ? <span className="bg-ink px-2 py-1">Format</span> : "Format"}
+          {isDoubleLine(forma) ? <span className="bg-ink px-2 py-1">Format</span> : "Format"}
         </span>
       )}
     </div>

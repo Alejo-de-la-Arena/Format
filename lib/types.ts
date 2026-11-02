@@ -15,6 +15,7 @@ export type ImageSrc = string | StaticImageData;
 export type Forma =
   | "circle"
   | "double-circle"
+  | "double-diamond"
   | "triangle"
   | "square"
   | "hexagon"

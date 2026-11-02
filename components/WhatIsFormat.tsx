@@ -2,7 +2,8 @@ import Link from "next/link";
 import SectionTitle from "@/components/SectionTitle";
 import { EDGES } from "@/components/TapeBlock";
 import { getShapePath } from "@/components/shapePaths";
-import DoubleCircle from "@/components/DoubleCircle";
+import DoubleLine from "@/components/DoubleLine";
+import { isDoubleLine } from "@/lib/season-shape";
 import HomeReveal from "@/components/home/HomeReveal";
 import ActionIcon from "@/components/ActionIcon";
 import type { Forma } from "@/lib/types";
@@ -33,8 +34,8 @@ export default function WhatIsFormat({ activa, className, wrapClassName }: {
           {activa && <div className="flex items-center gap-5 justify-self-center py-6 sm:gap-8">
             <div className="relative flex flex-col items-center">
             <div className="relative h-32 w-32" aria-hidden>
-              {[0, 1, 2].map((i) => activa.forma === "double-circle" ? (
-                <DoubleCircle key={i} className="absolute inset-0 h-full w-full"
+              {[0, 1, 2].map((i) => isDoubleLine(activa.forma) ? (
+                <DoubleLine key={i} forma={activa.forma} className="absolute inset-0 h-full w-full"
                   style={{ color: activa.color, opacity: i === 0 ? 1 : .45,
                     transform: `translate(${i * 13}px,${i * -7}px) rotate(${-7 + i * 8}deg)` }} />
               ) : <svg key={i} viewBox="0 0 72 72" className="absolute inset-0 h-full w-full"
@@ -44,7 +45,7 @@ export default function WhatIsFormat({ activa, className, wrapClassName }: {
               </svg>)}
               <svg viewBox="0 0 72 72" className="absolute inset-0 h-full w-full">
                 <path d="M23 36H48M39 27L48 36L39 45" fill="none"
-                  stroke={activa.forma === "double-circle" ? "var(--color-ink)" : "var(--color-paper)"} strokeWidth="2" />
+                  stroke={isDoubleLine(activa.forma) ? "var(--color-ink)" : "var(--color-paper)"} strokeWidth="2" />
               </svg>
             </div>
             <span className="relative mt-3 bg-ink px-3 py-2 text-xl font-black uppercase text-paper"

@@ -11,8 +11,8 @@ import {
   type ActionResult,
 } from "@/lib/admin/action-result";
 import { parseVideoUrl } from "@/lib/embed";
-import type { Forma } from "@/lib/types";
 import { isIntroMotion, isIntroText } from "@/lib/season-intro";
+import { isForma } from "@/lib/season-shape";
 
 export type SeasonFormState =
   | { error?: string; ok?: boolean; slug?: string }
@@ -52,7 +52,7 @@ export const upsertSeason = adminAction(async (
   const slug = String(formData.get("slug") ?? "").trim();
   const numero = String(formData.get("numero") ?? "").trim();
   const nombre = String(formData.get("nombre") ?? "").trim();
-  const forma = String(formData.get("forma") ?? "") as Forma;
+  const forma = String(formData.get("forma") ?? "");
   const concepto = String(formData.get("concepto") ?? "").trim();
   const fechaInicio = String(formData.get("fechaInicio") ?? "");
   const fechaFin = String(formData.get("fechaFin") ?? "");
@@ -75,6 +75,9 @@ export const upsertSeason = adminAction(async (
 
   if (!slug || !numero || !nombre || !forma || !fechaInicio || !fechaFin) {
     return { error: "Completá todos los campos obligatorios." };
+  }
+  if (!isForma(forma)) {
+    return { error: "Elegí una forma de la lista." };
   }
   if (fechaFin < fechaInicio) {
     return { error: "La fecha de fin no puede ser anterior a la de inicio." };

@@ -23,6 +23,8 @@ const SHAPE_INDEX: Record<Forma, number> = {
   infinity: 4,
   cross: 5,
   "double-circle": 6,
+  // Provisorio hasta la Fase 2 (SDF de rombo redondeado con doble línea).
+  "double-diamond": 0,
 };
 
 function hexToVec3(hex: string): [number, number, number] {

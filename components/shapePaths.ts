@@ -3,6 +3,29 @@ import { normalizeForma } from "@/lib/season-shape";
 import { hashSeed, mulberry32 } from "@/lib/rng";
 
 /**
+ * Rombo (cuadrado girado sobre su punta) con esquinas redondeadas tipo neón.
+ * `h` = media diagonal, `cut` = cuánto se recorta cada esquina sobre los
+ * lados. `reverse` invierte el sentido de giro (para huecos con fill).
+ */
+export function roundedDiamondPath(cx: number, cy: number, h: number, cut: number, reverse = false): string {
+  const v = [[cx, cy - h], [cx + h, cy], [cx, cy + h], [cx - h, cy]];
+  if (reverse) v.reverse();
+  const t = cut / Math.hypot(h, h);
+  const lerp = (a: number[], b: number[]) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  const f = (p: number[]) => `${p[0].toFixed(2)} ${p[1].toFixed(2)}`;
+  let d = `M${f(lerp(v[0], v[1]))}`;
+  for (let i = 1; i <= 4; i++) {
+    const curr = v[i % 4];
+    d += ` L${f(lerp(curr, v[i - 1]))} Q${f(curr)} ${f(lerp(curr, v[(i + 1) % 4]))}`;
+  }
+  return `${d} Z`;
+}
+
+/** Media diagonal de las dos líneas del rombo de Jungle: la interior a 0.88
+ * de la exterior. Compartido por la silueta rellena y el componente. */
+export const DOUBLE_DIAMOND_INNER = 0.88;
+
+/**
  * Geometría cruda (sin jitter) de cada forma de Season, viewBox 0 0 72 72.
  * Fuente única compartida por Glyph (stroke, línea fina) y como base de
  * getShapePath. Se mantiene exportada para no romper consumidores directos.
@@ -14,6 +37,11 @@ export const SHAPE_PATHS: Record<Forma, string> = {
     const sweep = i % 2 === 0 ? 1 : 0;
     return `M36 ${36 - r} A${r} ${r} 0 1 ${sweep} 36 ${36 + r} A${r} ${r} 0 1 ${sweep} 36 ${36 - r} Z`;
   }).join(" "),
+  // Misma lógica que double-circle: cada línea es una banda (borde externo e
+  // interno con giro opuesto). Ancho de banda 3.06 de media diagonal ≈ 2.16
+  // perpendicular, igual que los anillos de Pulse.
+  "double-diamond": [32.7, 32.7 * DOUBLE_DIAMOND_INNER].flatMap((h) => [h + 1.53, h - 1.53])
+    .map((h, i) => roundedDiamondPath(36, 36, h, h * 0.12, i % 2 === 1)).join(" "),
   circle: "M36 8 A28 28 0 1 1 35.99 8 Z",
   triangle: "M36 8 L64 62 L8 62 Z",
   square: "M10 10 H62 V62 H10 Z",
@@ -65,6 +93,7 @@ const CIRCLE = { cx: 36, cy: 36, r: 28, points: 14 };
  * silueta reconocible, no una forma nueva. */
 const JITTER_AMOUNT: Record<Forma, number> = {
   "double-circle": 0,
+  "double-diamond": 0,
   square: 2.4,
   triangle: 2,
   hexagon: 2,

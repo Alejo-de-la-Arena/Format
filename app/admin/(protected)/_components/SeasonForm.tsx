@@ -15,6 +15,7 @@ const FORMAS: { value: Forma; label: string }[] = [
   { value: "triangle", label: "Triángulo" },
   { value: "circle", label: "Círculo" },
   { value: "double-circle", label: "Doble círculo" },
+  { value: "double-diamond", label: "Rombo doble" },
   { value: "hexagon", label: "Hexágono" },
   { value: "hexagon-organic", label: "Hexágono orgánico" },
   { value: "infinity", label: "Infinito" },
