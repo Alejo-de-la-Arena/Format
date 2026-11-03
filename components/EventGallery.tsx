@@ -9,6 +9,7 @@ import ActionIcon from "@/components/ActionIcon";
 import ShapeSticker from "@/components/ShapeSticker";
 import { EDGES } from "@/components/TapeBlock";
 import { canShareFiles, fetchPhotoFile, galleryFileName, savePhoto } from "@/lib/gallery-save";
+import { paperGlow } from "@/lib/color-contrast";
 
 const HINT_MS = 4500;
 const SWIPE_PX = 50;
@@ -48,6 +49,7 @@ export default function EventGallery({
   // mantiene vigente el gesto del usuario que exige navigator.share().
   const prefetched = useRef<{ src: string; file: File } | null>(null);
   const isOpen = openIndex !== null;
+  const glow = paperGlow(colors[2], colors[0]);
 
   // Estables entre renders: el índice se lee del estado previo (setState
   // funcional), así el listener de teclado nunca queda con un valor viejo.
@@ -189,7 +191,7 @@ export default function EventGallery({
               <div
                 className="flex h-full w-full items-center justify-center transition-transform duration-500 group-hover:scale-[1.05]"
                 style={{
-                  background: `radial-gradient(80% 80% at 50% 50%, color-mix(in srgb, ${colors[2]} 55%, var(--color-paper-2)), var(--color-paper-2) 75%)`,
+                  background: `radial-gradient(80% 80% at 50% 50%, color-mix(in srgb, ${glow.color} ${glow.pct(55)}%, var(--color-paper-2)), var(--color-paper-2) 75%)`,
                 }}
               >
                 <ShapeSticker
@@ -231,7 +233,7 @@ export default function EventGallery({
               type="button"
               onClick={close}
               aria-label="Cerrar"
-              className="absolute right-4 top-4 z-10 rounded-sm bg-paper px-3 py-2 label-mono text-ink transition-colors hover:bg-accent-1 sm:right-6 sm:top-6"
+              className="absolute right-4 top-4 z-10 rounded-sm bg-paper px-3 py-2 label-mono text-ink transition-colors hover:bg-accent-1 hover:text-on-accent-1 sm:right-6 sm:top-6"
             >
               Cerrar ✕
             </button>
@@ -284,7 +286,7 @@ export default function EventGallery({
                 <div
                   className="flex h-full w-full items-center justify-center"
                   style={{
-                    background: `radial-gradient(80% 80% at 50% 50%, color-mix(in srgb, ${colors[2]} 55%, var(--color-paper-2)), var(--color-paper-2) 75%)`,
+                    background: `radial-gradient(80% 80% at 50% 50%, color-mix(in srgb, ${glow.color} ${glow.pct(55)}%, var(--color-paper-2)), var(--color-paper-2) 75%)`,
                   }}
                 >
                   <ShapeSticker
@@ -312,7 +314,7 @@ export default function EventGallery({
                   className="group inline-flex min-h-11 min-w-11 items-center justify-center disabled:cursor-wait"
                 >
                   <span
-                    className="label-mono inline-block bg-paper px-4 py-3 text-[12px] text-ink transition-colors group-hover:bg-accent-1 group-disabled:opacity-70 motion-reduce:transition-none"
+                    className="label-mono inline-block bg-paper px-4 py-3 text-[12px] text-ink transition-colors group-hover:bg-accent-1 group-hover:text-on-accent-1 group-disabled:opacity-70 motion-reduce:transition-none"
                     style={{ transform: "rotate(-1.5deg)", clipPath: EDGES[2] }}
                   >
                     {saving ? "Guardando…" : <>Guardar <ActionIcon kind="download" /></>}

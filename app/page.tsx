@@ -183,7 +183,7 @@ export default async function Home() {
               </div>}
               <Link
                 href="/experience"
-                className="label-mono mt-6 inline-flex items-center gap-1.5 bg-accent-1 px-[22px] py-3.5 text-paper motion-safe:transition-transform motion-safe:hover:-translate-y-1 motion-safe:hover:-rotate-1 hover:bg-paper hover:text-ink"
+                className="label-mono mt-6 inline-flex items-center gap-1.5 bg-accent-1 px-[22px] py-3.5 text-on-accent-1 motion-safe:transition-transform motion-safe:hover:-translate-y-1 motion-safe:hover:-rotate-1 hover:bg-paper hover:text-ink"
               >
                 Ver Experience
               </Link>

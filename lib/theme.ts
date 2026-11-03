@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import type { Season } from "@/lib/types";
 import { getSeasonColors } from "@/lib/season-colors";
+import { readableTextOn } from "@/lib/color-contrast";
 
 /**
  * Los 5 colores de una Season como custom properties CSS (--accent-1..5).
@@ -17,6 +18,8 @@ export function seasonAccentVars(season: Season | null): CSSProperties {
       "--accent-3": "var(--color-ink)",
       "--accent-4": "var(--color-ink)",
       "--accent-5": "var(--color-ink)",
+      "--on-accent-1": "var(--color-paper)",
+      "--on-accent-2": "var(--color-paper)",
     } as CSSProperties;
   }
   const [c1, c2, c3, c4, c5] = getSeasonColors(season);
@@ -26,5 +29,8 @@ export function seasonAccentVars(season: Season | null): CSSProperties {
     "--accent-3": c3,
     "--accent-4": c4,
     "--accent-5": c5,
+    // Texto sobre bloques de acento: papel o tinta según contraste.
+    "--on-accent-1": readableTextOn(c1),
+    "--on-accent-2": readableTextOn(c2),
   } as CSSProperties;
 }

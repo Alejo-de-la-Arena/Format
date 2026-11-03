@@ -74,6 +74,9 @@ html {
   --color-accent-3: var(--accent-3);
   --color-accent-4: var(--accent-4);
   --color-accent-5: var(--accent-5);
+  /* Texto sobre accent-1/2: papel o tinta, resuelto por contraste (lib/theme.ts). */
+  --color-on-accent-1: var(--on-accent-1);
+  --color-on-accent-2: var(--on-accent-2);
 }
 
 /* Etiquetas: fechas, kickers, datos. Antes monoespaciadas — el sitio usa

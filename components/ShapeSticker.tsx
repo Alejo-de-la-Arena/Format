@@ -3,6 +3,7 @@ import type { Forma } from "@/lib/types";
 import { getShapePath } from "@/components/shapePaths";
 import DoubleLine from "@/components/DoubleLine";
 import { isDoubleLine } from "@/lib/season-shape";
+import { readableTextOn } from "@/lib/color-contrast";
 
 /**
  * La forma de la Season como sticker sólido (relleno, no sólo línea) en el
@@ -51,8 +52,10 @@ export default function ShapeSticker({
       </svg>}
       {withLogo && (
         <span
-          className="absolute inset-0 flex items-center justify-center text-center font-body text-[9px] font-extrabold uppercase leading-none tracking-[0.08em] text-paper"
-          style={{ transform: `rotate(${-rotate}deg)` }}
+          className="absolute inset-0 flex items-center justify-center text-center font-body text-[9px] font-extrabold uppercase leading-none tracking-[0.08em]"
+          // Sobre el relleno del sticker: papel o tinta según contraste. Las
+          // formas de doble línea llevan su propia cinta negra.
+          style={{ transform: `rotate(${-rotate}deg)`, color: isDoubleLine(forma) ? "var(--color-paper)" : readableTextOn(color) }}
         >
           {isDoubleLine(forma) ? <span className="bg-ink px-2 py-1">Format</span> : "Format"}
         </span>

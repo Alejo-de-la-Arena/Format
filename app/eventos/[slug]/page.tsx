@@ -23,6 +23,7 @@ import { getFechasBySeason } from "@/lib/data/fechas";
 import { fechaCorta, esPasado, rangoHorario } from "@/lib/dates";
 import { getLabClipCover, isVideoUrl } from "@/lib/embed";
 import type { Fecha, Season } from "@/lib/types";
+import { paperGlow } from "@/lib/color-contrast";
 
 const wrap = "mx-auto max-w-[1400px] px-[clamp(18px,4vw,48px)]";
 const VENUE = "Av. Costanera Rafael Obligado 4801";
@@ -70,7 +71,7 @@ function FlyerVisual({
   season: Season;
   fullBleed: boolean;
 }) {
-  const glow = colors[2];
+  const glow = paperGlow(colors[2], colors[0]);
 
   if (fullBleed) {
     return (
@@ -88,7 +89,7 @@ function FlyerVisual({
           aria-hidden
           className="pointer-events-none absolute inset-x-0 bottom-0 h-32"
           style={{
-            background: `linear-gradient(to top, color-mix(in srgb, ${glow} 45%, var(--color-paper-2)) 0%, transparent 100%)`,
+            background: `linear-gradient(to top, color-mix(in srgb, ${glow.color} ${glow.pct(45)}%, var(--color-paper-2)) 0%, transparent 100%)`,
           }}
         />
       </div>
@@ -101,7 +102,7 @@ function FlyerVisual({
         aria-hidden
         className="pointer-events-none absolute -inset-10 -z-10 rounded-full opacity-70 blur-[90px]"
         style={{
-          background: `radial-gradient(circle, color-mix(in srgb, ${glow} 55%, transparent) 0%, transparent 70%)`,
+          background: `radial-gradient(circle, color-mix(in srgb, ${glow.color} ${glow.pct(55)}%, transparent) 0%, transparent 70%)`,
         }}
       />
       <div className="relative aspect-[3/4] w-full overflow-hidden">
@@ -257,7 +258,7 @@ function FechaRow({
                 >
                   <span
                     aria-hidden
-                    className="label-mono absolute -left-1 -top-2 z-10 bg-accent-1 px-2 py-1 text-[10px] text-ink"
+                    className="label-mono absolute -left-1 -top-2 z-10 bg-accent-1 px-2 py-1 text-[10px] text-on-accent-1"
                   >
                     {String(index + 1).padStart(2, "0")}
                   </span>

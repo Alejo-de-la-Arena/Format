@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { Forma, ImageSrc } from "@/lib/types";
 import ShapeSticker from "@/components/ShapeSticker";
+import { paperGlow } from "@/lib/color-contrast";
 
 /**
  * Imagen de un evento (flyer o foto de la puesta). Cuando existe la URL,
@@ -51,10 +52,11 @@ export default function EventImage({
   }
 
   const [c1, , c3] = colors;
+  const glow = paperGlow(c3, c1);
   const bg =
     variant === "shot"
-      ? `radial-gradient(80% 120% at 50% 0%, color-mix(in srgb, ${c3} 55%, var(--color-paper-2)), var(--color-paper-2) 72%)`
-      : `linear-gradient(160deg, color-mix(in srgb, ${c3} 55%, var(--color-paper-2)), var(--color-paper-2) 68%)`;
+      ? `radial-gradient(80% 120% at 50% 0%, color-mix(in srgb, ${glow.color} ${glow.pct(55)}%, var(--color-paper-2)), var(--color-paper-2) 72%)`
+      : `linear-gradient(160deg, color-mix(in srgb, ${glow.color} ${glow.pct(55)}%, var(--color-paper-2)), var(--color-paper-2) 68%)`;
 
   return (
     <div

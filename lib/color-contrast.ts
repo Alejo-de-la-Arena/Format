@@ -1,5 +1,6 @@
-/** Gris papel del sistema (--color-paper en app/globals.css). */
+/** Gris papel y tinta del sistema (--color-paper / --color-ink en app/globals.css). */
 export const PAPER = "#C8D0D2";
+export const INK = "#111111";
 
 /** Contraste mínimo para líneas y elementos gráficos (WCAG 1.4.11). */
 export const MIN_GRAPHIC_CONTRAST = 3;
@@ -34,4 +35,24 @@ export function contrastRatio(a: string, b: string): number {
  */
 export function readableOn(background: string, preferred: string, principal: string): string {
   return contrastRatio(preferred, background) >= MIN_GRAPHIC_CONTRAST ? preferred : principal;
+}
+
+/**
+ * Color de TEXTO sobre un fondo de acento: papel o tinta, el que más
+ * contraste. Ej.: sobre el verde de Jungle o el rojo de Pulse gana la tinta;
+ * sobre el azul de Origin, el papel.
+ */
+export function readableTextOn(background: string): typeof PAPER | typeof INK {
+  return contrastRatio(INK, background) >= contrastRatio(PAPER, background) ? INK : PAPER;
+}
+
+/**
+ * Glow (rol 3) sobre papel. Si el rol 3 no contrasta 3:1 contra el papel
+ * (el verde ácido de Jungle), se tiñe hacia el principal (35 % / 65 %) y baja
+ * de intensidad; el ácido puro queda para fondos negros. `pct(55)` escala el
+ * porcentaje de mezcla que usa cada glow.
+ */
+export function paperGlow(glow: string, principal: string): { color: string; pct: (base: number) => number } {
+  if (contrastRatio(glow, PAPER) >= MIN_GRAPHIC_CONTRAST) return { color: glow, pct: (base) => base };
+  return { color: `color-mix(in srgb, ${glow} 35%, ${principal})`, pct: (base) => Math.round(base * 0.6) };
 }
