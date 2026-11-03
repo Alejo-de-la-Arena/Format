@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { DOUBLE_DIAMOND_INNER, roundedDiamondPath } from "@/components/shapePaths";
+import { PlantSprig } from "@/components/JunglePlants";
 
 const OUTER = 46;
 const INNER = OUTER * DOUBLE_DIAMOND_INNER;
@@ -15,6 +16,8 @@ export default function DoubleDiamond({ className, style, strokeWidth = 3 }: {
     <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeLinejoin="round"
       className={className} style={style} aria-hidden>
       {PATHS.map((d) => <path key={d} d={d} strokeWidth={strokeWidth} />)}
+      <g transform="translate(73 29) rotate(38) scale(.48)"><PlantSprig variant={2} /></g>
+      <g transform="translate(24 73) rotate(-126) scale(.4)"><PlantSprig variant={1} /></g>
     </svg>
   );
 }

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { useAnimate, type AnimationSequence } from "motion/react";
 import { EDGES } from "@/components/TapeBlock";
 import { roundedDiamondPath } from "@/components/shapePaths";
+import { PlantSprig } from "@/components/JunglePlants";
 import { hashSeed, mulberry32 } from "@/lib/rng";
 import { introStorageKey } from "@/lib/season-intro";
 import type { ShapeIntroVariant } from "@/lib/season-shape";
@@ -114,7 +115,6 @@ const VINES = VINE_START.map((corner, v) => {
   });
   return { d, leaves };
 });
-const LEAF = "M0 0 C3 -3.4 8 -3.2 11 0 C8 3.2 3 3.4 0 0 Z";
 
 function Flashes({ flashes }: { flashes: Flash[] }) {
   const id = useId().replace(/:/g, "");
@@ -390,11 +390,12 @@ export default function ShapeIntro({ current, variant, onState, showReplay, path
             </svg>)}
             {variant === "grow" && <svg viewBox="0 0 100 100" className={styles.vines} aria-hidden>
               {VINES.map((vine, i) => <path key={i} d={vine.d} data-vine={i} pathLength={1} fill="none" stroke={c2}
-                strokeWidth="1.5" strokeLinecap="round" strokeDasharray="1" style={{ strokeDashoffset: reduced ? 0 : 1 }} />)}
+                strokeWidth="1.5" strokeLinecap="round" strokeDasharray="1" strokeDashoffset={reduced ? 0 : 1} />)}
               {VINES.flatMap((vine) => vine.leaves).map((leaf, i) => <g key={i} transform={`translate(${leaf.x.toFixed(2)} ${leaf.y.toFixed(2)}) rotate(${leaf.rotate.toFixed(1)}) scale(${leaf.scale.toFixed(2)})`}>
-                <g data-leaf={i} className={styles.leaf} style={reduced ? undefined : { opacity: 0, transform: "scale(0)" }}>
-                  <path d={LEAF} fill={i % 3 === 1 ? c2 : c1} />
-                  <path d="M0 0 L9.5 0" stroke="var(--color-paper)" strokeWidth=".45" opacity=".7" />
+                <g data-leaf={i} className={styles.leaf} opacity={reduced ? 1 : 0} style={reduced ? undefined : { transform: "scale(0)" }}>
+                  <g transform="rotate(90) scale(.4)" style={{ color: i % 3 === 1 ? c2 : c1 }}>
+                    <PlantSprig variant={i} />
+                  </g>
                 </g>
               </g>)}
             </svg>}

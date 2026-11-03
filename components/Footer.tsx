@@ -122,7 +122,7 @@ export default function Footer() {
             escalen juntos en cualquier viewport. `brightness-0 invert` deja el
             SVG en blanco sólido sobre el negro del footer. */}
         <div className="mt-[clamp(38px,5vw,68px)] border-t border-paper/12 pt-[clamp(22px,3vw,38px)] text-[clamp(48px,11vw,158px)]">
-          <div className="flex items-end justify-between gap-4">
+          <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
             <Image
               src="/logos/logo-format-horizontal.svg"
               alt="FORMAT"

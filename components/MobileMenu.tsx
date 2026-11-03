@@ -9,6 +9,7 @@ import { getShapePath } from "@/components/shapePaths";
 import styles from "./navigation.module.css";
 import { EDGES } from "@/components/TapeBlock";
 import type { Forma } from "@/lib/types";
+import Glyph from "@/components/Glyph";
 
 const panelTransition = { duration: 0.32, ease: [0.4, 0, 0.2, 1] as const };
 
@@ -101,7 +102,9 @@ export default function MobileMenu({
             exit="closed"
           >
             <span aria-hidden className={styles.menuArt} style={{ "--nav-accent": accent } as CSSProperties}>
-              {[0, 1, 2].map((n) => <svg key={n} viewBox="0 0 72 72">
+              {[0, 1, 2].map((n) => forma === "double-diamond"
+                ? <Glyph key={n} forma={forma} strokeWidth={n === 2 ? 2 : .35} />
+                : <svg key={n} viewBox="0 0 72 72">
                 <path d={getShapePath(forma)} fill="none" stroke="currentColor" strokeWidth={n === 2 ? 2 : .35} />
               </svg>)}
             </span>

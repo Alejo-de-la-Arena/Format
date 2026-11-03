@@ -173,6 +173,38 @@ const FRAGMENT = /* glsl */ `
     return min(abs(d) - halfWidth, abs(d + offset) - halfWidth);
   }
 
+  // Small botanical silhouettes rooted on the diamond. Kept in the same
+  // SDF as the outline so every print treatment carries its vegetation.
+  float sdSprig(vec2 p, float kind, float progress) {
+    if (abs(p.x) > .18 || p.y < -.02 || p.y > .43) return 1.0;
+    float height = .38;
+    float stemX = sin(p.y * 15.0) * .013;
+    float d = max(abs(p.x - stemX) - .009, max(-p.y, p.y - height * progress));
+    for (int i = 0; i < 5; i++) {
+      float y = .055 + float(i) * .061;
+      float size = (.066 - float(i) * .006) * smoothstep(y - .04, y + .035, progress * height);
+      for (int side = 0; side < 2; side++) {
+        float s = side == 0 ? -1.0 : 1.0;
+        vec2 q = p - vec2(s * size * .77 + sin(y * 15.0) * .013, y + size * .4);
+        q = vec2(q.x * .78 + q.y * s * .63, -q.x * s * .63 + q.y * .78);
+        vec2 axes = vec2(max(size, .001), max(size * (kind < .5 ? .32 : .56), .001));
+        float leaf = (length(q / axes) - 1.0) * min(axes.x, axes.y);
+        d = min(d, leaf);
+      }
+    }
+    return d;
+  }
+  float sdBotany(vec2 p, float r, float progress) {
+    vec2 q = p / r;
+    vec2 a = q - vec2(.54, .54);
+    vec2 b = q - vec2(-.58, -.5);
+    vec2 c = q - vec2(-.28, .8);
+    float d = sdSprig(vec2((a.x - a.y) * .7071, (a.x + a.y) * .7071), 1.0, progress);
+    d = min(d, sdSprig(vec2((b.x - b.y) * -.7071, (b.x + b.y) * -.7071), 0.0, progress));
+    d = min(d, sdSprig(vec2(c.x * .94 + c.y * .34, -c.x * .34 + c.y * .94), 0.0, progress));
+    return d * r;
+  }
+
   float sdShape(vec2 p, float shapeId, float r) {
     if (shapeId < 0.5) return sdBox(p, vec2(r * 0.82));
     if (shapeId < 1.5) return sdCircle(p, r);
@@ -182,7 +214,7 @@ const FRAGMENT = /* glsl */ `
     if (shapeId < 5.5) return sdCross(p, r * 0.8);
     float halfWidth = uCellPx * ${RING_STROKE_CELLS} * .5 / pulseFrameScale();
     float gap = uCellPx * ${RING_GAP_CELLS} / pulseFrameScale();
-    if (shapeId > 6.5) return sdDoubleDiamond(p, r, halfWidth, gap);
+    if (shapeId > 6.5) return min(sdDoubleDiamond(p, r, halfWidth, gap), sdBotany(p, r, 1.0));
     return min(sdRing(p, r, halfWidth), sdRing(p, max(halfWidth, r - 2.0 * halfWidth - gap), halfWidth));
   }
 
@@ -197,7 +229,7 @@ const FRAGMENT = /* glsl */ `
     float reach = r * 6.0;
     float outer = max(abs(d) - halfWidth, (t - progress * 1.08) * reach);
     float inner = max(abs(d + 2.0 * halfWidth + gap) - halfWidth, (t - (progress * 1.08 - .08)) * reach);
-    return min(outer, inner);
+    return min(min(outer, inner), sdBotany(p, r, smoothstep(.12, .7, progress)));
   }
 
   vec2 rotatePoint(vec2 p, float angle) {
@@ -251,7 +283,7 @@ const FRAGMENT = /* glsl */ `
     float halfWidth = uCellPx * ${RING_STROKE_CELLS} * .5;
     float gap = uCellPx * ${RING_GAP_CELLS};
     float inner = max(halfWidth + uCellPx, radius - 2.0 * halfWidth - gap);
-    if (uShape > 6.5) return sdDoubleDiamond(p, radius, halfWidth, gap);
+    if (uShape > 6.5) return min(sdDoubleDiamond(p, radius, halfWidth, gap), sdBotany(p, radius, 1.0));
     return min(sdRing(p, radius, halfWidth), sdRing(p, inner, halfWidth));
   }
   // Máscara de forma [0,1] en un punto uv dado, con warp + envolvente ya aplicados.

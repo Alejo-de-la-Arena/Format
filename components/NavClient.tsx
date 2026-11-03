@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useCallback, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "motion/react";
@@ -9,6 +9,7 @@ import MobileMenu from "@/components/MobileMenu";
 import HoverUnderline from "@/components/HoverUnderline";
 import styles from "./navigation.module.css";
 import type { Forma } from "@/lib/types";
+import JunglePlants from "@/components/JunglePlants";
 
 const MotionLink = motion.create(Link);
 
@@ -35,6 +36,11 @@ export default function NavClient({
   showBackButton?: boolean;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuTrigger = useRef<HTMLButtonElement>(null);
+  const closeMenu = useCallback(() => {
+    setMenuOpen(false);
+    menuTrigger.current?.focus({ preventScroll: true });
+  }, []);
 
   return (
     <>
@@ -43,6 +49,9 @@ export default function NavClient({
         className={`inset-x-0 top-0 z-[60] overflow-hidden bg-paper ${styles.header}`}
         style={{ "--header-accent": accent } as CSSProperties}
       >
+      {forma === "double-diamond" && <div className={styles.headerPlants} aria-hidden="true">
+        <JunglePlants variant={2} /><JunglePlants variant={1} /><JunglePlants variant={0} />
+      </div>}
       <div className={`relative z-10 mx-auto flex h-[78px] max-w-[1400px] items-center px-[clamp(18px,4vw,48px)] ${styles.bar}`}>
         <Link href="/" className="flex items-center" aria-label="FORMAT — inicio">
           {/* Logo apilado FOR/MAT. Alto fijado al del wordmark tipográfico
@@ -80,6 +89,7 @@ export default function NavClient({
         </div>
 
         <button
+          ref={menuTrigger}
           type="button"
           onClick={() => setMenuOpen(true)}
           aria-label="Abrir menú"
@@ -93,7 +103,7 @@ export default function NavClient({
 
       <MobileMenu
         open={menuOpen}
-        onClose={() => setMenuOpen(false)}
+        onClose={closeMenu}
         accent={accent}
         forma={forma}
       />
