@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Forma } from "@/lib/types";
-import { normalizeForma } from "@/lib/season-shape";
+import { isDoubleLine, normalizeForma } from "@/lib/season-shape";
 
 /** Fijo — mismo valor que --color-paper en app/globals.css. */
 const PAPER = "#c8d0d2";
@@ -23,8 +23,7 @@ const SHAPE_INDEX: Record<Forma, number> = {
   infinity: 4,
   cross: 5,
   "double-circle": 6,
-  // Provisorio hasta la Fase 2 (SDF de rombo redondeado con doble línea).
-  "double-diamond": 0,
+  "double-diamond": 7,
 };
 
 function hexToVec3(hex: string): [number, number, number] {
@@ -52,18 +51,41 @@ const FRAGMENT = /* glsl */ `
   uniform float uShape;
   uniform vec2 uPointer;
 
+  // Modo actual, siguiente y mezcla (x, y, z). Los 8 tratamientos duran 2.8s.
+  // Jungle (uShape 7) abre cada ciclo con la enredadera (id 8, 5.6s): el
+  // contorno crece desde la esquina superior hasta cerrarse y después siguen
+  // los 8 de siempre. Las demás formas conservan exactamente su timeline.
+  const float VINE_ID = 8.0;
+  const float VINE_SECONDS = 5.6;
+  vec3 modeAt() {
+    if (uShape > 6.5) {
+      float local = mod(uTime, VINE_SECONDS + 8.0 * 2.8);
+      if (local < VINE_SECONDS) return vec3(VINE_ID, 0.0, smoothstep(.8, 1.0, local / VINE_SECONDS));
+      float phase = (local - VINE_SECONDS) / 2.8;
+      float id = floor(phase);
+      return vec3(id, id > 6.5 ? VINE_ID : id + 1.0, smoothstep(.56, 1.0, fract(phase)));
+    }
+    float phase = uTime / 2.8;
+    float id = mod(floor(phase), 8.0);
+    return vec3(id, mod(id + 1.0, 8.0), smoothstep(.56, 1.0, fract(phase)));
+  }
+
+  // Avance de la enredadera [0,1]: 0 mientras no le toca.
+  float vineProgress() {
+    float local = mod(uTime, VINE_SECONDS + 8.0 * 2.8);
+    return local < VINE_SECONDS ? smoothstep(0.0, .78, local / VINE_SECONDS) : 0.0;
+  }
+
   // Projection only: preserve the original mode equations and 2.8s timeline.
   // Conservative support includes drift, warp, pointer, outlines and antialiasing.
   float pulseFrameScale() {
     float radius = min(uResolution.x, uResolution.y) * ${PULSE_RADIUS};
     float units = radius / 1.18;
     float available = min(uResolution.x, uResolution.y) * .5 - uCellPx;
-    float phase = uTime / 2.8;
-    float id = mod(floor(phase), 8.0);
-    float nextId = mod(id + 1.0, 8.0);
-    float currentBound = abs(id - 5.0) < .1 ? 1.8 : 1.6;
-    float nextBound = abs(nextId - 5.0) < .1 ? 1.8 : 1.6;
-    float bound = mix(currentBound, nextBound, smoothstep(.56, 1.0, fract(phase)));
+    vec3 mode = modeAt();
+    float currentBound = abs(mode.x - 5.0) < .1 ? 1.8 : 1.6;
+    float nextBound = abs(mode.y - 5.0) < .1 ? 1.8 : 1.6;
+    float bound = mix(currentBound, nextBound, mode.z);
     return min(units, available / bound);
   }
 
@@ -135,6 +157,22 @@ const FRAGMENT = /* glsl */ `
     return min(sdBox(p1, vec2(r, r * 0.3)), sdBox(p2, vec2(r, r * 0.3)));
   }
 
+  // Rombo (cuadrado girado 45°) de media diagonal r, esquinas redondeadas tipo neón.
+  float sdRoundDiamond(vec2 p, float r) {
+    const float c = 0.70710678;
+    vec2 q = mat2(c, -c, c, c) * p;
+    float b = r * c;
+    float k = b * .18;
+    return sdBox(q, vec2(b - k)) - k;
+  }
+
+  // Doble línea con el mismo grosor y separación en celdas que los anillos.
+  float sdDoubleDiamond(vec2 p, float r, float halfWidth, float gap) {
+    float d = sdRoundDiamond(p, r);
+    float offset = 2.0 * halfWidth + gap;
+    return min(abs(d) - halfWidth, abs(d + offset) - halfWidth);
+  }
+
   float sdShape(vec2 p, float shapeId, float r) {
     if (shapeId < 0.5) return sdBox(p, vec2(r * 0.82));
     if (shapeId < 1.5) return sdCircle(p, r);
@@ -144,7 +182,22 @@ const FRAGMENT = /* glsl */ `
     if (shapeId < 5.5) return sdCross(p, r * 0.8);
     float halfWidth = uCellPx * ${RING_STROKE_CELLS} * .5 / pulseFrameScale();
     float gap = uCellPx * ${RING_GAP_CELLS} / pulseFrameScale();
+    if (shapeId > 6.5) return sdDoubleDiamond(p, r, halfWidth, gap);
     return min(sdRing(p, r, halfWidth), sdRing(p, max(halfWidth, r - 2.0 * halfWidth - gap), halfWidth));
+  }
+
+  // Enredadera: el contorno doble aparece recorriéndolo en sentido horario
+  // desde la esquina superior; la línea interior sigue a la exterior con un
+  // leve retraso, como dos tallos. La punta se afina hacia adelante.
+  float sdVine(vec2 p, float r, float progress) {
+    float halfWidth = uCellPx * ${RING_STROKE_CELLS} * .5 / pulseFrameScale();
+    float gap = uCellPx * ${RING_GAP_CELLS} / pulseFrameScale();
+    float d = sdRoundDiamond(p, r);
+    float t = fract(atan(p.x, p.y) / 6.2831853 + 1.0);
+    float reach = r * 6.0;
+    float outer = max(abs(d) - halfWidth, (t - progress * 1.08) * reach);
+    float inner = max(abs(d + 2.0 * halfWidth + gap) - halfWidth, (t - (progress * 1.08 - .08)) * reach);
+    return min(outer, inner);
   }
 
   vec2 rotatePoint(vec2 p, float angle) {
@@ -160,14 +213,15 @@ const FRAGMENT = /* glsl */ `
   // Circular SDFs ignore rotation: rotate the field's sampling frame instead.
   // Subtract the original field before replacing it, never adding a second warp.
   vec2 printPoint(vec2 p, vec2 noiseP, float angle, float shapeId) {
-    if (shapeId < 5.5) return rotatePoint(p, angle);
+    if (shapeId < 5.5 || shapeId > 6.5) return rotatePoint(p, angle);
     return p - flowAt(noiseP) + rotatePoint(flowAt(rotatePoint(noiseP, angle)), -angle);
   }
 
   // Eight print treatments of ONE identity. No future Season shapes.
   float sdVariant(vec2 p, vec2 noiseP, float shapeId, float variantId, float r) {
     float d = 1.0;
-    if (variantId < 0.5) d = sdShape(printPoint(p, noiseP, sin(uTime * .4) * .12, shapeId), shapeId, r);
+    if (variantId > 7.5) d = sdVine(p, r, vineProgress());
+    else if (variantId < 0.5) d = sdShape(printPoint(p, noiseP, sin(uTime * .4) * .12, shapeId), shapeId, r);
     else if (variantId < 1.5) d = abs(sdShape(p, shapeId, r)) - .07;
     else if (variantId < 2.5) d = min(min(
       abs(sdShape(p, shapeId, r)) - .035,
@@ -197,6 +251,7 @@ const FRAGMENT = /* glsl */ `
     float halfWidth = uCellPx * ${RING_STROKE_CELLS} * .5;
     float gap = uCellPx * ${RING_GAP_CELLS};
     float inner = max(halfWidth + uCellPx, radius - 2.0 * halfWidth - gap);
+    if (uShape > 6.5) return sdDoubleDiamond(p, radius, halfWidth, gap);
     return min(sdRing(p, radius, halfWidth), sdRing(p, inner, halfWidth));
   }
   // Máscara de forma [0,1] en un punto uv dado, con warp + envolvente ya aplicados.
@@ -212,10 +267,8 @@ const FRAGMENT = /* glsl */ `
     vec2 noiseP = p;
     p += flowAt(noiseP);
     p += uPointer * .045;
-    float id = mod(floor(phase), 8.0);
-    float nextId = mod(id + 1.0, 8.0);
-    float morph = smoothstep(.56, 1.0, fract(phase));
-    float d = mix(sdVariant(p, noiseP, uShape, id, 1.18), sdVariant(p, noiseP, uShape, nextId, 1.18), morph);
+    vec3 mode = modeAt();
+    float d = mix(sdVariant(p, noiseP, uShape, mode.x, 1.18), sdVariant(p, noiseP, uShape, mode.y, 1.18), mode.z);
     return 1.0 - smoothstep(-.028, .028, d);
   }
 
@@ -315,7 +368,9 @@ export default function HeroBackground({
       const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
       const uniforms = {
-        uTime: { value: forma === "double-circle" ? 0 : .7 },
+        // Doble línea: arranca en 0 (cuadro estático con reduced motion; en
+        // Jungle, además, el inicio de la enredadera).
+        uTime: { value: isDoubleLine(normalizeForma(forma)) ? 0 : .7 },
         uCellPx: { value: CELL_DESKTOP },
         uResolution: { value: new THREE.Vector2(1, 1) },
         uAccent: { value: new THREE.Vector3(...hexToVec3(accent)) },
