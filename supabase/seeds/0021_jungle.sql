@@ -7,7 +7,7 @@ begin;
 
 insert into public.seasons (
   slug, numero, nombre, forma, colores, fecha_inicio, fecha_fin,
-  concepto, about_relato, color_descripcion, forma_descripcion, intro_text
+  concepto, about_relato, color_descripcion, forma_descripcion, intro_text, intro_motion
 )
 values (
   'jungle', '004', 'JUNGLE', 'double-diamond',
@@ -31,7 +31,8 @@ No decora la terraza: la cubre.$txt$,
 El cuadrado de Origin, girado sobre su punta.
 
 La estructura del inicio, inclinada y tomada por lo vivo. La doble línea de Pulse sigue ahí: la conexión no se pierde, ahora contiene una selva.$txt$,
-  $txt$LET IT GROW.$txt$
+  $txt$LET IT GROW.$txt$,
+  'grow'
 )
 on conflict (slug) do update set
   numero = excluded.numero,
@@ -44,7 +45,8 @@ on conflict (slug) do update set
   about_relato = excluded.about_relato,
   color_descripcion = excluded.color_descripcion,
   forma_descripcion = excluded.forma_descripcion,
-  intro_text = excluded.intro_text;
+  intro_text = excluded.intro_text,
+  intro_motion = excluded.intro_motion;
 
 insert into public.fechas (season_id, fecha, especial)
 select s.id, f.fecha, f.especial

@@ -40,7 +40,7 @@ test("remember each Season separately without including editorial content", () =
   assert.equal(introStorageKey(season("one", "2026-08-01")), "format:visit-intro:v2:one:2026-08-01");
 });
 test("motion preset validation", () => {
-  for (const preset of ["signal", "ascend", "expand"]) assert.equal(isIntroMotion(preset), true);
+  for (const preset of ["signal", "ascend", "expand", "grow"]) assert.equal(isIntroMotion(preset), true);
   assert.equal(isIntroMotion("untrusted"), false);
   assert.equal(isIntroMotion(undefined), false);
 });

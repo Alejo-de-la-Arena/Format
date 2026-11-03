@@ -1,6 +1,6 @@
 import type { Season } from "./types";
 
-export const INTRO_MOTIONS = ["signal", "ascend", "expand"] as const;
+export const INTRO_MOTIONS = ["signal", "ascend", "expand", "grow"] as const;
 export type IntroMotion = (typeof INTRO_MOTIONS)[number];
 
 export function isIntroMotion(value: unknown): value is IntroMotion {

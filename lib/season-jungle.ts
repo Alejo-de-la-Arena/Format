@@ -29,7 +29,7 @@ El cuadrado de Origin, girado sobre su punta.
 
 La estructura del inicio, inclinada y tomada por lo vivo. La doble línea de Pulse sigue ahí: la conexión no se pierde, ahora contiene una selva.`,
   },
-  intro: { text: "LET IT GROW.", motion: "signal" },
+  intro: { text: "LET IT GROW.", motion: "grow" },
 };
 
 export const JUNGLE_FECHAS: Fecha[] = [6, 13, 20, 27].map((day) => ({

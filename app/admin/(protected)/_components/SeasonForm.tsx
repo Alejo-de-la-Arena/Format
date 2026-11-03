@@ -254,6 +254,7 @@ export default function SeasonForm({
             <option value="signal">Señal — la forma se ensambla</option>
             <option value="ascend">Ascenso — la forma sube</option>
             <option value="expand">Expansión — la forma se abre</option>
+            <option value="grow">Crecimiento — la forma se cubre de vegetación</option>
           </select>
         </label>
       </fieldset>
