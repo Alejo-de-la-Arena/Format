@@ -7,6 +7,7 @@ import HeroBackground from "@/components/HeroBackground";
 import GlitchText from "@/components/GlitchText";
 import { useHomeMotion } from "@/components/home/HomeMotion";
 import HomeReveal from "@/components/home/HomeReveal";
+import HeroPlants from "@/components/HeroPlants";
 
 /**
  * Hero: fondo halftone/SDF animado (ver HeroBackground), el wordmark FORMAT
@@ -20,6 +21,7 @@ export default function Hero({ season }: { season: Season }) {
   return (
     <header className="relative flex min-h-[calc(100svh-78px)] items-center justify-center overflow-hidden border-b border-line bg-paper text-center">
       <HeroBackground forma={season.forma} accent={accent} paused={introOpen || !ready} />
+      {season.forma === "double-diamond" && <HeroPlants />}
 
       <div className="relative z-[2] mx-auto flex w-full max-w-[1400px] flex-col items-center px-[clamp(18px,4vw,48px)] py-[clamp(28px,4vw,52px)]">
         <HomeReveal><div

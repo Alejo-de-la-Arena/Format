@@ -1,0 +1,19 @@
+.frame { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; color: var(--accent-1); }
+.frame > div { position: absolute; width: clamp(160px, 18vw, 280px); }
+.frame svg { display: block; width: 100%; height: auto; }
+.topLeft { left: -62px; top: -158px; transform: rotate(144deg); color: var(--accent-2); }
+.topRight { right: -26px; top: -140px; transform: rotate(-148deg); }
+.left { left: -116px; top: 38%; transform: rotate(62deg); }
+.right { right: -140px; top: 27%; transform: rotate(-78deg); color: var(--accent-2); }
+.bottomLeft { bottom: -54px; left: -32px; transform: rotate(19deg); }
+.bottomRight { bottom: -32px; right: -28px; transform: rotate(-18deg); color: var(--accent-2); }
+@media (max-width: 767px) {
+  .frame > div { width: 148px; }
+  .topLeft { left: -38px; top: -94px; }
+  .topRight { right: -39px; top: -92px; }
+  .left { left: -112px; top: 40%; transform: rotate(38deg); }
+  .right { right: -118px; top: 36%; transform: rotate(-52deg); }
+  .bottomLeft { bottom: -28px; left: -35px; }
+  .bottomRight { bottom: -26px; right: -38px; }
+}
+@media (max-height: 500px) { .frame > div { width: 124px; } .left, .right { display: none; } .topLeft, .topRight { top: -90px; } .bottomLeft, .bottomRight { bottom: -44px; } }
