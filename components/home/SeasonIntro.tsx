@@ -3,13 +3,16 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { getShapePath } from "@/components/shapePaths";
 import { introStorageKey, shouldAutoIntro, type IntroMotion } from "@/lib/season-intro";
+import { shapeIntroVariant } from "@/lib/season-shape";
 import type { Forma } from "@/lib/types";
 import styles from "./home-motion.module.css";
-import PulseIntro from "./PulseIntro";
+import ShapeIntro from "./ShapeIntro";
 
 export interface IntroIdentity {
   slug: string; fechaInicio: string; numero: string; nombre: string;
   forma: Forma; color: string; text: string; motion: IntroMotion;
+  /** Los 5 roles de la Season (ver getSeasonColors). */
+  colors: [string, string, string, string, string];
 }
 
 /** Includes the 350ms exit; shared with the CSS timeline. */
@@ -40,7 +43,8 @@ export default function SeasonIntro(props: {
   showReplay?: boolean;
   pathname: string;
 }) {
-  return props.current.slug === "pulse" ? <PulseIntro {...props} /> : <LegacySeasonIntro {...props} />;
+  const variant = shapeIntroVariant(props.current);
+  return variant ? <ShapeIntro {...props} variant={variant} /> : <LegacySeasonIntro {...props} />;
 }
 
 function LegacySeasonIntro({ current, onState, showReplay = false, pathname }: {

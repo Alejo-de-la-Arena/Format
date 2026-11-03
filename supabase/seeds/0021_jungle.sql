@@ -60,5 +60,11 @@ cross join (values
 where s.slug = 'jungle'
 on conflict (season_id, fecha) do update set especial = excluded.especial;
 
+-- Pulse: su frase de bienvenida pasa a leerse de intro_text (antes estaba
+-- fija en el código). Sólo completa el campo si está vacío.
+update public.seasons
+set intro_text = 'FEEL THE CONNECTION'
+where slug = 'pulse' and intro_text = '';
+
 commit;
 reset role;

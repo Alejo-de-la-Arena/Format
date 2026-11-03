@@ -10,6 +10,8 @@ export const PULSE: Season = {
   fechaInicio: "2026-10-09",
   fechaFin: "2026-10-30",
   about: { relato: "", colorDescripcion: "", formaDescripcion: "" },
+  // Misma frase que supabase/seeds/0021_jungle.sql completa en la base.
+  intro: { text: "FEEL THE CONNECTION", motion: "expand" },
 };
 
 export const PULSE_FECHAS: Fecha[] = [9, 16, 23, 30].map((day) => ({

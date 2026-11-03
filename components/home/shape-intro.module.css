@@ -11,9 +11,9 @@
 .flash { position: absolute; aspect-ratio: 1; height: auto; transform: translate(-50%, -50%); }
 .welcome { position: absolute; top: 59%; left: 18px; right: 18px; z-index: 2; display: flex; align-items: center; flex-direction: column; gap: 10px; text-align: center; text-transform: uppercase; font-weight: 800; }
 .primary, .secondary { width: fit-content; max-width: 100%; margin: 0; opacity: 0; clip-path: inset(0 100% 0 0); }
-.primary { rotate: -1.5deg; color: #E5233B; font-size: clamp(19px, 1.8vw, 26px); line-height: 1.2; letter-spacing: .18em; }
+.primary { rotate: -1.5deg; font-size: clamp(19px, 1.8vw, 26px); line-height: 1.2; letter-spacing: .18em; }
 .secondary { position: relative; left: 10px; rotate: 1deg; color: var(--color-paper); font-size: clamp(11px, 1vw, 14px); line-height: 1.2; letter-spacing: .18em; }
-.primary span, .secondary span { display: block; padding: .6em .9em; background: var(--color-ink); white-space: nowrap; }
+.primary span, .secondary span { display: block; padding: .6em .9em; background: var(--color-ink); white-space: pre; }
 .edition { position: absolute; left: clamp(24px, 5vw, 80px); top: 32px; padding: 9px 12px; background: var(--color-ink); color: var(--color-paper); rotate: -2deg; font-size: 10px; font-weight: 700; letter-spacing: .13em; }
 .registration { position: absolute; inset: 88px 24px 76px; opacity: .3; font-size: 24px; pointer-events: none; }
 .registration span { position: absolute; }
@@ -34,3 +34,8 @@
 .flash { opacity: 0; translate: -50% -50%; transform: none; }
 @media (prefers-reduced-motion: reduce) { .flash { display: none; } }
 @media (prefers-reduced-motion: reduce) { .rings svg { clip-path: none !important; } }
+
+/* Jungle: lianas por fuera del rombo (overflow visible) y hojas que se
+   abren desde el tallo. Escalan con el ring stage durante el iris. */
+.vines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.leaf { transform-box: fill-box; transform-origin: 0% 50%; }

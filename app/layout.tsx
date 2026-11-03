@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import HomeMotion from "@/components/home/HomeMotion";
 import { introStorageKey } from "@/lib/season-intro";
+import { shapeIntroVariant } from "@/lib/season-shape";
 import { getSeasonColors } from "@/lib/season-colors";
 import type { Season } from "@/lib/types";
 import { seasonAccentVars } from "@/lib/theme";
@@ -38,13 +39,13 @@ export default async function RootLayout({
   const current = activeSeason;
   const identity = (season: Season | null) => season ? {
     slug: season.slug, fechaInicio: season.fechaInicio, numero: season.numero,
-    nombre: season.nombre, forma: season.forma, color: getSeasonColors(season)[0],
+    nombre: season.nombre, forma: season.forma, color: getSeasonColors(season)[0], colors: getSeasonColors(season),
     text: season.intro?.text.trim() ?? "", motion: season.intro?.motion ?? "signal" as const,
   } : null;
   // Corre antes del primer paint. Sólo tapa una visita que el cliente también
   // va a convertir en intro; las visitas ya recordadas no reciben el flag.
   const preflightScript = current
-    ? `(()=>{const r=${JSON.stringify(current.slug === "pulse")};try{const k=${JSON.stringify(introStorageKey(current)).replace(/</g, "\\u003c")};const n=performance.getEntriesByType("navigation")[0];if(!location.pathname.startsWith("/admin")&&(r||!matchMedia("(prefers-reduced-motion: reduce)").matches)&&sessionStorage.getItem(k)!=="1"&&n?.type!=="back_forward")document.documentElement.dataset.introPreflight=""}catch{if(!location.pathname.startsWith("/admin")&&(r||!matchMedia("(prefers-reduced-motion: reduce)").matches))document.documentElement.dataset.introPreflight=""}})()`
+    ? `(()=>{const r=${JSON.stringify(shapeIntroVariant({ forma: current.forma, motion: current.intro?.motion ?? "signal" }) !== null)};try{const k=${JSON.stringify(introStorageKey(current)).replace(/</g, "\\u003c")};const n=performance.getEntriesByType("navigation")[0];if(!location.pathname.startsWith("/admin")&&(r||!matchMedia("(prefers-reduced-motion: reduce)").matches)&&sessionStorage.getItem(k)!=="1"&&n?.type!=="back_forward")document.documentElement.dataset.introPreflight=""}catch{if(!location.pathname.startsWith("/admin")&&(r||!matchMedia("(prefers-reduced-motion: reduce)").matches))document.documentElement.dataset.introPreflight=""}})()`
     : "";
 
   return (
