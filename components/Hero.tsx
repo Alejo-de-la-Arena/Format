@@ -19,7 +19,7 @@ export default function Hero({ season }: { season: Season }) {
   const { introOpen, ready } = useHomeMotion();
 
   return (
-    <header className="relative flex min-h-[calc(100svh-78px)] items-center justify-center overflow-hidden border-b border-line bg-paper text-center">
+    <header className={`relative flex min-h-[calc(100svh-78px)] items-center justify-center overflow-hidden border-b border-line text-center ${season.forma === "double-diamond" ? "bg-white" : "bg-paper"}`}>
       <HeroBackground forma={season.forma} accent={accent} paused={introOpen || !ready} />
       {season.forma === "double-diamond" && <HeroPlants />}
 

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Forma } from "@/lib/types";
 import { isDoubleLine, normalizeForma } from "@/lib/season-shape";
+import { roundedDiamondPath } from "@/components/shapePaths";
 
 /** Fijo — mismo valor que --color-paper en app/globals.css. */
 const PAPER = "#c8d0d2";
@@ -51,29 +52,17 @@ const FRAGMENT = /* glsl */ `
   uniform float uShape;
   uniform vec2 uPointer;
 
-  // Modo actual, siguiente y mezcla (x, y, z). Los 8 tratamientos duran 2.8s.
-  // Jungle (uShape 7) abre cada ciclo con la enredadera (id 8, 5.6s): el
-  // contorno crece desde la esquina superior hasta cerrarse y después siguen
-  // los 8 de siempre. Las demás formas conservan exactamente su timeline.
-  const float VINE_ID = 8.0;
-  const float VINE_SECONDS = 5.6;
+  // Jungle keeps six upright diamond treatments, visible from the first frame.
+  // Other Seasons retain their eight original print treatments.
   vec3 modeAt() {
     if (uShape > 6.5) {
-      float local = mod(uTime, VINE_SECONDS + 8.0 * 2.8);
-      if (local < VINE_SECONDS) return vec3(VINE_ID, 0.0, smoothstep(.8, 1.0, local / VINE_SECONDS));
-      float phase = (local - VINE_SECONDS) / 2.8;
-      float id = floor(phase);
-      return vec3(id, id > 6.5 ? VINE_ID : id + 1.0, smoothstep(.56, 1.0, fract(phase)));
+      float phase = uTime / 2.4;
+      float id = mod(floor(phase), 6.0);
+      return vec3(id, mod(id + 1.0, 6.0), smoothstep(.78, 1.0, fract(phase)));
     }
     float phase = uTime / 2.8;
     float id = mod(floor(phase), 8.0);
     return vec3(id, mod(id + 1.0, 8.0), smoothstep(.56, 1.0, fract(phase)));
-  }
-
-  // Avance de la enredadera [0,1]: 0 mientras no le toca.
-  float vineProgress() {
-    float local = mod(uTime, VINE_SECONDS + 8.0 * 2.8);
-    return local < VINE_SECONDS ? smoothstep(0.0, .78, local / VINE_SECONDS) : 0.0;
   }
 
   // Projection only: preserve the original mode equations and 2.8s timeline.
@@ -186,18 +175,28 @@ const FRAGMENT = /* glsl */ `
     return min(sdRing(p, r, halfWidth), sdRing(p, max(halfWidth, r - 2.0 * halfWidth - gap), halfWidth));
   }
 
-  // Enredadera: el contorno doble aparece recorriéndolo en sentido horario
-  // desde la esquina superior; la línea interior sigue a la exterior con un
-  // leve retraso, como dos tallos. La punta se afina hacia adelante.
-  float sdVine(vec2 p, float r, float progress) {
+  float sdDiamondVariant(vec2 p, float variant, float r) {
     float halfWidth = uCellPx * ${RING_STROKE_CELLS} * .5 / pulseFrameScale();
     float gap = uCellPx * ${RING_GAP_CELLS} / pulseFrameScale();
-    float d = sdRoundDiamond(p, r);
-    float t = fract(atan(p.x, p.y) / 6.2831853 + 1.0);
-    float reach = r * 6.0;
-    float outer = max(abs(d) - halfWidth, (t - progress * 1.08) * reach);
-    float inner = max(abs(d + 2.0 * halfWidth + gap) - halfWidth, (t - (progress * 1.08 - .08)) * reach);
-    return min(outer, inner);
+    float base = sdDoubleDiamond(p, r, halfWidth, gap);
+    if (variant < .5) return base;
+    if (variant < 1.5) return min(base, abs(sdRoundDiamond(p, r * .72)) - halfWidth * .65);
+    if (variant < 2.5) return min(base, min(
+      abs(sdRoundDiamond(p, r * .68)) - halfWidth * .7,
+      abs(sdRoundDiamond(p, r * .4)) - halfWidth * .6));
+    if (variant < 3.5) return min(
+      sdDoubleDiamond(p - vec2(0.0, .12), r * .88, halfWidth, gap),
+      abs(sdRoundDiamond(p + vec2(0.0, .12), r * .88)) - halfWidth * .65);
+    if (variant < 4.5) {
+      float angle = atan(p.x, p.y);
+      float broken = max(abs(sdRoundDiamond(p, r * .76)) - halfWidth,
+        sin(angle * 12.0 + uTime * .65) * .025);
+      return min(base, broken);
+    }
+    // Taller rhombus: tips stay vertical; never rotate into a square.
+    vec2 q = vec2(p.x * 1.12, p.y / 1.06);
+    return min(sdDoubleDiamond(q, r * .94, halfWidth, gap),
+      abs(sdRoundDiamond(q, r * .6)) - halfWidth * .6);
   }
 
   vec2 rotatePoint(vec2 p, float angle) {
@@ -219,9 +218,9 @@ const FRAGMENT = /* glsl */ `
 
   // Eight print treatments of ONE identity. No future Season shapes.
   float sdVariant(vec2 p, vec2 noiseP, float shapeId, float variantId, float r) {
+    if (shapeId > 6.5) return sdDiamondVariant(p, variantId, r);
     float d = 1.0;
-    if (variantId > 7.5) d = sdVine(p, r, vineProgress());
-    else if (variantId < 0.5) d = sdShape(printPoint(p, noiseP, sin(uTime * .4) * .12, shapeId), shapeId, r);
+    if (variantId < 0.5) d = sdShape(printPoint(p, noiseP, sin(uTime * .4) * .12, shapeId), shapeId, r);
     else if (variantId < 1.5) d = abs(sdShape(p, shapeId, r)) - .07;
     else if (variantId < 2.5) d = min(min(
       abs(sdShape(p, shapeId, r)) - .035,
@@ -263,9 +262,9 @@ const FRAGMENT = /* glsl */ `
     vec2 p = uShape > 5.5
       ? (uv - .5) * uResolution / pulseFrameScale()
       : (uv - center) * 2.0 * aspect;
-    p -= vec2(sin(uTime * .25), cos(uTime * .31)) * .09;
+    p -= vec2(sin(uTime * .25), cos(uTime * .31)) * (uShape > 6.5 ? .025 : .09);
     vec2 noiseP = p;
-    p += flowAt(noiseP);
+    p += flowAt(noiseP) * (uShape > 6.5 ? .22 : 1.0);
     p += uPointer * .045;
     vec3 mode = modeAt();
     float d = mix(sdVariant(p, noiseP, uShape, mode.x, 1.18), sdVariant(p, noiseP, uShape, mode.y, 1.18), mode.z);
@@ -287,7 +286,7 @@ const FRAGMENT = /* glsl */ `
       mask = 1.0 - smoothstep(-uCellPx * .15, uCellPx * .15, pulsePair(p, radius));
     }
     float grain = fract(sin(dot(floor(uv * density), vec2(12.9898,78.233))) * 43758.5453);
-    float amt = clamp(.045 + grain * .055 + mask * .89, 0.0, 1.0);
+    float amt = clamp((uShape > 6.5 ? 0.0 : .045 + grain * .055) + mask * .89, 0.0, 1.0);
 
     vec2 grid = fract(uv * density) - 0.5;
     float cellDist = mix(length(grid), max(abs(grid.x),abs(grid.y)), .5 + .5 * sin(uTime * .7));
@@ -297,6 +296,7 @@ const FRAGMENT = /* glsl */ `
     float dotR = mix(minR, maxR, amt);
     float aa = 0.035;
     float dot = 1.0 - smoothstep(dotR - aa, dotR + aa, cellDist);
+    if (uShape > 6.5) dot *= mask;
 
     vec3 color = mix(uPaper, uAccent, dot);
     gl_FragColor = vec4(color, 1.0);
@@ -310,7 +310,8 @@ const FRAGMENT = /* glsl */ `
  * shader custom, sin partículas ni geometría instanciada.
  *
  * Vive sólo en el hero. Decorativo: si WebGL o three fallan, el <header>
- * ya tiene bg-paper propio y se ve igual. Respeta prefers-reduced-motion
+ * conserva su propio fondo. Jungle incluye un rombo SVG mientras carga WebGL.
+ * Respeta prefers-reduced-motion
  * (un frame estático). Pausa fuera de viewport / pestaña oculta.
  */
 export default function HeroBackground({
@@ -323,23 +324,13 @@ export default function HeroBackground({
   paused?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [initialized, setInitialized] = useState(false);
-  // Wait for both the entrance and an idle period before importing/compiling WebGL.
-  useEffect(() => {
-    if (paused || initialized) return;
-    if (typeof window.requestIdleCallback === "function") {
-      const id = window.requestIdleCallback(() => setInitialized(true));
-      return () => window.cancelIdleCallback(id);
-    }
-    const id = window.setTimeout(() => setInitialized(true), 100);
-    return () => window.clearTimeout(id);
-  }, [paused, initialized]);
+  const [painted, setPainted] = useState(false);
+  const diamond = normalizeForma(forma) === "double-diamond";
   const pausedRef = useRef(paused);
   const updateRef = useRef<() => void>(() => {});
   useEffect(() => { pausedRef.current = paused; updateRef.current(); }, [paused]);
 
   useEffect(() => {
-    if (!initialized) return;
     const canvas = canvasRef.current;
     const parent = canvas?.parentElement;
     if (!canvas || !parent) return;
@@ -368,13 +359,12 @@ export default function HeroBackground({
       const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
       const uniforms = {
-        // Doble línea: arranca en 0 (cuadro estático con reduced motion; en
-        // Jungle, además, el inicio de la enredadera).
+        // Double outlines start fully visible, also in reduced motion.
         uTime: { value: isDoubleLine(normalizeForma(forma)) ? 0 : .7 },
         uCellPx: { value: CELL_DESKTOP },
         uResolution: { value: new THREE.Vector2(1, 1) },
         uAccent: { value: new THREE.Vector3(...hexToVec3(accent)) },
-        uPaper: { value: new THREE.Vector3(...hexToVec3(PAPER)) },
+        uPaper: { value: new THREE.Vector3(...hexToVec3(diamond ? "#ffffff" : PAPER)) },
         uShape: { value: SHAPE_INDEX[normalizeForma(forma)] },
         uPointer: { value: new THREE.Vector2(0, 0) },
       };
@@ -401,6 +391,7 @@ export default function HeroBackground({
         lastW = width;
         lastH = height;
         renderer.render(scene, camera);
+        setPainted(true);
       }
       resize(parent.clientWidth, parent.clientHeight);
       // Observe the stable svh host, not browser chrome resize events.
@@ -479,13 +470,21 @@ export default function HeroBackground({
       disposed = true;
       cleanup();
     };
-  }, [forma, accent, initialized]);
+  }, [forma, accent, diamond]);
 
   return (
+    <>
+    {diamond && !painted && <div aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center" data-hero-placeholder>
+      <svg viewBox="0 0 100 100" fill="none" stroke={accent} strokeWidth="1.1" opacity=".6"
+        style={{ width: "min(72vw, calc(72svh - 56.16px))", height: "auto" }}>
+        {[49, 43].map((radius) => <path key={radius} d={roundedDiamondPath(50, 50, radius, radius * .12)} />)}
+      </svg>
+    </div>}
     <canvas
       ref={canvasRef}
       aria-hidden
       className="absolute inset-0 h-full w-full opacity-60"
     />
+    </>
   );
 }
